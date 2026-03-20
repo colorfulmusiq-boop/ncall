@@ -476,7 +476,7 @@ function doAddGuest() {
 
 // ── QR 보여주기 ──
 function showQR(guestId, label) {
-  const url = location.origin + '/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
+  const url = location.origin + '/guest?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
   document.getElementById('qrPopupUrl').textContent = url;
@@ -626,7 +626,8 @@ function startListeners() {
     const data = snap.val() || {};
     const guests = Object.entries(data)
       .map(([k,v]) => ({...v, _key:k}))
-      .filter(g => g.active !== false);
+      .filter(g => g.active !== false)
+      .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
     const list = document.getElementById('guestList');
     if (guests.length === 0) {
       list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div>';

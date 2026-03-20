@@ -688,14 +688,7 @@ function startListeners() {
         tableGroups[tbl].push(n);
       });
 
-      const sortedTableEntries = Object.entries(tableGroups).sort((a,b) => {
-        const aKey = a[1].map(n=>n._key||'').sort().pop() || '';
-        const bKey = b[1].map(n=>n._key||'').sort().pop() || '';
-        return aKey > bKey ? 1 : aKey < bKey ? -1 : 0;
-      });
-      const totalTables = sortedTableEntries.length;
-      const tableFolders = sortedTableEntries.slice().reverse().map(([tbl, tItems], revIdx) => {
-        const tableNum = String(totalTables - revIdx).padStart(2, '0');
+      const tableFolders = Object.entries(tableGroups).map(([tbl, tItems]) => {
         const safeTbl = tbl.replace(/'/g,"\\'").replace(/\s/g,'-');
         const safeDate = date.replace(/\s/g,'-');
         const folderId = `tf-${safeDate}-${safeTbl}`;
@@ -704,11 +697,9 @@ function startListeners() {
         const counts = { booking:0, call:0, checkout:0, beer:0, message:0 };
         tItems.forEach(n => { if(counts[n.type]!==undefined) counts[n.type]++; });
 
-        const checkoutItem = tItems.find(n => n.type === 'checkout');
-        const checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
         const summaryHtml = Object.entries(counts).filter(([,c])=>c>0).map(([t,c])=>`
           <span style="display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:${typeColor[t]};">
-            ${typeIcon[t]} ${t==='checkout' ? ('계산 완료' + (checkoutTime ? ' ' + checkoutTime : '')) : typeLabel[t]+' '+c+'회'}
+            ${typeIcon[t]} ${t==='checkout' ? '계산 완료' : typeLabel[t]+' '+c+'회'}
           </span>
         `).join('');
 
@@ -729,7 +720,7 @@ function startListeners() {
             <div onclick="toggleFolder('${folderId}')" style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;cursor:pointer;user-select:none;">
               <div style="flex:1;">
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
-                  <span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 ${tbl}</span> <span style="font-size:0.65rem;font-weight:600;color:var(--muted);">#${tableNum}</span>
+                  <span style="font-size:0.65rem;font-weight:700;color:var(--muted);margin-right:0.1rem;">#${tableNum}</span><span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 ${tbl}</span>
                   <span style="background:var(--navy);color:#fff;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;">${tItems.length}건</span>
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${summaryHtml}</div>

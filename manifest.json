@@ -1,0 +1,24 @@
+{
+  "name": "CALL — 웨이터 호출",
+  "short_name": "CALL",
+  "description": "나이트클럽 웨이터 실시간 호출 시스템",
+  "start_url": "/waiter.html",
+  "display": "standalone",
+  "background_color": "#eef2f7",
+  "theme_color": "#1a2535",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

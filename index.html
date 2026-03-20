@@ -476,7 +476,7 @@ function doAddGuest() {
 
 // ── QR 보여주기 ──
 function showQR(guestId, label) {
-  const url = location.origin + '/guest?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
+  const url = location.origin + '/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
   document.getElementById('qrPopupUrl').textContent = url;
@@ -626,7 +626,8 @@ function startListeners() {
     const data = snap.val() || {};
     const guests = Object.entries(data)
       .map(([k,v]) => ({...v, _key:k}))
-      .filter(g => g.active !== false);
+      .filter(g => g.active !== false)
+      .sort((a,b) => b._key.localeCompare(a._key));
     const list = document.getElementById('guestList');
     if (guests.length === 0) {
       list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div>';
@@ -706,9 +707,11 @@ function startListeners() {
         const counts = { booking:0, call:0, checkout:0, beer:0, message:0 };
         tItems.forEach(n => { if(counts[n.type]!==undefined) counts[n.type]++; });
 
+        const checkoutItem = tItems.find(n => n.type === 'checkout');
+        const checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
         const summaryHtml = Object.entries(counts).filter(([,c])=>c>0).map(([t,c])=>`
           <span style="display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:${typeColor[t]};">
-            ${typeIcon[t]} ${t==='checkout' ? '계산 완료' : typeLabel[t]+' '+c+'회'}
+            ${typeIcon[t]} ${t==='checkout' ? ('계산 완료' + (checkoutTime ? ' ' + checkoutTime : '')) : typeLabel[t]+' '+c+'회'}
           </span>
         `).join('');
 
@@ -729,7 +732,7 @@ function startListeners() {
             <div onclick="toggleFolder('${folderId}')" style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;cursor:pointer;user-select:none;">
               <div style="flex:1;">
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
-                  <span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 ${tbl}</span>
+                  <span style="font-size:0.65rem;font-weight:700;color:var(--muted);margin-right:0.2rem;">#${tableNum}</span><span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 ${tbl}</span>
                   <span style="background:var(--navy);color:#fff;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;">${tItems.length}건</span>
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${summaryHtml}</div>
@@ -841,9 +844,10 @@ function clearAllNotifs() {
       Object.entries(data).forEach(([k,v]) => {
         if (!v.done) {
           fbRemove(fbRef(db, `notifs/${W.id}/${k}`));
-          fbPush(fbRef(db, `history/${W.id}`), {
-            type: v.type, tableLabel: v.tableLabel, time: v.time, date: todayStr(), doneAt: nowStr()
-          });
+          const histItem = { type: v.type, tableLabel: v.tableLabel, guestId: v.guestId||'', time: v.time, date: todayStr(), doneAt: nowStr() };
+          if (v.type === 'message' && v.msgText) histItem.msgText = v.msgText;
+          if (v.type === 'beer' && v.beerQty) histItem.beerQty = v.beerQty;
+          fbPush(fbRef(db, `history/${W.id}`), histItem);
         }
       });
     });

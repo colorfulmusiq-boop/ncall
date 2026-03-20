@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CALL — 호출</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, push, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+const cfg = {
+  apiKey:"AIzaSyDpToFo3_0q35eRxpZ6iIWC5nUZqZKGZqw",
+  authDomain:"nightcall-47430.firebaseapp.com",
+  databaseURL:"https://nightcall-47430-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"nightcall-47430",
+  storageBucket:"nightcall-47430.firebasestorage.app",
+  messagingSenderId:"522787869614",
+  appId:"1:522787869614:web:785a75ed1219ed078f2e3f"
+};
+const app = initializeApp(cfg);
+const db = getDatabase(app);
+window._db=db; window._ref=ref; window._push=push; window._get=get; window._set=set; window._update=update; window._onValue=onValue;
+window._fbReady=true;
+document.dispatchEvent(new Event('fb-ready'));
+</script>
+
+<style>
+:root{
+  --bg:#eef2f7;--bg2:#e4eaf2;--card:#fff;
+  --navy:#1a2535;--blue:#3a5a8a;--muted:#7a8fa8;
+  --border:rgba(26,37,53,0.1);--text:#1a2535;
+  --red:#c0392b;--green:#27ae60;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-system,sans-serif;height:100vh;display:flex;flex-direction:column;}
+
+#errorScreen{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;}
+.err-icon{font-size:2.5rem;margin-bottom:1rem;}
+.err-title{font-size:1rem;font-weight:600;color:var(--navy);margin-bottom:0.5rem;}
+.err-desc{font-size:0.82rem;color:var(--muted);line-height:1.6;}
+
+#checkoutScreen{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;}
+.checkout-icon{font-size:3rem;margin-bottom:1rem;}
+.checkout-title{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--navy);margin-bottom:0.5rem;}
+.checkout-desc{font-size:0.85rem;color:var(--muted);line-height:1.6;}
+
+#mainScreen{flex:1;display:none;flex-direction:column;}
+
+.hdr{padding:1.25rem 1.5rem 1rem;display:flex;align-items:flex-end;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--navy);letter-spacing:-0.02em;line-height:1;}
+.logo-sub{font-size:0.65rem;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;}
+
+.info-bar{margin:0 1.5rem;background:var(--card);border-radius:12px;padding:0.9rem 1.1rem;border:0.5px solid var(--border);flex-shrink:0;}
+.info-waiter{font-size:0.7rem;color:var(--muted);margin-bottom:0.2rem;}
+.info-table{font-size:1rem;font-weight:600;color:var(--navy);}
+
+.sent-bar{display:none;margin:0.75rem 1.5rem 0;background:#e8f5ee;border:0.5px solid #b8ddc8;border-radius:10px;padding:0.75rem 1rem;font-size:0.8rem;color:#2d6e4a;align-items:center;gap:0.5rem;flex-shrink:0;}
+.sent-bar.show{display:flex;}
+
+.main-area{flex:1;display:flex;flex-direction:column;gap:0.6rem;padding:1rem 1.5rem;justify-content:center;}
+
+.action-btn{display:flex;flex-direction:row;align-items:center;gap:1rem;padding:1rem 1.25rem;border-radius:14px;border:none;cursor:pointer;text-align:left;transition:all 0.15s;position:relative;overflow:hidden;}
+.action-btn:active{transform:scale(0.98);}
+.btn-call{background:var(--card);border:0.5px solid var(--border);}
+.btn-booking{background:var(--card);border:0.5px solid var(--border);}
+.btn-icon{font-size:1.5rem;line-height:1;flex-shrink:0;}
+.btn-texts{display:flex;flex-direction:column;}
+.btn-title{font-size:1rem;font-weight:600;margin-bottom:0.15rem;}
+.btn-desc{font-size:0.72rem;line-height:1.3;}
+.btn-call .btn-title{color:var(--navy);}
+.btn-call .btn-desc{color:var(--muted);}
+.btn-booking .btn-title{color:var(--navy);}
+.btn-booking .btn-desc{color:var(--muted);}
+.btn-circle{display:none;}
+
+.btn-beer{background:var(--card);border:0.5px solid var(--border);}
+.btn-beer .btn-title{color:var(--navy);}
+.btn-beer .btn-desc{color:var(--muted);}
+.btn-msg{background:var(--card);border:0.5px solid var(--border);}
+.btn-msg .btn-title{color:var(--navy);}
+.btn-msg .btn-desc{color:var(--muted);}
+.msg-textarea{width:100%;background:var(--bg);border:0.5px solid var(--border);border-radius:10px;padding:0.9rem 1rem;font-family:inherit;font-size:0.9rem;color:var(--navy);outline:none;resize:none;height:120px;margin-bottom:1rem;transition:border-color 0.2s;}
+.msg-textarea:focus{border-color:var(--navy);}
+.msg-textarea::placeholder{color:var(--muted);}
+
+/* 수량 선택 */
+.qty-row{display:flex;align-items:center;justify-content:center;gap:1.25rem;margin:1.25rem 0;}
+.qty-btn{width:44px;height:44px;border-radius:50%;border:0.5px solid var(--border);background:var(--bg2);font-size:1.3rem;font-weight:700;color:var(--navy);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.qty-btn:active{transform:scale(0.95);}
+.qty-num{font-family:'DM Serif Display',serif;font-size:2.5rem;color:var(--navy);min-width:3rem;text-align:center;line-height:1;}
+.qty-unit{font-size:0.85rem;color:var(--muted);margin-top:0.25rem;text-align:center;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,37,53,0.5);backdrop-filter:blur(4px);z-index:100;align-items:flex-end;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:1.75rem 1.5rem 2.5rem;width:100%;max-width:480px;animation:slideUp 0.25s ease;}
+.modal-handle{width:36px;height:4px;background:var(--bg2);border-radius:2px;margin:0 auto 1.5rem;}
+.modal-icon{font-size:2.2rem;margin-bottom:0.75rem;display:block;}
+.modal-title{font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--navy);margin-bottom:0.4rem;}
+.modal-sub{font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.5;}
+.btn-row{display:flex;gap:0.5rem;}
+.btn{flex:1;padding:0.95rem;border-radius:10px;border:none;font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn:active{transform:scale(0.98);}
+.btn-confirm{background:var(--navy);color:#fff;}
+.btn-confirm.red{background:var(--red);}
+.btn-cancel{background:var(--bg2);color:var(--muted);}
+
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:8px;padding:0.7rem 1.25rem;font-size:0.82rem;white-space:nowrap;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+#toast.show{opacity:1;}
+
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.fade-up{animation:fadeUp 0.4s ease both;}
+</style>
+</head>
+<body>
+
+<!-- 계산 완료 화면 -->
+<div id="checkoutScreen" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;">
+  <div style="font-size:3rem;margin-bottom:1rem;">🙏</div>
+  <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--navy);margin-bottom:0.5rem;">이용해 주셔서 감사합니다</div>
+  <div style="font-size:0.85rem;color:var(--muted);line-height:1.6;">즐거운 시간 되셨길 바랍니다</div>
+</div>
+
+<div id="errorScreen">
+  <div class="err-icon">🔗</div>
+  <div class="err-title">잘못된 링크예요</div>
+  <div class="err-desc">웨이터에게 받은 QR코드로 다시 접속해주세요</div>
+</div>
+
+<div id="checkoutScreen">
+  <div class="checkout-icon">✅</div>
+  <div class="checkout-title">계산이 완료됐어요</div>
+  <div class="checkout-desc">이용해 주셔서 감사합니다.<br>즐거운 시간이었길 바랍니다 😊</div>
+</div>
+
+<div id="mainScreen">
+  <div class="hdr fade-up">
+    <div>
+      <div class="logo">Call</div>
+      <div class="logo-sub">웨이터 호출 서비스</div>
+    </div>
+  </div>
+
+  <div class="info-bar fade-up" style="animation-delay:0.05s;">
+    <div class="info-waiter">담당 웨이터</div>
+    <div class="info-table" id="infoWaiter">—</div>
+  </div>
+
+  <div class="sent-bar" id="sentBar">
+    <span>✓</span>
+    <span id="sentMsg">전송 완료</span>
+  </div>
+
+  <!-- 웨이터 답장 바 -->
+  <div id="replyBar" style="display:none;margin:0.5rem 1.5rem 0;background:#e8f0fe;border:0.5px solid #b8ccf0;border-radius:10px;padding:0.75rem 1rem;font-size:0.85rem;color:#1a2535;align-items:center;gap:0.5rem;font-weight:600;">
+    <span>💬</span>
+    <span id="replyMsg"></span>
+  </div>
+
+  <div class="main-area fade-up" style="animation-delay:0.1s;">
+    <button class="action-btn btn-booking" onclick="sendAction('booking')">
+      <div class="btn-icon">🔔</div>
+      <div class="btn-texts">
+        <div class="btn-title">부킹 요청</div>
+        <div class="btn-desc">여자가 빠졌어요 — 부킹 다시 보내주세요</div>
+      </div>
+    </button>
+    <button class="action-btn btn-beer" onclick="openBeerModal()">
+      <div class="btn-icon">🍾</div>
+      <div class="btn-texts">
+        <div class="btn-title">맥주 추가</div>
+        <div class="btn-desc">맥주를 추가로 주문해요</div>
+      </div>
+    </button>
+    <button class="action-btn btn-call" onclick="sendAction('call')">
+      <div class="btn-icon">🙋</div>
+      <div class="btn-texts">
+        <div class="btn-title">웨이터 호출</div>
+        <div class="btn-desc">담당 웨이터를 지금 불러요</div>
+      </div>
+    </button>
+    <button class="action-btn btn-msg" onclick="openMsgModal()">
+      <div class="btn-icon">💬</div>
+      <div class="btn-texts">
+        <div class="btn-title">메시지 보내기</div>
+        <div class="btn-desc">웨이터에게 직접 메시지를 보내요</div>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- 메시지 보내기 모달 -->
+<div class="modal-bg" id="msgModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <span class="modal-icon">💬</span>
+    <div class="modal-title">메시지 보내기</div>
+    <div class="modal-sub" id="msgModalSub">웨이터에게 전달할 내용을 입력해요</div>
+    <textarea class="msg-textarea" id="msgInput" placeholder="예) 맥주 더 주세요, 자리 바꿔주세요..."></textarea>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeMsgModal()">취소</button>
+      <button class="btn btn-confirm" onclick="sendMsg()">전송</button>
+    </div>
+  </div>
+</div>
+
+<!-- 맥주 추가 모달 -->
+<div class="modal-bg" id="beerModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <span class="modal-icon">🍾</span>
+    <div class="modal-title">맥주 추가</div>
+    <div class="modal-sub" id="beerModalSub">몇 병 추가할까요?</div>
+    <div class="qty-row">
+      <button class="qty-btn" onclick="changeQty(-1)">−</button>
+      <div>
+        <div class="qty-num" id="qtyNum">1</div>
+        <div class="qty-unit">병</div>
+      </div>
+      <button class="qty-btn" onclick="changeQty(1)">+</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeBeerModal()">취소</button>
+      <button class="btn btn-confirm" onclick="sendBeer()">주문</button>
+    </div>
+  </div>
+</div>
+
+<!-- 확인 모달 -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <span class="modal-icon" id="modalIcon">🙋</span>
+    <div class="modal-title" id="modalTitle">웨이터 호출</div>
+    <div class="modal-sub" id="modalSub">담당 웨이터에게 알림을 보낼게요</div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn btn-confirm" id="confirmBtn" onclick="doSend()">전송</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let waiterData = null;
+let guestData = null;
+let guestId = null;
+let pendingType = null;
+let isActive = true;
+let db, fbRef, fbPush, fbGet, fbSet, fbUpdate, fbOnValue;
+
+document.addEventListener('fb-ready', () => {
+  db=window._db; fbRef=window._ref; fbPush=window._push;
+  fbGet=window._get; fbSet=window._set; fbUpdate=window._update; fbOnValue=window._onValue;
+  init();
+});
+function waitFb(fn) { if(window._fbReady) fn(); else document.addEventListener('fb-ready',fn,{once:true}); }
+function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
+
+function init() {
+  const params = new URLSearchParams(location.search);
+  let wname = params.get('w');
+  let savedGuestId = params.get('g');
+
+  // URL 파라미터 없으면 localStorage에서 복원
+  if (!wname || !savedGuestId) {
+    const saved = localStorage.getItem('ncall_guest');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        wname = parsed.w;
+        savedGuestId = parsed.g;
+      } catch(e) {}
+    }
+  }
+
+  if (!wname || !savedGuestId) { showError(); return; }
+
+  // URL 파라미터 있으면 localStorage에 저장 (갱신)
+  if (params.get('w') && params.get('g')) {
+    localStorage.setItem('ncall_guest', JSON.stringify({ w: wname, g: savedGuestId }));
+  }
+
+  guestId = savedGuestId;
+
+  // 웨이터 정보 가져오기
+  fbGet(fbRef(db, `waiters/${wname}`)).then(wSnap => {
+    if (!wSnap.exists()) { showError(); return; }
+    waiterData = wSnap.val();
+
+    // 손님 정보 가져오기
+    fbGet(fbRef(db, `guests/${waiterData.id}/${guestId}`)).then(gSnap => {
+      if (!gSnap.exists() || gSnap.val().active === false) { showError(); return; }
+      guestData = gSnap.val();
+
+      document.getElementById('infoWaiter').textContent = wname + ' 웨이터';
+      document.getElementById('mainScreen').style.display = 'flex';
+
+      // 웨이터 답장 실시간 감지
+      fbOnValue(fbRef(db, `replies/${guestId}`), snap => {
+        if (snap.val()) {
+          const reply = snap.val();
+          document.getElementById('replyBar').style.display = 'flex';
+          document.getElementById('replyMsg').textContent = '웨이터: ' + reply.msg;
+          setTimeout(() => {
+            document.getElementById('replyBar').style.display = 'none';
+            fbRemove(fbRef(db, `replies/${guestId}`));
+          }, 5000);
+        }
+      });
+
+      // 실시간으로 계산 완료 감지
+      fbOnValue(fbRef(db, `guests/${waiterData.id}/${guestId}/active`), snap => {
+        if (snap.val() === false) {
+          isActive = false;
+          localStorage.removeItem('ncall_guest'); // 계산 완료 시 저장 데이터 삭제
+          document.getElementById('mainScreen').style.display = 'none';
+          document.getElementById('checkoutScreen').style.display = 'flex';
+        }
+      });
+    });
+  });
+}
+
+function showError() {
+  document.getElementById('errorScreen').style.display = 'flex';
+}
+
+let beerQty = 1;
+
+function openMsgModal() {
+  document.getElementById('msgInput').value = '';
+  document.getElementById('msgModalSub').textContent = guestData.label + ' — 웨이터에게 전달할 내용을 입력해요';
+  document.getElementById('msgModal').classList.add('open');
+  setTimeout(() => document.getElementById('msgInput').focus(), 300);
+}
+function closeMsgModal() {
+  document.getElementById('msgModal').classList.remove('open');
+}
+function sendMsg() {
+  const text = document.getElementById('msgInput').value.trim();
+  if (!text) { toast('메시지를 입력해주세요'); return; }
+  closeMsgModal();
+  if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
+  waitFb(() => {
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+      type: 'message',
+      tableLabel: guestData.label,
+      guestMsg: guestData.label,
+      msgText: text,
+      waiterName: waiterData.name,
+      guestId,
+      time: nowStr(),
+      done: false
+    });
+    const bar = document.getElementById('sentBar');
+    document.getElementById('sentMsg').textContent = '메시지가 전송됐어요';
+    bar.classList.add('show');
+    setTimeout(() => bar.classList.remove('show'), 4000);
+    toast('💬 메시지 전송!');
+  });
+}
+
+function openBeerModal() {
+  beerQty = 1;
+  document.getElementById('qtyNum').textContent = '1';
+  document.getElementById('beerModalSub').textContent = guestData.label + ' — 몇 병 추가할까요?';
+  document.getElementById('beerModal').classList.add('open');
+}
+function closeBeerModal() {
+  document.getElementById('beerModal').classList.remove('open');
+}
+function changeQty(delta) {
+  beerQty = Math.min(10, Math.max(1, beerQty + delta));
+  document.getElementById('qtyNum').textContent = beerQty;
+}
+function sendBeer() {
+  closeBeerModal();
+  if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
+  waitFb(() => {
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+      type: 'beer',
+      tableLabel: guestData.label,
+      guestMsg: guestData.label,
+      beerQty,
+      waiterName: waiterData.name,
+      guestId,
+      time: nowStr(),
+      done: false
+    });
+    const bar = document.getElementById('sentBar');
+    document.getElementById('sentMsg').textContent = '맥주 ' + beerQty + '병 주문됐어요';
+    bar.classList.add('show');
+    setTimeout(() => bar.classList.remove('show'), 4000);
+    toast('🍾 맥주 ' + beerQty + '병 전송!');
+  });
+}
+
+function sendAction(type) {
+  pendingType = type;
+  document.getElementById('modalIcon').textContent = type==='call' ? '🙋' : '🔔';
+  document.getElementById('modalTitle').textContent = type==='call' ? '웨이터 호출' : '부킹 요청';
+  document.getElementById('modalSub').textContent = type==='call'
+    ? guestData.label + ' — 웨이터를 호출해요'
+    : guestData.label + ' — 부킹을 요청해요';
+  document.getElementById('confirmBtn').className = 'btn btn-confirm' + (type==='booking' ? ' red' : '');
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('confirmModal').classList.remove('open');
+}
+
+function doSend() {
+  closeModal();
+  if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
+  const type = pendingType;
+
+  waitFb(() => {
+    // 부킹 요청일 때만 muted 체크
+    if (type === 'booking') {
+      fbGet(fbRef(db, `guests/${waiterData.id}/${guestId}/muted`)).then(snap => {
+        if (snap.val() === true) {
+          toast('부킹 요청이 차단된 테이블이에요');
+          return;
+        }
+        sendNotif(type);
+      });
+    } else {
+      // 웨이터 호출은 muted 상관없이 전송
+      sendNotif(type);
+    }
+  });
+}
+
+function sendNotif(type) {
+  fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+    type,
+    tableLabel: guestData.label,
+    guestMsg: guestData.label,
+    waiterName: waiterData.name,
+    guestId,
+    time: nowStr(),
+    done: false
+  });
+  if (type === 'booking') {
+    const countRef = fbRef(db, `guests/${waiterData.id}/${guestId}/bookingCount`);
+    fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
+  }
+  const bar = document.getElementById('sentBar');
+  document.getElementById('sentMsg').textContent = type==='call' ? '호출이 전송됐어요' : '부킹 요청이 전송됐어요';
+  bar.classList.add('show');
+  setTimeout(() => bar.classList.remove('show'), 4000);
+  toast(type==='call' ? '✓ 호출 전송!' : '✓ 부킹 요청 전송!');
+}
+
+let toastT;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>

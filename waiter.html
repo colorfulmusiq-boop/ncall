@@ -626,8 +626,7 @@ function startListeners() {
     const data = snap.val() || {};
     const guests = Object.entries(data)
       .map(([k,v]) => ({...v, _key:k}))
-      .filter(g => g.active !== false)
-      .sort((a,b) => b._key.localeCompare(a._key));
+      .filter(g => g.active !== false);
     const list = document.getElementById('guestList');
     if (guests.length === 0) {
       list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div>';
@@ -689,7 +688,11 @@ function startListeners() {
         tableGroups[tbl].push(n);
       });
 
-      const tableFolders = Object.entries(tableGroups).map(([tbl, tItems]) => {
+      const tableFolders = Object.entries(tableGroups).sort((a,b) => {
+        const aLast = a[1][a[1].length-1]._key || '';
+        const bLast = b[1][b[1].length-1]._key || '';
+        return bLast.localeCompare(aLast);
+      }).map(([tbl, tItems]) => {
         const safeTbl = tbl.replace(/'/g,"\\'").replace(/\s/g,'-');
         const safeDate = date.replace(/\s/g,'-');
         const folderId = `tf-${safeDate}-${safeTbl}`;

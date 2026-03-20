@@ -778,8 +778,9 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
     fbGet(fbRef(db, `notifs/${wid}/${key}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
+      const finalGuestId = notifData.guestId || '';
       fbRemove(fbRef(db, `notifs/${wid}/${key}`));
-      const histData = {type, tableLabel, guestId: guestId||'', time, date:todayStr(), doneAt:nowStr()};
+      const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr()};
       if (type === 'beer' && beerQty) histData.beerQty = beerQty;
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
       fbPush(fbRef(db, `history/${wid}`), histData);
@@ -793,8 +794,9 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
+      const finalGuestId = guestId || notifData.guestId || '';
       fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
-      const histData = {type, tableLabel, time, date:todayStr(), doneAt:nowStr(), reply:replyMsg};
+      const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr(), reply:replyMsg};
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
       fbPush(fbRef(db, `history/${wid}`), histData);
       if (guestId) fbSet(fbRef(db, `replies/${guestId}`), {msg: replyMsg, time: nowStr()});

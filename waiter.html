@@ -627,7 +627,7 @@ function startListeners() {
     const guests = Object.entries(data)
       .map(([k,v]) => ({...v, _key:k}))
       .filter(g => g.active !== false)
-      .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      .sort((a,b) => b._key.localeCompare(a._key));
     const list = document.getElementById('guestList');
     if (guests.length === 0) {
       list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div>';
@@ -698,9 +698,11 @@ function startListeners() {
         const counts = { booking:0, call:0, checkout:0, beer:0, message:0 };
         tItems.forEach(n => { if(counts[n.type]!==undefined) counts[n.type]++; });
 
+        const checkoutItem = tItems.find(n => n.type === 'checkout');
+        const checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
         const summaryHtml = Object.entries(counts).filter(([,c])=>c>0).map(([t,c])=>`
           <span style="display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:${typeColor[t]};">
-            ${typeIcon[t]} ${t==='checkout' ? '계산 완료' : typeLabel[t]+' '+c+'회'}
+            ${typeIcon[t]} ${t==='checkout' ? ('계산 완료' + (checkoutTime ? ' ' + checkoutTime : '')) : typeLabel[t]+' '+c+'회'}
           </span>
         `).join('');
 

@@ -500,7 +500,7 @@ function checkoutGuest(guestId, label) {
   waitFb(() => {
     fbUpdate(fbRef(db, `guests/${W.id}/${guestId}`), {active: false});
     fbPush(fbRef(db, `history/${W.id}`), {
-      type:'checkout', guestMsg: label, time: nowStr(), date: todayStr()
+      type:'checkout', guestMsg: label, tableLabel: label, guestId, time: nowStr(), date: todayStr()
     });
   });
   toast('✓ 계산 완료');
@@ -684,12 +684,21 @@ function startListeners() {
       const tableGroups = {};
       items.forEach(n => {
         const tbl = n.tableLabel || n.guestMsg || '손님';
-        if (!tableGroups[tbl]) tableGroups[tbl] = [];
-        tableGroups[tbl].push(n);
+        const grpKey = n.guestId ? (tbl + '___' + n.guestId) : tbl;
+        if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
+        tableGroups[grpKey].push(n);
       });
 
-      const tableFolders = Object.entries(tableGroups).map(([tbl, tItems]) => {
-        const safeTbl = tbl.replace(/'/g,"\\'").replace(/\s/g,'-');
+      const sortedTableEntries2 = Object.entries(tableGroups).sort((a,b) => {
+        const aKey = a[1].map(n=>n._key||'').sort().pop() || '';
+        const bKey = b[1].map(n=>n._key||'').sort().pop() || '';
+        return aKey > bKey ? 1 : aKey < bKey ? -1 : 0;
+      });
+      const totalTables = sortedTableEntries2.length;
+      const tableFolders = sortedTableEntries2.slice().reverse().map(([grpKey, tItems], revIdx) => {
+        const tbl = tItems[0].tableLabel || tItems[0].guestMsg || '손님';
+        const tableNum = String(totalTables - revIdx).padStart(2, '0');
+        const safeTbl = grpKey.replace(/'/g,"\'").replace(/\s/g,'-');
         const safeDate = date.replace(/\s/g,'-');
         const folderId = `tf-${safeDate}-${safeTbl}`;
 
@@ -767,7 +776,7 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       fbRemove(fbRef(db, `notifs/${wid}/${key}`));
-      const histData = {type, tableLabel, time, date:todayStr(), doneAt:nowStr()};
+      const histData = {type, tableLabel, guestId: guestId||'', time, date:todayStr(), doneAt:nowStr()};
       if (type === 'beer' && beerQty) histData.beerQty = beerQty;
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
       fbPush(fbRef(db, `history/${wid}`), histData);
@@ -832,10 +841,9 @@ function clearAllNotifs() {
       Object.entries(data).forEach(([k,v]) => {
         if (!v.done) {
           fbRemove(fbRef(db, `notifs/${W.id}/${k}`));
-          const histItem = { type: v.type, tableLabel: v.tableLabel, time: v.time, date: todayStr(), doneAt: nowStr() };
-          if (v.type === 'message' && v.msgText) histItem.msgText = v.msgText;
-          if (v.type === 'beer' && v.beerQty) histItem.beerQty = v.beerQty;
-          fbPush(fbRef(db, `history/${W.id}`), histItem);
+          fbPush(fbRef(db, `history/${W.id}`), {
+            type: v.type, tableLabel: v.tableLabel, time: v.time, date: todayStr(), doneAt: nowStr()
+          });
         }
       });
     });

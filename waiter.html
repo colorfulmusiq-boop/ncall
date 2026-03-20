@@ -689,9 +689,9 @@ function startListeners() {
       });
 
       const tableFolders = Object.entries(tableGroups).sort((a,b) => {
-        const aLast = a[1][a[1].length-1]._key || '';
-        const bLast = b[1][b[1].length-1]._key || '';
-        return bLast.localeCompare(aLast);
+        const aKey = a[1].map(n=>n._key||'').sort().pop() || '';
+        const bKey = b[1].map(n=>n._key||'').sort().pop() || '';
+        return bKey > aKey ? 1 : bKey < aKey ? -1 : 0;
       }).map(([tbl, tItems]) => {
         const safeTbl = tbl.replace(/'/g,"\\'").replace(/\s/g,'-');
         const safeDate = date.replace(/\s/g,'-');

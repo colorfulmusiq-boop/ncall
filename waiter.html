@@ -695,7 +695,7 @@ function startListeners() {
       });
       const totalTables = sortedTableEntries.length;
       const tableFolders = sortedTableEntries.slice().reverse().map(([tbl, tItems], revIdx) => {
-        const tableNum = totalTables - revIdx;
+        const tableNum = String(totalTables - revIdx).padStart(2, '0');
         const safeTbl = tbl.replace(/'/g,"\\'").replace(/\s/g,'-');
         const safeDate = date.replace(/\s/g,'-');
         const folderId = `tf-${safeDate}-${safeTbl}`;
@@ -727,10 +727,9 @@ function startListeners() {
         return `
           <div style="margin-bottom:0.6rem;background:var(--card);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;">
             <div onclick="toggleFolder('${folderId}')" style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;cursor:pointer;user-select:none;">
-              <span style="font-size:0.65rem;font-weight:700;color:var(--muted);background:var(--bg2);border-radius:5px;padding:0.1rem 0.4rem;margin-right:0.4rem;">#${tableNum}</span>
               <div style="flex:1;">
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
-                  <span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 ${tbl}</span>
+                  <span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 ${tbl}</span> <span style="font-size:0.65rem;font-weight:600;color:var(--muted);">#${tableNum}</span>
                   <span style="background:var(--navy);color:#fff;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;">${tItems.length}건</span>
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${summaryHtml}</div>

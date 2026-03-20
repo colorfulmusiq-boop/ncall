@@ -476,7 +476,7 @@ function doAddGuest() {
 
 // ── QR 보여주기 ──
 function showQR(guestId, label) {
-  const url = location.origin + '/guest?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
+  const url = location.origin + '/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
   document.getElementById('qrPopupUrl').textContent = url;

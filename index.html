@@ -810,6 +810,7 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
+      const finalGuestId = guestId || notifData.guestId || '';
       fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
       const saveReply = (date) => {
         const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr(), reply:replyMsg};

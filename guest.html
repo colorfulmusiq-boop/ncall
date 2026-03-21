@@ -279,10 +279,20 @@ function init() {
 
   if (!wname || !savedGuestId) { showError(); return; }
 
-  // URL 파라미터 있으면 localStorage에 저장 (갱신)
-  if (params.get('w') && params.get('g')) {
-    localStorage.setItem('ncall_guest', JSON.stringify({ w: wname, g: savedGuestId }));
+  // localStorage에 항상 저장
+  localStorage.setItem('ncall_guest', JSON.stringify({ w: wname, g: savedGuestId }));
+
+  // URL에 파라미터 없으면 복원 (뒤로가기로 파라미터 날아간 경우)
+  if (!params.get('w') || !params.get('g')) {
+    const newUrl = location.pathname + '?w=' + encodeURIComponent(wname) + '&g=' + savedGuestId;
+    history.replaceState(null, '', newUrl);
   }
+
+  // 뒤로가기 막기
+  history.pushState(null, '', location.href);
+  window.addEventListener('popstate', () => {
+    history.pushState(null, '', location.href);
+  });
 
   guestId = savedGuestId;
 

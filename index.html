@@ -359,7 +359,12 @@ function waitFb(fn) {
   else document.addEventListener('fb-ready', () => { _assignFb(); fn(); }, {once:true});
 }
 function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
-function todayStr() { const n=new Date(); return n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일'; }
+function todayStr() {
+  const n=new Date();
+  // 새벽 6시 이전이면 전날 날짜 사용 (나이트 영업 대응)
+  if (n.getHours() < 6) n.setDate(n.getDate() - 1);
+  return n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일';
+}
 
 // ── 인증 ──
 function switchAuthTab(tab) {
@@ -465,7 +470,7 @@ function doAddGuest() {
   closeModal('addGuestModal');
   waitFb(() => {
     const guestRef = fbPush(fbRef(db, `guests/${W.id}`), {
-      label, bookingCount: 0, createdAt: nowStr(), active: true
+      label, bookingCount: 0, createdAt: nowStr(), createdDate: todayStr(), active: true
     });
     const guestId = guestRef.key;
     toast('✓ 손님 추가됨');
@@ -499,8 +504,11 @@ function checkoutGuest(guestId, label) {
   if (!confirm(label + '\n계산 완료 처리할까요?')) return;
   waitFb(() => {
     fbUpdate(fbRef(db, `guests/${W.id}/${guestId}`), {active: false});
-    fbPush(fbRef(db, `history/${W.id}`), {
-      type:'checkout', guestMsg: label, tableLabel: label, guestId, time: nowStr(), date: todayStr()
+    fbGet(fbRef(db, `guests/${W.id}/${guestId}/createdDate`)).then(ds => {
+      const date = ds.val() || todayStr();
+      fbPush(fbRef(db, `history/${W.id}`), {
+        type:'checkout', guestMsg: label, tableLabel: label, guestId, time: nowStr(), date
+      });
     });
   });
   toast('✓ 계산 완료');
@@ -774,16 +782,24 @@ function startListeners() {
 
 function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
   waitFb(() => {
-    // msgText가 없으면 Firebase에서 직접 읽어오기
     fbGet(fbRef(db, `notifs/${wid}/${key}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = notifData.guestId || '';
       fbRemove(fbRef(db, `notifs/${wid}/${key}`));
-      const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr()};
-      if (type === 'beer' && beerQty) histData.beerQty = beerQty;
-      if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
-      fbPush(fbRef(db, `history/${wid}`), histData);
+      const saveHist = (date) => {
+        const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr()};
+        if (type === 'beer' && beerQty) histData.beerQty = beerQty;
+        if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
+        fbPush(fbRef(db, `history/${wid}`), histData);
+      };
+      if (finalGuestId) {
+        fbGet(fbRef(db, `guests/${wid}/${finalGuestId}/createdDate`)).then(ds => {
+          saveHist(ds.val() || todayStr());
+        });
+      } else {
+        saveHist(todayStr());
+      }
     });
   });
   toast('✓ 처리 완료');
@@ -794,11 +810,19 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
-      const finalGuestId = guestId || notifData.guestId || '';
       fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
-      const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr(), reply:replyMsg};
-      if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
-      fbPush(fbRef(db, `history/${wid}`), histData);
+      const saveReply = (date) => {
+        const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr(), reply:replyMsg};
+        if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
+        fbPush(fbRef(db, `history/${wid}`), histData);
+      };
+      if (finalGuestId) {
+        fbGet(fbRef(db, `guests/${wid}/${finalGuestId}/createdDate`)).then(ds => {
+          saveReply(ds.val() || todayStr());
+        });
+      } else {
+        saveReply(todayStr());
+      }
       if (guestId) fbSet(fbRef(db, `replies/${guestId}`), {msg: replyMsg, time: nowStr()});
     });
   });

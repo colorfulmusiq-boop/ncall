@@ -481,6 +481,10 @@ function doAddGuest() {
       label, bookingCount: 0, createdAt: nowStr(), createdDate: todayStr(), active: true
     });
     const guestId = guestRef.key;
+    // 입장 시간 내역에 기록
+    fbPush(fbRef(db, `history/${W.id}`), {
+      type: 'enter', guestMsg: label, tableLabel: label, guestId, time: nowStr(), date: todayStr()
+    });
     toast('✓ 손님 추가됨');
     // 모달 닫힌 후 충분히 기다렸다가 QR 팝업
     setTimeout(() => showQR(guestId, label), 400);
@@ -685,9 +689,9 @@ function startListeners() {
       dateGroups[date].push(n);
     });
 
-    const typeIcon  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬' };
-    const typeLabel = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지' };
-    const typeColor = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad' };
+    const typeIcon  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪' };
+    const typeLabel = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
+    const typeColor = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
 
     // 날짜 내림차순 정렬
     const sortedDates = Object.keys(dateGroups).sort((a,b) => b.localeCompare(a));
@@ -720,14 +724,16 @@ function startListeners() {
         const folderId = `tf-${safeDate}-${safeTbl}`;
 
         // 타입별 카운트
-        const counts = { booking:0, call:0, checkout:0, beer:0, message:0 };
+        const counts = { booking:0, call:0, checkout:0, beer:0, message:0, enter:0 };
         tItems.forEach(n => { if(counts[n.type]!==undefined) counts[n.type]++; });
 
         const checkoutItem = tItems.find(n => n.type === 'checkout');
         const checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
+        const enterItem = tItems.find(n => n.type === 'enter');
+        const enterTime = enterItem ? enterItem.time : null;
         const summaryHtml = Object.entries(counts).filter(([,c])=>c>0).map(([t,c])=>`
           <span style="display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:${typeColor[t]};">
-            ${typeIcon[t]} ${t==='checkout' ? ('계산 완료' + (checkoutTime ? ' ' + checkoutTime : '')) : typeLabel[t]+' '+c+'회'}
+            ${typeIcon[t]} ${t==='checkout' ? ('계산 완료' + (checkoutTime ? ' ' + checkoutTime : '')) : t==='enter' ? ('입장 ' + (enterTime || '')) : typeLabel[t]+' '+c+'회'}
           </span>
         `).join('');
 

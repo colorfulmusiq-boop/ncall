@@ -351,7 +351,7 @@ let beerQty = 1;
 
 function openMsgModal() {
   document.getElementById('msgInput').value = '';
-  document.getElementById('msgModalSub').textContent = guestData.label + ' — 웨이터에게 전달할 내용을 입력해요';
+  document.getElementById('msgModalSub').textContent = '웨이터에게 전달할 내용을 입력해요';
   document.getElementById('msgModal').classList.add('open');
   setTimeout(() => document.getElementById('msgInput').focus(), 300);
 }
@@ -385,7 +385,7 @@ function sendMsg() {
 function openBeerModal() {
   beerQty = 1;
   document.getElementById('qtyNum').textContent = '1';
-  document.getElementById('beerModalSub').textContent = guestData.label + ' — 몇 병 추가할까요?';
+  document.getElementById('beerModalSub').textContent = '몇 병 추가할까요?';
   document.getElementById('beerModal').classList.add('open');
 }
 function closeBeerModal() {
@@ -422,8 +422,8 @@ function sendAction(type) {
   document.getElementById('modalIcon').textContent = type==='call' ? '🙋' : '🔔';
   document.getElementById('modalTitle').textContent = type==='call' ? '웨이터 호출' : '부킹 요청';
   document.getElementById('modalSub').textContent = type==='call'
-    ? guestData.label + ' — 웨이터를 호출해요'
-    : guestData.label + ' — 부킹을 요청해요';
+    ? '웨이터를 호출해요'
+    : '부킹을 요청해요';
   document.getElementById('confirmBtn').className = 'btn btn-confirm' + (type==='booking' ? ' red' : '');
   document.getElementById('confirmModal').classList.add('open');
 }

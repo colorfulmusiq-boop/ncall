@@ -273,9 +273,9 @@ function init() {
   let wname = params.get('w');
   let savedGuestId = params.get('g');
 
-  // URL 파라미터 없으면 localStorage에서 복원
+  // URL 파라미터 없으면 localStorage/sessionStorage에서 복원
   if (!wname || !savedGuestId) {
-    const saved = localStorage.getItem('ncall_guest');
+    const saved = localStorage.getItem('ncall_guest') || sessionStorage.getItem('ncall_guest');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -287,8 +287,10 @@ function init() {
 
   if (!wname || !savedGuestId) { showError(); return; }
 
-  // localStorage에 항상 저장
-  localStorage.setItem('ncall_guest', JSON.stringify({ w: wname, g: savedGuestId }));
+  // localStorage + sessionStorage 둘 다 저장 (PWA/브라우저 분리 대응)
+  const guestSaveData = JSON.stringify({ w: wname, g: savedGuestId });
+  localStorage.setItem('ncall_guest', guestSaveData);
+  try { sessionStorage.setItem('ncall_guest', guestSaveData); } catch(e) {}
 
   // URL에 파라미터 없으면 복원 (뒤로가기로 파라미터 날아간 경우)
   if (!params.get('w') || !params.get('g')) {

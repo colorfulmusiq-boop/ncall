@@ -705,7 +705,7 @@ const checkoutItem = tItems.find(n => n.type === 'checkout');
           </span>
         `).join('');
 
-        const itemsHtml = tItems.slice().sort((a,b) => a._key.localeCompare(b._key)).map(n => `
+        const itemsHtml = tItems.slice().sort((a,b) => { if(a.type==='enter') return -1; if(b.type==='enter') return 1; return a._key.localeCompare(b._key); }).map(n => `
           <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-bottom:0.5px solid var(--border);">
             <span style="font-size:1rem;">${typeIcon[n.type]||'•'}</span>
             <div style="flex:1;">

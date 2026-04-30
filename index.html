@@ -798,22 +798,23 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${wid}/${key}`)).then(snap => {
       const notifData = snap.val() || {};
+      const finalType = type || notifData.type || '';
+      const finalTableLabel = tableLabel || notifData.tableLabel || notifData.guestMsg || '손님';
+      const finalTime = time || notifData.time || nowStr();
       const finalMsgText = msgText || notifData.msgText || '';
+      const finalBeerQty = beerQty || notifData.beerQty || 0;
       const finalGuestId = notifData.guestId || '';
+      const historyKey = notifData.historyKey || '';
       fbRemove(fbRef(db, `notifs/${wid}/${key}`));
-      const saveHist = (date) => {
-        const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr()};
-        if (type === 'beer' && beerQty) histData.beerQty = beerQty;
-        if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
-        fbPush(fbRef(db, `history/${wid}`), histData);
+      const histUpdate = {
+        type: finalType, tableLabel: finalTableLabel, guestMsg: finalTableLabel,
+        guestId: finalGuestId, time: finalTime,
+        date: notifData.date || todayStr(), doneAt: nowStr(), status: 'done'
       };
-      if (finalGuestId) {
-        fbGet(fbRef(db, `guests/${wid}/${finalGuestId}/createdDate`)).then(ds => {
-          saveHist(ds.val() || todayStr());
-        });
-      } else {
-        saveHist(todayStr());
-      }
+      if (finalBeerQty) histUpdate.beerQty = finalBeerQty;
+      if (finalMsgText) histUpdate.msgText = finalMsgText;
+      if (historyKey) fbUpdate(fbRef(db, `history/${wid}/${historyKey}`), histUpdate);
+      else fbPush(fbRef(db, `history/${wid}`), histUpdate);
     });
   });
   toast('✓ 처리 완료');
@@ -824,42 +825,36 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
       const notifData = snap.val() || {};
+      const finalType = type || notifData.type || '';
+      const finalTableLabel = tableLabel || notifData.tableLabel || notifData.guestMsg || '손님';
+      const finalTime = time || notifData.time || nowStr();
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = guestId || notifData.guestId || '';
+      const historyKey = notifData.historyKey || '';
       const replyKey = notifKey || ('reply_' + Date.now());
       const replyData = {
-        msg: replyMsg,
-        guestId: finalGuestId,
-        waiterId: wid,
-        notifKey: replyKey,
-        type: type || notifData.type || '',
-        tableLabel: tableLabel || notifData.tableLabel || '손님',
-        requestTime: time || notifData.time || '',
-        time: nowStr(),
-        sentAt: Date.now()
+        msg: replyMsg, guestId: finalGuestId, waiterId: wid,
+        notifKey: replyKey, type: finalType, tableLabel: finalTableLabel,
+        requestTime: finalTime, time: nowStr(), sentAt: Date.now()
       };
-
       const writes = [];
       if (replyKey) writes.push(fbSet(fbRef(db, `replies/${replyKey}`), replyData));
       if (finalGuestId) {
         writes.push(fbSet(fbRef(db, `guestReplies/${wid}/${finalGuestId}/${replyKey}`), replyData));
         writes.push(fbSet(fbRef(db, `guests/${wid}/${finalGuestId}/lastReply`), replyData));
       }
-
       Promise.all(writes).then(() => {
         if (notifKey) fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
-        const saveReply = (date) => {
-          const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr(), reply:replyMsg};
-          if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
-          fbPush(fbRef(db, `history/${wid}`), histData);
+        const histUpdate = {
+          type: finalType, tableLabel: finalTableLabel, guestMsg: finalTableLabel,
+          guestId: finalGuestId, time: finalTime,
+          date: notifData.date || todayStr(), doneAt: nowStr(),
+          reply: replyMsg, status: 'replied'
         };
-        if (finalGuestId) {
-          fbGet(fbRef(db, `guests/${wid}/${finalGuestId}/createdDate`)).then(ds => {
-            saveReply(ds.val() || todayStr());
-          });
-        } else {
-          saveReply(todayStr());
-        }
+        if (finalMsgText) histUpdate.msgText = finalMsgText;
+        if (notifData.beerQty) histUpdate.beerQty = notifData.beerQty;
+        if (historyKey) fbUpdate(fbRef(db, `history/${wid}/${historyKey}`), histUpdate);
+        else fbPush(fbRef(db, `history/${wid}`), histUpdate);
       });
     });
   });

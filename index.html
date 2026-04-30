@@ -838,7 +838,8 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       } else {
         saveReply(todayStr());
       }
-      if (guestId) fbSet(fbRef(db, `replies/${guestId}`), {msg: replyMsg, time: nowStr()});
+      const replyTarget = finalGuestId || guestId;
+      if (replyTarget) fbSet(fbRef(db, `replies/${replyTarget}`), {msg: replyMsg, time: nowStr()});
     });
   });
   toast('✓ ' + replyMsg + ' 전송!');

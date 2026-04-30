@@ -787,7 +787,8 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       const histData = {type, tableLabel, time, date:todayStr(), doneAt:nowStr(), reply:replyMsg};
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
       fbPush(fbRef(db, `history/${wid}`), histData);
-      if (guestId) fbSet(fbRef(db, `replies/${guestId}`), {msg: replyMsg, time: nowStr()});
+      const replyTarget = finalGuestId || guestId;
+      if (replyTarget) fbSet(fbRef(db, `replies/${replyTarget}`), {msg: replyMsg, time: nowStr()});
     });
   });
   toast('✓ ' + replyMsg + ' 전송!');

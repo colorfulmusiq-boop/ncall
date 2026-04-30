@@ -35,20 +35,12 @@ self.addEventListener('push', e => {
     vibrate: data.type === 'booking' ? [200,100,200,100,400] : [150,80,150],
     tag: data.type,
     renotify: true,
-    data: { url: data.url || '/waiter.html' }
+    data: { url: '/waiter.html' }
   };
   e.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const targetUrl = (e.notification.data && e.notification.data.url) || '/waiter.html';
-  e.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      for (const client of windowClients) {
-        if ('focus' in client && new URL(client.url).pathname === new URL(targetUrl, self.location.origin).pathname) return client.focus();
-      }
-      return clients.openWindow(targetUrl);
-    })
-  );
+  e.waitUntil(clients.openWindow((e.notification && e.notification.data && e.notification.data.url) || '/waiter.html'));
 });

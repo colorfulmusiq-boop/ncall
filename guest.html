@@ -4,12 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CALL — 호출</title>
-<link rel="manifest" href="/manifest.json">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="CALL">
-<meta name="theme-color" content="#1a2535">
-<link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
 
@@ -274,126 +268,47 @@ document.addEventListener('fb-ready', () => {
 function waitFb(fn) { if(window._fbReady) fn(); else document.addEventListener('fb-ready',fn,{once:true}); }
 function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
 
-function currentGuestUrl() {
-  const w = waiterData?.name || new URLSearchParams(location.search).get('w') || '';
-  const g = guestId || new URLSearchParams(location.search).get('g') || '';
-  const query = w && g ? ('?w=' + encodeURIComponent(w) + '&g=' + encodeURIComponent(g)) : location.search;
-  return location.pathname + query;
-}
-
-async function ensureGuestNotificationsReady() {
-  if (!('Notification' in window)) return false;
-  if ('serviceWorker' in navigator) {
-    try { await navigator.serviceWorker.register('/sw.js'); } catch(e) {}
-  }
-  if (Notification.permission === 'granted') return true;
-  if (Notification.permission === 'default') {
-    try { return (await Notification.requestPermission()) === 'granted'; } catch(e) { return false; }
-  }
-  return false;
-}
-
-async function showGuestReplyNotification(replyMsg) {
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
-
-  const title = '💬 웨이터 답장';
-  const body = '웨이터: ' + replyMsg;
-  const url = currentGuestUrl();
-  const options = {
-    body,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    vibrate: replyMsg === '곧 갈게요' ? [180, 80, 180] : [120, 80, 120],
-    tag: 'guest-reply-' + guestId,
-    renotify: true,
-    requireInteraction: false,
-    data: { url }
-  };
-
-  if ('serviceWorker' in navigator) {
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      await reg.showNotification(title, options);
-      return;
-    } catch(e) {}
-  }
-  try { new Notification(title, options); } catch(e) {}
-}
-
-
-const handledReplyKeys = new Set();
+const processedReplyKeys = new Set();
 let replyHideTimer = null;
 
-function normalizeReplyKey(prefix, key, reply) {
-  return prefix + ':' + (key || reply?.notifKey || reply?.createdAt || reply?.time || reply?.msg || Math.random());
-}
-
-function shouldShowReply(reply) {
-  if (!reply || !reply.msg) return false;
-  if (reply.guestId && String(reply.guestId) !== String(guestId)) return false;
-  if (reply.waiterId && waiterData?.id && String(reply.waiterId) !== String(waiterData.id)) return false;
-  // 30분 이내 답장은 보여주고, createdAt 없는 구버전 답장은 일단 보여줌
-  if (reply.createdAt && Date.now() - Number(reply.createdAt) > 30 * 60 * 1000) return false;
-  return true;
-}
-
-function displayGuestReply(reply, uniqueKey, removePath) {
-  if (!shouldShowReply(reply)) return;
-  if (handledReplyKeys.has(uniqueKey)) return;
-  handledReplyKeys.add(uniqueKey);
-
-  const msg = reply.msg;
+function showGuestReply(msg) {
   const bar = document.getElementById('replyBar');
-  const msgEl = document.getElementById('replyMsg');
-  if (bar && msgEl) {
-    bar.style.display = 'flex';
-    msgEl.textContent = '웨이터: ' + msg;
-  }
-  toast('웨이터: ' + msg);
-  showGuestReplyNotification(msg);
+  const text = document.getElementById('replyMsg');
+  if (!bar || !text) return;
 
   clearTimeout(replyHideTimer);
-  replyHideTimer = setTimeout(() => {
-    if (bar) bar.style.display = 'none';
-  }, 15000);
+  text.textContent = '웨이터: ' + msg;
 
-  if (removePath && fbRemove) {
-    setTimeout(() => fbRemove(fbRef(db, removePath)), 1800);
+  // 같은 문구가 연속으로 와도 새 메시지처럼 다시 뜨게 강제 리렌더링
+  bar.style.display = 'none';
+  void bar.offsetWidth;
+  bar.style.display = 'flex';
+  bar.style.transform = 'translateY(-4px)';
+  bar.style.opacity = '0';
+  requestAnimationFrame(() => {
+    bar.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+    bar.style.opacity = '1';
+    bar.style.transform = 'translateY(0)';
+  });
+
+  replyHideTimer = setTimeout(() => {
+    bar.style.display = 'none';
+  }, 15000);
+}
+
+function handleGuestReply(key, reply, sourcePath) {
+  if (!reply || reply.guestId !== guestId || !reply.msg) return;
+  if (processedReplyKeys.has(key)) return;
+  processedReplyKeys.add(key);
+
+  showGuestReply(reply.msg);
+
+  // 처리한 답장은 DB에서 정리해서 같은 메시지가 새로고침 때 반복 표시되지 않게 함
+  if (sourcePath && fbRemove) {
+    setTimeout(() => fbRemove(fbRef(db, sourcePath)).catch(() => {}), 500);
   }
 }
 
-function listenGuestReplies(wid) {
-  // 1순위: 웨이터가 손님별로 쓰는 전용 답장 경로
-  fbOnValue(fbRef(db, `guestReplies/${wid}/${guestId}`), snap => {
-    const data = snap.val();
-    if (!data) return;
-    Object.entries(data).forEach(([key, reply]) => {
-      const uniqueKey = normalizeReplyKey('guestReplies', key, reply);
-      displayGuestReply(reply, uniqueKey, `guestReplies/${wid}/${guestId}/${key}`);
-    });
-  });
-
-  // 2순위: 마지막 답장 경로. 손님 화면이 늦게 열렸을 때도 잡기 위함
-  fbOnValue(fbRef(db, `guests/${wid}/${guestId}/lastReply`), snap => {
-    const reply = snap.val();
-    if (!reply) return;
-    const uniqueKey = normalizeReplyKey('lastReply', reply.notifKey || 'last', reply);
-    displayGuestReply(reply, uniqueKey, null);
-  });
-
-  // 3순위: 기존 구버전 호환용 replies 전체 감지
-  fbOnValue(fbRef(db, `replies`), snap => {
-    const data = snap.val();
-    if (!data) return;
-    Object.entries(data).forEach(([key, reply]) => {
-      if (reply && String(reply.guestId || '') === String(guestId)) {
-        const uniqueKey = normalizeReplyKey('legacy', key, reply);
-        displayGuestReply(reply, uniqueKey, `replies/${key}`);
-      }
-    });
-  });
-}
 
 function init() {
   const params = new URLSearchParams(location.search);
@@ -447,7 +362,22 @@ function init() {
       document.getElementById('mainScreen').style.display = 'flex';
 
       // 웨이터 답장 실시간 감지
-      listenGuestReplies(waiterData.id);
+      // 1) 기존 replies 경로도 감지
+      // 2) 손님별 전용 guestReplies 경로도 감지
+      // 같은 문구라도 새 요청의 새 notifKey면 새 메시지처럼 다시 표시하고 15초 타이머를 리셋함
+      fbOnValue(fbRef(db, `replies`), snap => {
+        const data = snap.val() || {};
+        Object.entries(data).forEach(([key, reply]) => {
+          handleGuestReply(key, reply, `replies/${key}`);
+        });
+      });
+
+      fbOnValue(fbRef(db, `guestReplies/${waiterData.id}/${guestId}`), snap => {
+        const data = snap.val() || {};
+        Object.entries(data).forEach(([key, reply]) => {
+          handleGuestReply(key, reply, `guestReplies/${waiterData.id}/${guestId}/${key}`);
+        });
+      });
 
       // 실시간으로 계산 완료 감지
       fbOnValue(fbRef(db, `guests/${waiterData.id}/${guestId}/active`), snap => {
@@ -477,11 +407,10 @@ function openMsgModal() {
 function closeMsgModal() {
   document.getElementById('msgModal').classList.remove('open');
 }
-async function sendMsg() {
+function sendMsg() {
   const text = document.getElementById('msgInput').value.trim();
   if (!text) { toast('메시지를 입력해주세요'); return; }
   closeMsgModal();
-  await ensureGuestNotificationsReady();
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
@@ -515,9 +444,8 @@ function changeQty(delta) {
   beerQty = Math.min(10, Math.max(1, beerQty + delta));
   document.getElementById('qtyNum').textContent = beerQty;
 }
-async function sendBeer() {
+function sendBeer() {
   closeBeerModal();
-  await ensureGuestNotificationsReady();
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
@@ -553,9 +481,8 @@ function closeModal() {
   document.getElementById('confirmModal').classList.remove('open');
 }
 
-async function doSend() {
+function doSend() {
   closeModal();
-  await ensureGuestNotificationsReady();
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   const type = pendingType;
 
@@ -596,8 +523,6 @@ function sendNotif(type) {
   setTimeout(() => bar.classList.remove('show'), 4000);
   toast(type==='call' ? '✓ 호출 전송!' : '✓ 부킹 요청 전송!');
 }
-
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 
 let toastT;
 function toast(msg) {

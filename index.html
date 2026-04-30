@@ -822,65 +822,45 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
 function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText) {
   toast('✓ ' + replyMsg + ' 전송!');
   waitFb(() => {
-    const notifRef = fbRef(db, `notifs/${wid}/${notifKey}`);
-    fbGet(notifRef).then(snap => {
+    fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
       const notifData = snap.val() || {};
-      const finalGuestId = notifData.guestId || guestId || '';
       const finalMsgText = msgText || notifData.msgText || '';
-      const replyPayload = {
+      const finalGuestId = guestId || notifData.guestId || '';
+      const replyKey = notifKey || ('reply_' + Date.now());
+      const replyData = {
         msg: replyMsg,
         guestId: finalGuestId,
         waiterId: wid,
-        notifKey: notifKey || '',
+        notifKey: replyKey,
         type: type || notifData.type || '',
         tableLabel: tableLabel || notifData.tableLabel || '손님',
+        requestTime: time || notifData.time || '',
         time: nowStr(),
-        createdAt: Date.now(),
-        read: false
+        sentAt: Date.now()
       };
 
       const writes = [];
-      if (notifKey) writes.push(fbSet(fbRef(db, `replies/${notifKey}`), replyPayload));
+      if (replyKey) writes.push(fbSet(fbRef(db, `replies/${replyKey}`), replyData));
       if (finalGuestId) {
-        // 손님 화면이 가장 확실하게 듣는 전용 경로
-        writes.push(fbPush(fbRef(db, `guestReplies/${wid}/${finalGuestId}`), replyPayload));
-        // 혹시 손님 화면이 나중에 열려도 마지막 답장을 바로 잡는 경로
-        writes.push(fbSet(fbRef(db, `guests/${wid}/${finalGuestId}/lastReply`), replyPayload));
+        writes.push(fbSet(fbRef(db, `guestReplies/${wid}/${finalGuestId}/${replyKey}`), replyData));
+        writes.push(fbSet(fbRef(db, `guests/${wid}/${finalGuestId}/lastReply`), replyData));
       }
 
-      Promise.allSettled(writes).then(() => {
-        if (notifKey) fbRemove(notifRef);
-        const histData = {
-          type: type || notifData.type || '',
-          tableLabel: tableLabel || notifData.tableLabel || '손님',
-          guestId: finalGuestId,
-          time,
-          date: todayStr(),
-          doneAt: nowStr(),
-          reply: replyMsg
+      Promise.all(writes).then(() => {
+        if (notifKey) fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
+        const saveReply = (date) => {
+          const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr(), reply:replyMsg};
+          if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
+          fbPush(fbRef(db, `history/${wid}`), histData);
         };
-        if ((type === 'message' || notifData.type === 'message') && finalMsgText) histData.msgText = finalMsgText;
-        fbPush(fbRef(db, `history/${wid}`), histData);
+        if (finalGuestId) {
+          fbGet(fbRef(db, `guests/${wid}/${finalGuestId}/createdDate`)).then(ds => {
+            saveReply(ds.val() || todayStr());
+          });
+        } else {
+          saveReply(todayStr());
+        }
       });
-    }).catch(() => {
-      // notifs 읽기 실패 시에도 기존 guestId가 있으면 손님에게 답장을 보냄
-      const fallbackGuestId = guestId || '';
-      const replyPayload = {
-        msg: replyMsg,
-        guestId: fallbackGuestId,
-        waiterId: wid,
-        notifKey: notifKey || '',
-        type: type || '',
-        tableLabel: tableLabel || '손님',
-        time: nowStr(),
-        createdAt: Date.now(),
-        read: false
-      };
-      if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), replyPayload);
-      if (fallbackGuestId) {
-        fbPush(fbRef(db, `guestReplies/${wid}/${fallbackGuestId}`), replyPayload);
-        fbSet(fbRef(db, `guests/${wid}/${fallbackGuestId}/lastReply`), replyPayload);
-      }
     });
   });
 }

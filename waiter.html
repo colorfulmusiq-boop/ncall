@@ -465,10 +465,15 @@ function doAddGuest() {
   if (!label) { toast('테이블 정보를 입력해주세요'); return; }
   closeModal('addGuestModal');
   waitFb(() => {
+    const date = todayStr();
     const guestRef = fbPush(fbRef(db, `guests/${W.id}`), {
-      label, bookingCount: 0, createdAt: nowStr(), active: true
+      label, bookingCount: 0, createdAt: nowStr(), createdDate: date, active: true
     });
     const guestId = guestRef.key;
+    // 입장 시간 내역에 기록
+    fbPush(fbRef(db, `history/${W.id}`), {
+      type: 'enter', guestMsg: label, tableLabel: label, guestId, time: nowStr(), date
+    });
     toast('✓ 손님 추가됨');
     // 모달 닫힌 후 충분히 기다렸다가 QR 팝업
     setTimeout(() => showQR(guestId, label), 400);
@@ -499,9 +504,19 @@ function closeQR() { document.getElementById('qrPopup').classList.remove('open')
 function checkoutGuest(guestId, label) {
   if (!confirm(label + '\n계산 완료 처리할까요?')) return;
   waitFb(() => {
-    fbUpdate(fbRef(db, `guests/${W.id}/${guestId}`), {active: false});
-    fbPush(fbRef(db, `history/${W.id}`), {
-      type:'checkout', guestMsg: label, time: nowStr(), date: todayStr()
+    const guestRef = fbRef(db, `guests/${W.id}/${guestId}`);
+    fbUpdate(guestRef, {active: false});
+    fbGet(fbRef(db, `guests/${W.id}/${guestId}`)).then(ds => {
+      const guest = ds.val() || {};
+      const date = guest.createdDate || guest.date || todayStr();
+      fbPush(fbRef(db, `history/${W.id}`), {
+        type:'checkout',
+        guestMsg: label,
+        tableLabel: label,
+        guestId,
+        time: nowStr(),
+        date
+      });
     });
   });
   toast('✓ 계산 완료');

@@ -114,6 +114,25 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
 .fade-up{animation:fadeUp 0.4s ease both;}
+
+/* 웨이터 답장 도착 애니메이션 */
+#replyBar.reply-arrive {
+  animation: replyArrive 0.42s cubic-bezier(.2,.9,.25,1.25) both, replyGlow 1.15s ease both;
+}
+#replyBar.reply-blink {
+  box-shadow: 0 0 0 3px rgba(58,90,138,0.12), 0 8px 22px rgba(26,37,53,0.14);
+}
+@keyframes replyArrive {
+  0% { opacity: 0; transform: translateY(-14px) scale(0.96); }
+  55% { opacity: 1; transform: translateY(3px) scale(1.025); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes replyGlow {
+  0% { background:#ffffff; border-color:#3a5a8a; }
+  35% { background:#dfeaff; border-color:#6f95cf; }
+  100% { background:#e8f0fe; border-color:#b8ccf0; }
+}
+
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-SV35PPV643"></script>
@@ -285,19 +304,28 @@ function showGuestReply(msg) {
   if (!bar || !text) return;
 
   clearTimeout(replyHideTimer);
-  text.textContent = '웨이터: ' + msg;
 
-  // 같은 문구가 연속으로 와도 새 메시지처럼 다시 뜨게 강제 리렌더링
+  // 같은 문구라도 새 답장이 오면 기존 표시를 완전히 초기화한다.
+  text.textContent = '웨이터: ' + msg;
   bar.style.display = 'none';
+  bar.classList.remove('reply-arrive', 'reply-blink');
+
+  // 브라우저가 같은 애니메이션을 재사용하지 않도록 강제로 리플로우
   void bar.offsetWidth;
+
+  // 새 메시지가 도착한 것처럼 다시 켜지는 효과
   bar.style.display = 'flex';
-  bar.style.transform = 'translateY(-4px)';
-  bar.style.opacity = '0';
-  requestAnimationFrame(() => {
-    bar.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
-    bar.style.opacity = '1';
-    bar.style.transform = 'translateY(0)';
-  });
+  bar.classList.add('reply-arrive', 'reply-blink');
+
+  // 휴대폰에서는 짧게 진동까지 줘서 새 메시지 느낌을 강화
+  if (navigator.vibrate) {
+    try { navigator.vibrate([80, 40, 80]); } catch(e) {}
+  }
+
+  // 애니메이션 클래스는 잠깐 뒤 제거해 다음 답장 때 다시 실행되게 함
+  setTimeout(() => {
+    bar.classList.remove('reply-arrive', 'reply-blink');
+  }, 700);
 
   replyHideTimer = setTimeout(() => {
     bar.style.display = 'none';

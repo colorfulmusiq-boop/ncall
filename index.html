@@ -516,11 +516,18 @@ function closeQR() { document.getElementById('qrPopup').classList.remove('open')
 function checkoutGuest(guestId, label) {
   if (!confirm(label + '\n계산 완료 처리할까요?')) return;
   waitFb(() => {
-    fbUpdate(fbRef(db, `guests/${W.id}/${guestId}`), {active: false});
-    fbGet(fbRef(db, `guests/${W.id}/${guestId}/createdDate`)).then(ds => {
-      const date = ds.val() || todayStr();
+    const guestRef = fbRef(db, `guests/${W.id}/${guestId}`);
+    fbUpdate(guestRef, {active: false});
+    fbGet(guestRef).then(ds => {
+      const guest = ds.val() || {};
+      const date = guest.createdDate || guest.date || todayStr();
       fbPush(fbRef(db, `history/${W.id}`), {
-        type:'checkout', guestMsg: label, tableLabel: label, guestId, time: nowStr(), date
+        type:'checkout',
+        guestMsg: label,
+        tableLabel: label,
+        guestId,
+        time: nowStr(),
+        date
       });
     });
   });

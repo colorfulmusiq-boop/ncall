@@ -809,7 +809,7 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = guestId || notifData.guestId || '';
       const historyKey = notifData.historyKey || '';
-      const replyKey = notifKey || ('reply_' + Date.now());
+      const replyKey = (notifKey || 'reply') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
       const replyData = {
         msg: replyMsg, guestId: finalGuestId, waiterId: wid,
         notifKey: replyKey, type: finalType, tableLabel: finalTableLabel,

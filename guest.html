@@ -306,12 +306,16 @@ function showGuestReply(msg) {
 
 function handleGuestReply(key, reply, sourcePath) {
   if (!reply || reply.guestId !== guestId || !reply.msg) return;
-  if (processedReplyKeys.has(key)) return;
-  processedReplyKeys.add(key);
+
+  // 같은 문구(예: 곧 갈게요)라도 요청/답장마다 새 이벤트로 처리한다.
+  // Firebase key가 같아도 sentAt/eventId가 다르면 새 답장으로 다시 띄운다.
+  const eventKey = String(key || '') + '_' + String(reply.sentAt || reply.eventId || reply.time || '');
+  if (processedReplyKeys.has(eventKey)) return;
+  processedReplyKeys.add(eventKey);
 
   showGuestReply(reply.msg);
 
-  // 처리한 답장은 DB에서 정리해서 같은 메시지가 새로고침 때 반복 표시되지 않게 함
+  // 처리한 답장은 DB에서 정리해서 새로고침 때 반복 표시되지 않게 함
   if (sourcePath && fbRemove) {
     setTimeout(() => fbRemove(fbRef(db, sourcePath)).catch(() => {}), 500);
   }

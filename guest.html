@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a2535">
 <title>CALL — 호출</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -121,6 +123,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   gtag('js', new Date());
   gtag('config', 'G-SV35PPV643');
 </script>
+<link rel="icon" href="/favicon.png">
 </head>
 <body>
 
@@ -267,6 +270,11 @@ document.addEventListener('fb-ready', () => {
 });
 function waitFb(fn) { if(window._fbReady) fn(); else document.addEventListener('fb-ready',fn,{once:true}); }
 function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
+function todayStr() {
+  const n = new Date();
+  if (n.getHours() < 6) n.setDate(n.getDate() - 1);
+  return n.getFullYear() + "년 " + (n.getMonth()+1) + "월 " + n.getDate() + "일";
+}
 
 const processedReplyKeys = new Set();
 let replyHideTimer = null;

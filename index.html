@@ -738,7 +738,14 @@ function startListeners() {
           </span>
         `).join('');
 
-        const itemsHtml = tItems.slice().sort((a,b) => { if(a.type==='enter') return -1; if(b.type==='enter') return 1; return a._key.localeCompare(b._key); }).map(n => `
+        const itemsHtml = tItems.slice().sort((a,b) => {
+          // 상세 내역 정렬: 입장은 항상 맨 위, 계산 완료는 항상 맨 아래, 나머지는 발생순
+          if (a.type === 'enter' && b.type !== 'enter') return -1;
+          if (b.type === 'enter' && a.type !== 'enter') return 1;
+          if (a.type === 'checkout' && b.type !== 'checkout') return 1;
+          if (b.type === 'checkout' && a.type !== 'checkout') return -1;
+          return (a._key || '').localeCompare(b._key || '');
+        }).map(n => `
           <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-bottom:0.5px solid var(--border);">
             <span style="font-size:1rem;">${typeIcon[n.type]||'•'}</span>
             <div style="flex:1;">

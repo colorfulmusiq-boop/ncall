@@ -820,12 +820,19 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
 }
 
 function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText) {
+  // replies 저장을 먼저 바로 실행 (타이밍 문제 방지)
+  if (guestId) fbSet(fbRef(db, `replies/${guestId}`), {msg: replyMsg, time: nowStr()});
+  toast('✓ ' + replyMsg + ' 전송!');
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = guestId || notifData.guestId || '';
       fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
+      // guestId 없었으면 finalGuestId로 다시 저장
+      if (!guestId && finalGuestId) {
+        fbSet(fbRef(db, `replies/${finalGuestId}`), {msg: replyMsg, time: nowStr()});
+      }
       const saveReply = (date) => {
         const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr(), reply:replyMsg};
         if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
@@ -838,11 +845,8 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       } else {
         saveReply(todayStr());
       }
-      const replyTarget = finalGuestId || guestId;
-      if (replyTarget) fbSet(fbRef(db, `replies/${replyTarget}`), {msg: replyMsg, time: nowStr()});
     });
   });
-  toast('✓ ' + replyMsg + ' 전송!');
 }
 
 function toggleMute(guestId) {

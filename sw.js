@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ncall-v17';
+const CACHE_NAME = 'ncall-v18';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -46,7 +46,7 @@ self.addEventListener('notificationclick', e => {
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
       for (const client of windowClients) {
-        if ('focus' in client && client.url.includes(targetUrl)) return client.focus();
+        if ('focus' in client && new URL(client.url).pathname === new URL(targetUrl, self.location.origin).pathname) return client.focus();
       }
       return clients.openWindow(targetUrl);
     })

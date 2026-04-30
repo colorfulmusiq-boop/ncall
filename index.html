@@ -821,7 +821,7 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
 
 function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText) {
   // replies 저장을 먼저 바로 실행 (타이밍 문제 방지)
-  if (guestId) fbPush(fbRef(db, `replies/${guestId}`), {msg: replyMsg, time: nowStr()});
+  if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: guestId, time: nowStr()});
   toast('✓ ' + replyMsg + ' 전송!');
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
@@ -831,7 +831,7 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
       // guestId 없었으면 finalGuestId로 다시 저장
       if (!guestId && finalGuestId) {
-        fbPush(fbRef(db, `replies/${finalGuestId}`), {msg: replyMsg, time: nowStr()});
+        if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
       }
       const saveReply = (date) => {
         const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr(), reply:replyMsg};

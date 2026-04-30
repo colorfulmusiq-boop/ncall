@@ -319,27 +319,20 @@ function init() {
       document.getElementById('infoWaiter').textContent = wname + ' 웨이터';
       document.getElementById('mainScreen').style.display = 'flex';
 
-      // 웨이터 답장 실시간 감지
-      fbOnValue(fbRef(db, `replies/${guestId}`), snap => {
-        if (snap.val()) {
-          const data = snap.val();
-          // push로 저장된 경우 마지막 항목 가져오기
-          let reply;
-          if (typeof data === 'object' && !data.msg) {
-            const keys = Object.keys(data);
-            reply = data[keys[keys.length - 1]];
-          } else {
-            reply = data;
-          }
-          if (reply && reply.msg) {
+      // 웨이터 답장 실시간 감지 (notifKey 기준)
+      fbOnValue(fbRef(db, `replies`), snap => {
+        if (!snap.val()) return;
+        const data = snap.val();
+        Object.entries(data).forEach(([key, reply]) => {
+          if (reply && reply.guestId === guestId && reply.msg) {
             document.getElementById('replyBar').style.display = 'flex';
             document.getElementById('replyMsg').textContent = '웨이터: ' + reply.msg;
             setTimeout(() => {
               document.getElementById('replyBar').style.display = 'none';
-              fbRemove(fbRef(db, `replies/${guestId}`));
+              fbRemove(fbRef(db, `replies/${key}`));
             }, 15000);
           }
-        }
+        });
       });
 
       // 실시간으로 계산 완료 감지

@@ -1,3 +1,4 @@
+const CACHE_NAME = 'ncall-v27';
 const CACHE_NAME = 'ncall-v26';
 
 self.addEventListener('install', e => {

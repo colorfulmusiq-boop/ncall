@@ -326,6 +326,8 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div class="qr-sheet-sub" id="qrPopupSub">손님에게 스캔하게 해주세요</div>
     <div class="qr-img-box" id="qrPopupBox"></div>
     <div class="qr-url-text" id="qrPopupUrl"></div>
+    <button class="qr-close" id="smsLinkBtn" onclick="sendGuestLinkSms()" style="margin-bottom:0.5rem;">문자로 링크 보내기</button>
+    <button class="qr-close" id="copyLinkBtn" onclick="copyGuestLink()" style="margin-bottom:0.5rem;background:var(--bg2);color:var(--navy);">링크 복사</button>
     <button class="qr-close" onclick="closeQR()">닫기</button>
   </div>
 </div>
@@ -492,11 +494,16 @@ function doAddGuest() {
   });
 }
 
+let currentGuestLinkForShare = '';
+let currentGuestLabelForShare = '';
+
 // ── QR 보여주기 ──
 function showQR(guestId, label) {
   const url = location.origin + '/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
+  currentGuestLinkForShare = url;
+  currentGuestLabelForShare = label;
   document.getElementById('qrPopupUrl').textContent = url;
   document.getElementById('qrPopupBox').innerHTML = '';
   document.getElementById('qrPopup').classList.add('open');
@@ -511,6 +518,64 @@ function showQR(guestId, label) {
 }
 
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
+
+function buildGuestSmsText() {
+  return `형님, 오늘 담당 호출 링크입니다
+
+부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요
+${currentGuestLinkForShare}`;
+}
+
+function sendGuestLinkSms() {
+  if (!currentGuestLinkForShare) {
+    toast('링크가 아직 생성되지 않았어요');
+    return;
+  }
+
+  const body = encodeURIComponent(buildGuestSmsText());
+
+  // Android는 sms:?body= 형식, iOS는 sms:&body= 형식이 더 안정적인 경우가 있어 분기.
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const smsUrl = isIOS ? `sms:&body=${body}` : `sms:?body=${body}`;
+  location.href = smsUrl;
+}
+
+function copyGuestLink() {
+  if (!currentGuestLinkForShare) {
+    toast('복사할 링크가 없어요');
+    return;
+  }
+
+  const text = buildGuestSmsText();
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => toast('✓ 링크 문구 복사됨'))
+      .catch(() => fallbackCopyText(text));
+  } else {
+    fallbackCopyText(text);
+  }
+}
+
+function fallbackCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+
+  try {
+    document.execCommand('copy');
+    toast('✓ 링크 문구 복사됨');
+  } catch(e) {
+    toast('복사 실패');
+  }
+
+  document.body.removeChild(ta);
+}
+
 
 // ── 계산 완료 ──
 function checkoutGuest(guestId, label) {

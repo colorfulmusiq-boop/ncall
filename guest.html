@@ -454,7 +454,7 @@ function sendMsg() {
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
     const sentTime = nowStr();
-    const sentDate = todayStr();
+    const sentDate = guestData.createdDate || guestData.date || todayStr();
     const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
       type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
       msgText: text, waiterName: waiterData.name, guestId,
@@ -491,7 +491,7 @@ function sendBeer() {
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
     const sentTime = nowStr();
-    const sentDate = todayStr();
+    const sentDate = guestData.createdDate || guestData.date || todayStr();
     const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
       type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
       beerQty, waiterName: waiterData.name, guestId,
@@ -549,7 +549,7 @@ function doSend() {
 
 function sendNotif(type) {
   const sentTime = nowStr();
-  const sentDate = todayStr();
+  const sentDate = guestData.createdDate || guestData.date || todayStr();
   const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,

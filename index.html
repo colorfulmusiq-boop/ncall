@@ -536,7 +536,7 @@ function sendGuestLinkSms() {
 
   // Android는 sms:?body= 형식, iOS는 sms:&body= 형식이 더 안정적인 경우가 있어 분기.
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const smsUrl = isIOS ? `sms:&body=${body}` : `sms:?body=${body}`;
+  const smsUrl = isIOS ? `sms:&body=${body}` : `sms:?&body=${body}`;
   location.href = smsUrl;
 }
 

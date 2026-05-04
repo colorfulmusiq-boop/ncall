@@ -482,10 +482,20 @@ function doAddGuest() {
   });
 }
 
+// ── QR 보여주기 ──
+
+
+
+
+
+
+
+
+
+
+
 let currentGuestLinkForShare = '';
 let currentGuestLabelForShare = '';
-
-// ── QR 보여주기 ──
 
 function encodeGuestToken(data) {
   const json = JSON.stringify(data);
@@ -494,8 +504,8 @@ function encodeGuestToken(data) {
 }
 
 function buildGuestUrl(guestId) {
-  // 문자앱이 &g= 파라미터를 링크로 제대로 묶지 못하는 경우가 있어
-  // w/g를 따로 보내지 않고 c 하나에 웨이터명+손님ID를 묶어서 보낸다.
+  // QR과 문자 모두 이 함수에서 만든 같은 링크만 사용한다.
+  // 문자앱에서 &g=가 잘리는 문제를 막기 위해 c 코드 하나로 웨이터명+손님ID를 묶는다.
   const guestUrl = new URL('guest.html', location.href);
   guestUrl.search = '';
   guestUrl.searchParams.set('c', encodeGuestToken({ w: W.name, g: guestId }));
@@ -531,14 +541,13 @@ ${currentGuestLinkForShare}`;
 }
 
 function sendGuestLinkSms() {
+  // 문자 링크는 QR 팝업에 표시된 링크(currentGuestLinkForShare)를 그대로 사용한다.
   if (!currentGuestLinkForShare) {
     toast('링크가 아직 생성되지 않았어요');
     return;
   }
 
   const body = encodeURIComponent(buildGuestSmsText());
-
-  // Android는 sms:?body= 형식, iOS는 sms:&body= 형식이 더 안정적인 경우가 있어 분기.
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const smsUrl = isIOS ? `sms:&body=${body}` : `sms:?&body=${body}`;
   location.href = smsUrl;
@@ -579,6 +588,12 @@ function fallbackCopyText(text) {
 
   document.body.removeChild(ta);
 }
+
+
+
+
+
+
 
 
 // ── 계산 완료 ──

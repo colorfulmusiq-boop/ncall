@@ -352,21 +352,8 @@ function handleGuestReply(key, reply, sourcePath) {
 
 function init() {
   const params = new URLSearchParams(location.search);
-  let wname = params.get('w') || params.get('waiter') || params.get('wid');
-  let savedGuestId = params.get('g') || params.get('guest') || params.get('gid');
-
-  // 문자앱에서 &g= 파라미터가 잘리는 문제를 막기 위해
-  // c 코드 하나로 웨이터명과 손님ID를 함께 받을 수 있게 처리한다.
-  const token = params.get('c') || params.get('code');
-  if (token) {
-    try {
-      let normalized = token.replace(/-/g, '+').replace(/_/g, '/');
-      while (normalized.length % 4) normalized += '=';
-      const decoded = JSON.parse(decodeURIComponent(escape(atob(normalized))));
-      if (decoded.w) wname = decoded.w;
-      if (decoded.g) savedGuestId = decoded.g;
-    } catch(e) {}
-  }
+  let wname = params.get('w');
+  let savedGuestId = params.get('g');
 
   // URL 파라미터 없으면 localStorage/sessionStorage에서 복원
   if (!wname || !savedGuestId) {
@@ -467,7 +454,7 @@ function sendMsg() {
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
     const sentTime = nowStr();
-    const sentDate = guestData.createdDate || guestData.date || todayStr();
+    const sentDate = todayStr();
     const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
       type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
       msgText: text, waiterName: waiterData.name, guestId,
@@ -504,7 +491,7 @@ function sendBeer() {
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
     const sentTime = nowStr();
-    const sentDate = guestData.createdDate || guestData.date || todayStr();
+    const sentDate = todayStr();
     const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
       type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
       beerQty, waiterName: waiterData.name, guestId,
@@ -562,7 +549,7 @@ function doSend() {
 
 function sendNotif(type) {
   const sentTime = nowStr();
-  const sentDate = guestData.createdDate || guestData.date || todayStr();
+  const sentDate = todayStr();
   const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,

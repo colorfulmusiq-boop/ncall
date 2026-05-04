@@ -326,8 +326,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div class="qr-sheet-sub" id="qrPopupSub">손님에게 스캔하게 해주세요</div>
     <div class="qr-img-box" id="qrPopupBox"></div>
     <div class="qr-url-text" id="qrPopupUrl"></div>
-    <button class="qr-close" id="smsLinkBtn" onclick="sendGuestLinkSms()" style="margin-bottom:0.5rem;background:var(--bg2);color:var(--navy);">문자로 링크 보내기</button>
-    <button class="qr-close" id="copyLinkBtn" onclick="copyGuestLink()" style="margin-bottom:0.5rem;background:var(--bg2);color:var(--navy);">링크 복사</button>
     <button class="qr-close" onclick="closeQR()">닫기</button>
   </div>
 </div>
@@ -495,41 +493,10 @@ function doAddGuest() {
 }
 
 // ── QR 보여주기 ──
-
-
-
-
-
-
-
-
-
-
-
-let currentGuestLinkForShare = '';
-let currentGuestLabelForShare = '';
-
-function encodeGuestToken(data) {
-  const json = JSON.stringify(data);
-  const encoded = btoa(unescape(encodeURIComponent(json)));
-  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function buildGuestUrl(guestId) {
-  // QR과 문자 모두 이 함수에서 만든 같은 링크만 사용한다.
-  // 문자앱에서 &g=가 잘리는 문제를 막기 위해 c 코드 하나로 웨이터명+손님ID를 묶는다.
-  const guestUrl = new URL('guest.html', location.href);
-  guestUrl.search = '';
-  guestUrl.searchParams.set('c', encodeGuestToken({ w: W.name, g: guestId }));
-  return guestUrl.toString();
-}
-
 function showQR(guestId, label) {
-  const url = buildGuestUrl(guestId);
+  const url = location.origin + '/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
-  currentGuestLinkForShare = url;
-  currentGuestLabelForShare = label;
   document.getElementById('qrPopupUrl').textContent = url;
   document.getElementById('qrPopupBox').innerHTML = '';
   document.getElementById('qrPopup').classList.add('open');
@@ -544,69 +511,6 @@ function showQR(guestId, label) {
 }
 
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
-
-function buildGuestSmsText() {
-  return `형님, 오늘 담당 호출 링크입니다
-
-부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요
-${currentGuestLinkForShare}`;
-}
-
-function sendGuestLinkSms() {
-  // 문자 링크는 QR 팝업에 표시된 링크(currentGuestLinkForShare)를 그대로 사용한다.
-  if (!currentGuestLinkForShare) {
-    toast('링크가 아직 생성되지 않았어요');
-    return;
-  }
-
-  const body = encodeURIComponent(buildGuestSmsText());
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const smsUrl = isIOS ? `sms:&body=${body}` : `sms:?&body=${body}`;
-  location.href = smsUrl;
-}
-
-function copyGuestLink() {
-  if (!currentGuestLinkForShare) {
-    toast('복사할 링크가 없어요');
-    return;
-  }
-
-  const text = buildGuestSmsText();
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text)
-      .then(() => toast('✓ 링크 문구 복사됨'))
-      .catch(() => fallbackCopyText(text));
-  } else {
-    fallbackCopyText(text);
-  }
-}
-
-function fallbackCopyText(text) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.left = '-9999px';
-  document.body.appendChild(ta);
-  ta.focus();
-  ta.select();
-
-  try {
-    document.execCommand('copy');
-    toast('✓ 링크 문구 복사됨');
-  } catch(e) {
-    toast('복사 실패');
-  }
-
-  document.body.removeChild(ta);
-}
-
-
-
-
-
-
-
 
 // ── 계산 완료 ──
 function checkoutGuest(guestId, label) {

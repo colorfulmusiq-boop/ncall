@@ -498,8 +498,18 @@ let currentGuestLinkForShare = '';
 let currentGuestLabelForShare = '';
 
 // ── QR 보여주기 ──
+
+function buildGuestUrl(guestId) {
+  // 현재 파일이 루트(/)든 하위폴더(/ncall/)든 같은 폴더의 guest.html로 정확히 연결한다.
+  const guestUrl = new URL('guest.html', location.href);
+  guestUrl.search = '';
+  guestUrl.searchParams.set('w', W.name);
+  guestUrl.searchParams.set('g', guestId);
+  return guestUrl.toString();
+}
+
 function showQR(guestId, label) {
-  const url = location.origin + '/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
+  const url = buildGuestUrl(guestId);
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
   currentGuestLinkForShare = url;

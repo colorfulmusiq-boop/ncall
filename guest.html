@@ -352,8 +352,8 @@ function handleGuestReply(key, reply, sourcePath) {
 
 function init() {
   const params = new URLSearchParams(location.search);
-  let wname = params.get('w');
-  let savedGuestId = params.get('g');
+  let wname = params.get('w') || params.get('waiter') || params.get('wid');
+  let savedGuestId = params.get('g') || params.get('guest') || params.get('gid');
 
   // URL 파라미터 없으면 localStorage/sessionStorage에서 복원
   if (!wname || !savedGuestId) {

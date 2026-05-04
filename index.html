@@ -499,12 +499,18 @@ let currentGuestLabelForShare = '';
 
 // ── QR 보여주기 ──
 
+function encodeGuestToken(data) {
+  const json = JSON.stringify(data);
+  const encoded = btoa(unescape(encodeURIComponent(json)));
+  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
 function buildGuestUrl(guestId) {
-  // 현재 파일이 루트(/)든 하위폴더(/ncall/)든 같은 폴더의 guest.html로 정확히 연결한다.
+  // 문자앱이 &g= 파라미터를 링크로 제대로 묶지 못하는 경우가 있어
+  // w/g를 따로 보내지 않고 c 하나에 웨이터명+손님ID를 묶어서 보낸다.
   const guestUrl = new URL('guest.html', location.href);
   guestUrl.search = '';
-  guestUrl.searchParams.set('w', W.name);
-  guestUrl.searchParams.set('g', guestId);
+  guestUrl.searchParams.set('c', encodeGuestToken({ w: W.name, g: guestId }));
   return guestUrl.toString();
 }
 

@@ -355,6 +355,19 @@ function init() {
   let wname = params.get('w') || params.get('waiter') || params.get('wid');
   let savedGuestId = params.get('g') || params.get('guest') || params.get('gid');
 
+  // 문자앱에서 &g= 파라미터가 끊기는 문제를 막기 위해
+  // c 토큰 하나로 웨이터명과 손님ID를 함께 받을 수 있게 처리한다.
+  const token = params.get('c') || params.get('code');
+  if (token) {
+    try {
+      let normalized = token.replace(/-/g, '+').replace(/_/g, '/');
+      while (normalized.length % 4) normalized += '=';
+      const decoded = JSON.parse(decodeURIComponent(escape(atob(normalized))));
+      if (decoded.w) wname = decoded.w;
+      if (decoded.g) savedGuestId = decoded.g;
+    } catch(e) {}
+  }
+
   // URL 파라미터 없으면 localStorage/sessionStorage에서 복원
   if (!wname || !savedGuestId) {
     const saved = localStorage.getItem('ncall_guest') || sessionStorage.getItem('ncall_guest');

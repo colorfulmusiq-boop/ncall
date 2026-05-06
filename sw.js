@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ncall-v26';
+const CACHE_NAME = 'ncall-v17';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -35,12 +35,12 @@ self.addEventListener('push', e => {
     vibrate: data.type === 'booking' ? [200,100,200,100,400] : [150,80,150],
     tag: data.type,
     renotify: true,
-    data: { url: data.url || '/waiter.html' }
+    data: { url: '/waiter.html' }
   };
   e.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(clients.openWindow((e.notification && e.notification.data && e.notification.data.url) || '/waiter.html'));
+  e.waitUntil(clients.openWindow('/waiter.html'));
 });

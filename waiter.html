@@ -496,9 +496,7 @@ function showQR(guestId, label) {
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
 
 function sendSMS() {
-  const body = '형님, 오늘 담당 호출 링크입니다 😊
-부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요
-' + currentQRUrl;
+  const body = '형님, 오늘 담당 호출 링크입니다\n부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요\n' + currentQRUrl;
   window.open('sms:?body=' + encodeURIComponent(body));
 }
 

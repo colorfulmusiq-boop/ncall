@@ -325,7 +325,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div class="qr-sheet-sub" id="qrPopupSub">손님에게 스캔하게 해주세요</div>
     <div class="qr-img-box" id="qrPopupBox"></div>
     <div class="qr-url-text" id="qrPopupUrl"></div>
-    <button class="btn btn-primary" onclick="sendSMS()" style="margin-bottom:0.5rem;width:100%;">📱 문자로 보내기</button>
+    <button class="btn btn-primary" onclick="sendSMS()" style="margin-bottom:0.5rem;width:100%;">✉️ 문자로 보내기</button>
     <button class="qr-close" onclick="closeQR()">닫기</button>
   </div>
 </div>
@@ -515,8 +515,10 @@ function showQR(guestId, label) {
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
 
 function sendSMS() {
-  const msg = encodeURIComponent('형님, 오늘 담당 호출 링크입니다 😊\n부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요\n' + currentQRUrl);
-  window.open('sms:?body=' + msg);
+  const body = '형님, 오늘 담당 호출 링크입니다 😊
+부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요
+' + currentQRUrl;
+  window.open('sms:?body=' + encodeURIComponent(body));
 }
 
 // ── 계산 완료 ──

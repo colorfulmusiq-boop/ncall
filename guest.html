@@ -355,6 +355,19 @@ function init() {
   let wname = params.get('w');
   let savedGuestId = params.get('g');
 
+  // 문자 링크용 wg 파라미터 파싱 (w와 g를 | 로 구분)
+  if (!wname || !savedGuestId) {
+    const wg = params.get('wg');
+    if (wg) {
+      const decoded = decodeURIComponent(wg);
+      const parts = decoded.split('|');
+      if (parts.length === 2) {
+        wname = parts[0];
+        savedGuestId = parts[1];
+      }
+    }
+  }
+
   // URL 파라미터 없으면 localStorage/sessionStorage에서 복원
   if (!wname || !savedGuestId) {
     const saved = localStorage.getItem('ncall_guest') || sessionStorage.getItem('ncall_guest');

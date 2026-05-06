@@ -517,7 +517,7 @@ function showQR(guestId, label) {
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
 
 function sendSMS() {
-  const link = 'https://ncall.kr/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + currentQRGuestId;
+  const link = 'https://ncall.kr/guest.html?wg=' + encodeURIComponent(W.name + '|' + currentQRGuestId);
   const body = '형님, 오늘 담당 호출 링크입니다\n부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요\n' + link;
   window.open('sms:?body=' + encodeURIComponent(body));
 }

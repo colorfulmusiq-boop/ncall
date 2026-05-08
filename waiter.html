@@ -721,7 +721,7 @@ const checkoutItem = tItems.find(n => n.type === 'checkout');
               ${n.type==='message'?`<div style="font-size:0.72rem;color:var(--muted);margin-top:0.15rem;">"${n.msgText||'내용 없음'}"</div>`:''}
               <div style="font-size:0.7rem;color:var(--muted);">${n.time}</div>
             </div>
-            <button onclick="deleteHistItem('${n._key}')" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 0.2rem;">×</button>
+            <button onclick="event.stopPropagation();deleteHistItem('${n._key}')" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 0.2rem;">×</button>
           </div>
         `).join('');
 

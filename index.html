@@ -924,7 +924,6 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
           createdAt: notifData.createdAt || Date.now()
         });
       }
-      else fbPush(fbRef(db, `history/${wid}`), histUpdate);
     });
   });
   toast('✓ 처리 완료');
@@ -973,7 +972,7 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
           createdAt: notifData.createdAt || Date.now()
         });
       }
-        else fbPush(fbRef(db, `history/${wid}`), histUpdate);
+
       });
     });
   });

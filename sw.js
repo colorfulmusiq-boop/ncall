@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ncall-v35';
+const CACHE_NAME = 'ncall-v37';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -24,7 +24,7 @@ self.addEventListener('push', e => {
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     vibrate: data.type === 'booking' ? [200,100,200,100,400] : [150,80,150],
-    tag: data.type,
+    tag: data.type + '_' + Date.now(),
     renotify: true,
     data: { url: '/waiter.html' }
   };

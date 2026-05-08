@@ -936,16 +936,18 @@ function toggleFolder(id) {
   if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
-function deleteTableGroup(wid, date, tableLabel, guestId) {
+function deleteTableGroup(wid, date, tableLabel, grpKey) {
   if (!confirm(date + '\n[' + tableLabel + '] 폴더 전체를 삭제할까요?')) return;
+  // grpKey에서 guestId 추출
+  const parts = grpKey ? grpKey.split('___') : [];
+  const guestId = parts.length === 2 ? parts[1] : null;
   waitFb(() => {
     fbGet(fbRef(db, `history/${wid}`)).then(snap => {
       const data = snap.val() || {};
       Object.entries(data).forEach(([k, v]) => {
         const tbl = v.tableLabel || v.guestMsg || '손님';
         const sameDate = (v.date || '날짜 미상') === date;
-        const sameLabel = tbl === tableLabel;
-        const match = guestId && v.guestId ? (v.guestId === guestId && sameDate) : (sameDate && sameLabel);
+        const match = guestId ? (v.guestId === guestId && sameDate) : (sameDate && tbl === tableLabel);
         if (match) fbRemove(fbRef(db, `history/${wid}/${k}`));
       });
     });

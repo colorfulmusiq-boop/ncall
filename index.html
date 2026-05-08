@@ -772,7 +772,7 @@ function startListeners() {
                 <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${summaryHtml}</div>
               </div>
               <div style="display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;flex-shrink:0;">
-                <button onclick="event.stopPropagation();deleteTableGroup('${wid}','${date}','${tbl}')" style="background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;">삭제</button>
+                <button onclick="event.stopPropagation();deleteTableGroup('${wid}','${date}','${tbl}','${grpKey}')" style="background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;">삭제</button>
                 <span id="arrow-${folderId}" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;">▼</span>
               </div>
             </div>
@@ -936,14 +936,18 @@ function toggleFolder(id) {
   if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
-function deleteTableGroup(wid, date, tableLabel) {
+function deleteTableGroup(wid, date, tableLabel, guestId) {
   if (!confirm(date + '\n[' + tableLabel + '] 폴더 전체를 삭제할까요?')) return;
   waitFb(() => {
     fbGet(fbRef(db, `history/${wid}`)).then(snap => {
       const data = snap.val() || {};
       Object.entries(data).forEach(([k, v]) => {
         const tbl = v.tableLabel || v.guestMsg || '손님';
-        if ((v.date || '날짜 미상') === date && tbl === tableLabel) {
+        const sameDate = (v.date || '날짜 미상') === date;
+        const sameLabel = tbl === tableLabel;
+        // guestId가 있으면 guestId 기준으로, 없으면 날짜+라벨 기준
+        const sameGuest = guestId ? (v.guestId === guestId) : (sameDate && sameLabel);
+        if (sameGuest || (sameDate && sameLabel && !guestId)) {
           fbRemove(fbRef(db, `history/${wid}/${k}`));
         }
       });

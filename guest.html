@@ -568,21 +568,11 @@ function doSend() {
 function sendNotif(type) {
   const sentTime = nowStr();
   const sentDate = todayStr();
-  const sortKey = nowFull();
-  fbPush(fbRef(db, `history/${waiterData.id}`), {
-    type, tableLabel: guestData.label, guestMsg: guestData.label,
-    waiterName: waiterData.name, guestId,
-    time: sentTime, date: sentDate, sortKey, status: 'requested'
-  });
   fbPush(fbRef(db, `notifs/${waiterData.id}`), {
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,
     time: sentTime, date: sentDate, done: false
   });
-  if (type === 'booking') {
-    const countRef = fbRef(db, `guests/${waiterData.id}/${guestId}/bookingCount`);
-    fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
-  }
   const bar = document.getElementById('sentBar');
   document.getElementById('sentMsg').textContent = type==='call' ? '호출이 전송됐어요' : '부킹 요청이 전송됐어요';
   bar.classList.add('show');

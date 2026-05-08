@@ -546,6 +546,7 @@ function doSend() {
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   const type = pendingType;
 
+  if (!waiterData || !guestId) { toast('연결이 끊겼어요. 다시 접속해주세요.'); return; }
   waitFb(() => {
     // 부킹 요청일 때만 muted 체크
     if (type === 'booking') {
@@ -556,11 +557,9 @@ function doSend() {
         }
         sendNotif(type);
       }).catch(() => {
-        // muted 조회 실패해도 부킹 전송
         sendNotif(type);
       });
     } else {
-      // 웨이터 호출은 muted 상관없이 전송
       sendNotif(type);
     }
   });

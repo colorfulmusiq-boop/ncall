@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="CALL">
 <meta name="theme-color" content="#1a2535">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -196,7 +196,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .fade-up{animation:fadeUp 0.35s ease both;}
 </style>
-<link rel="icon" href="/favicon.png">
 </head>
 <body>
 
@@ -318,8 +317,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div class="qr-sheet-sub" id="qrPopupSub">손님에게 스캔하게 해주세요</div>
     <div class="qr-img-box" id="qrPopupBox"></div>
     <div class="qr-url-text" id="qrPopupUrl"></div>
-    <button class="qr-close" id="smsLinkBtn" onclick="sendGuestLinkSms()" style="margin-bottom:0.5rem;background:var(--bg2);color:var(--navy);">문자로 링크 보내기</button>
-    <button class="qr-close" id="copyLinkBtn" onclick="copyGuestLink()" style="margin-bottom:0.5rem;background:var(--bg2);color:var(--navy);">링크 복사</button>
+    <button class="btn btn-primary" onclick="sendSMS()" style="margin-bottom:0.5rem;width:100%;">✉️ 문자로 보내기</button>
     <button class="qr-close" onclick="closeQR()">닫기</button>
   </div>
 </div>
@@ -362,6 +360,7 @@ function waitFb(fn) {
   else document.addEventListener('fb-ready', () => { _assignFb(); fn(); }, {once:true});
 }
 function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
+function nowFull() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 function todayStr() { const n=new Date(); return n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일'; }
 
 // ── 인증 ──
@@ -467,15 +466,10 @@ function doAddGuest() {
   if (!label) { toast('테이블 정보를 입력해주세요'); return; }
   closeModal('addGuestModal');
   waitFb(() => {
-    const date = todayStr();
     const guestRef = fbPush(fbRef(db, `guests/${W.id}`), {
-      label, bookingCount: 0, createdAt: nowStr(), createdDate: date, active: true
+      label, bookingCount: 0, createdAt: nowStr(), active: true
     });
     const guestId = guestRef.key;
-    // 입장 시간 내역에 기록
-    fbPush(fbRef(db, `history/${W.id}`), {
-      type: 'enter', guestMsg: label, tableLabel: label, guestId, time: nowStr(), date
-    });
     toast('✓ 손님 추가됨');
     // 모달 닫힌 후 충분히 기다렸다가 QR 팝업
     setTimeout(() => showQR(guestId, label), 400);
@@ -483,17 +477,8 @@ function doAddGuest() {
 }
 
 // ── QR 보여주기 ──
-
-function buildOriginalGuestUrl(guestId) {
-  const guestUrl = new URL('guest.html', location.href);
-  guestUrl.search = '';
-  guestUrl.searchParams.set('w', W.name);
-  guestUrl.searchParams.set('g', guestId);
-  return guestUrl.toString();
-}
-
 function showQR(guestId, label) {
-  const url = buildOriginalGuestUrl(guestId);
+  const url = location.origin + '/guest?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
   document.getElementById('qrPopupUrl').textContent = url;
@@ -511,90 +496,19 @@ function showQR(guestId, label) {
 
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
 
-function getDisplayedGuestLink() {
-  const el = document.getElementById('qrPopupUrl');
-  return el ? el.textContent.trim() : '';
+function sendSMS() {
+  const link = 'https://ncall.kr/guest.html?wg=' + encodeURIComponent(W.name + '|' + currentQRGuestId);
+  const body = '형님, 오늘 담당 호출 링크입니다\n부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요\n' + link;
+  window.open('sms:?body=' + encodeURIComponent(body));
 }
-
-function buildGuestSmsText() {
-  const link = getDisplayedGuestLink();
-  return `형님, 오늘 담당 호출 링크입니다
-
-부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요
-${link}`;
-}
-
-function sendGuestLinkSms() {
-  const link = getDisplayedGuestLink();
-  if (!link) {
-    toast('링크가 아직 생성되지 않았어요');
-    return;
-  }
-
-  const body = encodeURIComponent(buildGuestSmsText());
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const smsUrl = isIOS ? `sms:&body=${body}` : `sms:?body=${body}`;
-  location.href = smsUrl;
-}
-
-function copyGuestLink() {
-  const link = getDisplayedGuestLink();
-  if (!link) {
-    toast('복사할 링크가 없어요');
-    return;
-  }
-
-  const text = buildGuestSmsText();
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text)
-      .then(() => toast('✓ 링크 문구 복사됨'))
-      .catch(() => fallbackCopyText(text));
-  } else {
-    fallbackCopyText(text);
-  }
-}
-
-function fallbackCopyText(text) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.left = '-9999px';
-  document.body.appendChild(ta);
-  ta.focus();
-  ta.select();
-
-  try {
-    document.execCommand('copy');
-    toast('✓ 링크 문구 복사됨');
-  } catch(e) {
-    toast('복사 실패');
-  }
-
-  document.body.removeChild(ta);
-}
-
-
-
-
 
 // ── 계산 완료 ──
 function checkoutGuest(guestId, label) {
   if (!confirm(label + '\n계산 완료 처리할까요?')) return;
   waitFb(() => {
-    const guestRef = fbRef(db, `guests/${W.id}/${guestId}`);
-    fbUpdate(guestRef, {active: false});
-    fbGet(fbRef(db, `guests/${W.id}/${guestId}`)).then(ds => {
-      const guest = ds.val() || {};
-      const date = guest.createdDate || guest.date || todayStr();
-      fbPush(fbRef(db, `history/${W.id}`), {
-        type:'checkout',
-        guestMsg: label,
-        tableLabel: label,
-        guestId,
-        time: nowStr(),
-        date
-      });
+    fbUpdate(fbRef(db, `guests/${W.id}/${guestId}`), {active: false});
+    fbPush(fbRef(db, `history/${W.id}`), {
+      type:'checkout', guestMsg: label, time: nowStr(), date: todayStr()
     });
   });
   toast('✓ 계산 완료');
@@ -793,22 +707,13 @@ function startListeners() {
         tItems.forEach(n => { if(counts[n.type]!==undefined) counts[n.type]++; });
 const checkoutItem = tItems.find(n => n.type === 'checkout');
         const checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
-        const enterItem = tItems.find(n => n.type === 'enter');
-        const enterTime = enterItem ? enterItem.time : null;
         const summaryHtml = Object.entries(counts).filter(([,c])=>c>0).map(([t,c])=>`
           <span style="display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:${typeColor[t]};">
             ${typeIcon[t]} ${t==='checkout' ? '계산 완료' + (checkoutTime ? ' ' + checkoutTime : '') : t==='enter' ? ('입장 ' + (enterTime || '')) : typeLabel[t]+' '+c+'회'}
           </span>
         `).join('');
 
-        const itemsHtml = tItems.slice().sort((a,b) => {
-          // 상세 내역 정렬: 입장은 항상 맨 위, 계산 완료는 항상 맨 아래, 나머지는 발생순
-          if (a.type === 'enter' && b.type !== 'enter') return -1;
-          if (b.type === 'enter' && a.type !== 'enter') return 1;
-          if (a.type === 'checkout' && b.type !== 'checkout') return 1;
-          if (b.type === 'checkout' && a.type !== 'checkout') return -1;
-          return (a._key || '').localeCompare(b._key || '');
-        }).map(n => `
+        const itemsHtml = tItems.slice().sort((a,b) => { if(a.type==='enter') return -1; if(b.type==='enter') return 1; if(a.type==='checkout') return 1; if(b.type==='checkout') return -1; return (a.sortKey||a._key).localeCompare(b.sortKey||b._key); }).map(n => `
           <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-bottom:0.5px solid var(--border);">
             <span style="font-size:1rem;">${typeIcon[n.type]||'•'}</span>
             <div style="flex:1;">
@@ -867,66 +772,34 @@ const checkoutItem = tItems.find(n => n.type === 'checkout');
 
 function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
   waitFb(() => {
+    // msgText가 없으면 Firebase에서 직접 읽어오기
     fbGet(fbRef(db, `notifs/${wid}/${key}`)).then(snap => {
       const notifData = snap.val() || {};
-      const finalType = type || notifData.type || '';
-      const finalTableLabel = tableLabel || notifData.tableLabel || notifData.guestMsg || '손님';
-      const finalTime = time || notifData.time || nowStr();
       const finalMsgText = msgText || notifData.msgText || '';
-      const finalBeerQty = beerQty || notifData.beerQty || 0;
-      const finalGuestId = notifData.guestId || '';
-      const historyKey = notifData.historyKey || '';
       fbRemove(fbRef(db, `notifs/${wid}/${key}`));
-      const histUpdate = {
-        type: finalType, tableLabel: finalTableLabel, guestMsg: finalTableLabel,
-        guestId: finalGuestId, time: finalTime,
-        date: notifData.date || todayStr(), doneAt: nowStr(), status: 'done'
-      };
-      if (finalBeerQty) histUpdate.beerQty = finalBeerQty;
-      if (finalMsgText) histUpdate.msgText = finalMsgText;
-      if (historyKey) fbUpdate(fbRef(db, `history/${wid}/${historyKey}`), histUpdate);
-
+      const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr(), sortKey:nowFull()};
+      if (type === 'beer' && beerQty) histData.beerQty = beerQty;
+      if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
+      fbPush(fbRef(db, `history/${wid}`), histData);
     });
   });
   toast('✓ 처리 완료');
 }
 
 function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText) {
+  // replies 저장을 먼저 바로 실행 (타이밍 문제 방지)
+  if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: guestId, time: nowStr()});
   toast('✓ ' + replyMsg + ' 전송!');
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
       const notifData = snap.val() || {};
-      const finalType = type || notifData.type || '';
-      const finalTableLabel = tableLabel || notifData.tableLabel || notifData.guestMsg || '손님';
-      const finalTime = time || notifData.time || nowStr();
       const finalMsgText = msgText || notifData.msgText || '';
-      const finalGuestId = guestId || notifData.guestId || '';
-      const historyKey = notifData.historyKey || '';
-      const replyKey = (notifKey || 'reply') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-      const replyData = {
-        msg: replyMsg, guestId: finalGuestId, waiterId: wid,
-        notifKey: replyKey, type: finalType, tableLabel: finalTableLabel,
-        requestTime: finalTime, time: nowStr(), sentAt: Date.now()
-      };
-      const writes = [];
-      if (replyKey) writes.push(fbSet(fbRef(db, `replies/${replyKey}`), replyData));
-      if (finalGuestId) {
-        writes.push(fbSet(fbRef(db, `guestReplies/${wid}/${finalGuestId}/${replyKey}`), replyData));
-        writes.push(fbSet(fbRef(db, `guests/${wid}/${finalGuestId}/lastReply`), replyData));
+      const finalGuestId = notifData.guestId || guestId || '';
+      fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
+      if (!guestId && finalGuestId) {
+        if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
       }
-      Promise.all(writes).then(() => {
-        if (notifKey) fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
-        const histUpdate = {
-          type: finalType, tableLabel: finalTableLabel, guestMsg: finalTableLabel,
-          guestId: finalGuestId, time: finalTime,
-          date: notifData.date || todayStr(), doneAt: nowStr(),
-          reply: replyMsg, status: 'replied'
-        };
-        if (finalMsgText) histUpdate.msgText = finalMsgText;
-        if (notifData.beerQty) histUpdate.beerQty = notifData.beerQty;
-        if (historyKey) fbUpdate(fbRef(db, `history/${wid}/${historyKey}`), histUpdate);
-
-      });
+      // history 저장은 확인 버튼(doneNotif)에서만 처리
     });
   });
 }
@@ -972,20 +845,9 @@ function clearAllNotifs() {
       Object.entries(data).forEach(([k,v]) => {
         if (!v.done) {
           fbRemove(fbRef(db, `notifs/${W.id}/${k}`));
-          const histItem = {
-            type: v.type,
-            tableLabel: v.tableLabel || v.guestMsg || '손님',
-            guestMsg: v.tableLabel || v.guestMsg || '손님',
-            guestId: v.guestId || '',
-            time: v.time || nowStr(),
-            date: v.date || todayStr(),
-            doneAt: nowStr(),
-            status: 'done'
-          };
-          if (v.beerQty) histItem.beerQty = v.beerQty;
-          if (v.msgText) histItem.msgText = v.msgText;
-          if (v.historyKey) fbUpdate(fbRef(db, `history/${W.id}/${v.historyKey}`), histItem);
-          else fbPush(fbRef(db, `history/${W.id}`), histItem);
+          fbPush(fbRef(db, `history/${W.id}`), {
+            type: v.type, tableLabel: v.tableLabel, time: v.time, date: todayStr(), doneAt: nowStr()
+          });
         }
       });
     });

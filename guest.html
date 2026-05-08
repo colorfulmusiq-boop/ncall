@@ -469,6 +469,12 @@ function sendMsg() {
   waitFb(() => {
     const sentTime = nowStr();
     const sentDate = todayStr();
+    const sortKey = nowFull();
+    fbPush(fbRef(db, `history/${waiterData.id}`), {
+      type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
+      msgText: text, waiterName: waiterData.name, guestId,
+      time: sentTime, date: sentDate, sortKey, status: 'requested'
+    });
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
       type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
       msgText: text, waiterName: waiterData.name, guestId,
@@ -501,6 +507,12 @@ function sendBeer() {
   waitFb(() => {
     const sentTime = nowStr();
     const sentDate = todayStr();
+    const sortKey = nowFull();
+    fbPush(fbRef(db, `history/${waiterData.id}`), {
+      type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
+      beerQty, waiterName: waiterData.name, guestId,
+      time: sentTime, date: sentDate, sortKey, status: 'requested'
+    });
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
       type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
       beerQty, waiterName: waiterData.name, guestId,
@@ -543,6 +555,9 @@ function doSend() {
           return;
         }
         sendNotif(type);
+      }).catch(() => {
+        // muted 조회 실패해도 부킹 전송
+        sendNotif(type);
       });
     } else {
       // 웨이터 호출은 muted 상관없이 전송
@@ -554,6 +569,12 @@ function doSend() {
 function sendNotif(type) {
   const sentTime = nowStr();
   const sentDate = todayStr();
+  const sortKey = nowFull();
+  fbPush(fbRef(db, `history/${waiterData.id}`), {
+    type, tableLabel: guestData.label, guestMsg: guestData.label,
+    waiterName: waiterData.name, guestId,
+    time: sentTime, date: sentDate, sortKey, status: 'requested'
+  });
   fbPush(fbRef(db, `notifs/${waiterData.id}`), {
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,

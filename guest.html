@@ -468,15 +468,10 @@ function sendMsg() {
   waitFb(() => {
     const sentTime = nowStr();
     const sentDate = todayStr();
-    const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
-      type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
-      msgText: text, waiterName: waiterData.name, guestId,
-      time: sentTime, date: sentDate, status: 'requested', source: 'guest'
-    });
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
       type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
       msgText: text, waiterName: waiterData.name, guestId,
-      time: sentTime, date: sentDate, historyKey: histRef.key, done: false
+      time: sentTime, date: sentDate, done: false
     });
     const bar = document.getElementById('sentBar');
     document.getElementById('sentMsg').textContent = '메시지가 전송됐어요';
@@ -505,15 +500,10 @@ function sendBeer() {
   waitFb(() => {
     const sentTime = nowStr();
     const sentDate = todayStr();
-    const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
-      type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
-      beerQty, waiterName: waiterData.name, guestId,
-      time: sentTime, date: sentDate, status: 'requested', source: 'guest'
-    });
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
       type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
       beerQty, waiterName: waiterData.name, guestId,
-      time: sentTime, date: sentDate, historyKey: histRef.key, done: false
+      time: sentTime, date: sentDate, done: false
     });
     const bar = document.getElementById('sentBar');
     document.getElementById('sentMsg').textContent = '맥주 ' + beerQty + '병 주문됐어요';

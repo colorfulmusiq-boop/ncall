@@ -798,9 +798,7 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       if (!guestId && finalGuestId) {
         if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
       }
-      const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr(), reply:replyMsg};
-      if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
-      fbPush(fbRef(db, `history/${wid}`), histData);
+      // history 저장은 확인 버튼(doneNotif)에서만 처리
     });
   });
 }

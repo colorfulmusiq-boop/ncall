@@ -289,7 +289,7 @@ document.addEventListener('fb-ready', () => {
 });
 function waitFb(fn) { if(window._fbReady) fn(); else document.addEventListener('fb-ready',fn,{once:true}); }
 function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
-function nowFull() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
+function makeReqId() { return Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
 function todayStr() {
   const n = new Date();
   if (n.getHours() < 6) n.setDate(n.getDate() - 1);
@@ -355,19 +355,6 @@ function init() {
   const params = new URLSearchParams(location.search);
   let wname = params.get('w');
   let savedGuestId = params.get('g');
-
-  // 문자 링크용 wg 파라미터 파싱 (w와 g를 | 로 구분)
-  if (!wname || !savedGuestId) {
-    const wg = params.get('wg');
-    if (wg) {
-      const decoded = decodeURIComponent(wg);
-      const parts = decoded.split('|');
-      if (parts.length === 2) {
-        wname = parts[0];
-        savedGuestId = parts[1];
-      }
-    }
-  }
 
   // URL 파라미터 없으면 localStorage/sessionStorage에서 복원
   if (!wname || !savedGuestId) {
@@ -468,11 +455,17 @@ function sendMsg() {
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
     const sentTime = nowStr();
-    const sentDate = todayStr();
+    const sentDate = guestData.createdDate || guestData.date || todayStr();
+    const reqId = makeReqId();
+    const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
+      type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
+      msgText: text, waiterName: waiterData.name, guestId,
+      time: sentTime, date: sentDate, reqId, createdAt: Date.now(), status: 'requested', source: 'guest'
+    });
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
       type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
       msgText: text, waiterName: waiterData.name, guestId,
-      time: sentTime, date: sentDate, done: false
+      time: sentTime, date: sentDate, reqId, createdAt: Date.now(), historyKey: histRef.key, done: false
     });
     const bar = document.getElementById('sentBar');
     document.getElementById('sentMsg').textContent = '메시지가 전송됐어요';
@@ -500,11 +493,17 @@ function sendBeer() {
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
     const sentTime = nowStr();
-    const sentDate = todayStr();
+    const sentDate = guestData.createdDate || guestData.date || todayStr();
+    const reqId = makeReqId();
+    const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
+      type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
+      beerQty, waiterName: waiterData.name, guestId,
+      time: sentTime, date: sentDate, reqId, createdAt: Date.now(), status: 'requested', source: 'guest'
+    });
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
       type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
       beerQty, waiterName: waiterData.name, guestId,
-      time: sentTime, date: sentDate, done: false
+      time: sentTime, date: sentDate, reqId, createdAt: Date.now(), historyKey: histRef.key, done: false
     });
     const bar = document.getElementById('sentBar');
     document.getElementById('sentMsg').textContent = '맥주 ' + beerQty + '병 주문됐어요';
@@ -553,11 +552,16 @@ function doSend() {
 
 function sendNotif(type) {
   const sentTime = nowStr();
-  const sentDate = todayStr();
+  const sentDate = guestData.createdDate || guestData.date || todayStr();
+  const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
+    type, tableLabel: guestData.label, guestMsg: guestData.label,
+    waiterName: waiterData.name, guestId,
+    time: sentTime, date: sentDate, reqId, createdAt: Date.now(), status: 'requested', source: 'guest'
+  });
   fbPush(fbRef(db, `notifs/${waiterData.id}`), {
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,
-    time: sentTime, date: sentDate, done: false
+    time: sentTime, date: sentDate, reqId, createdAt: Date.now(), historyKey: histRef.key, done: false
   });
   if (type === 'booking') {
     const countRef = fbRef(db, `guests/${waiterData.id}/${guestId}/bookingCount`);

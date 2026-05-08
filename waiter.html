@@ -898,10 +898,8 @@ function deleteTableGroup(wid, date, tableLabel, guestId) {
         const tbl = v.tableLabel || v.guestMsg || '손님';
         const sameDate = (v.date || '날짜 미상') === date;
         const sameLabel = tbl === tableLabel;
-        const sameGuest = guestId ? (v.guestId === guestId) : (sameDate && sameLabel);
-        if (sameGuest || (sameDate && sameLabel && !guestId)) {
-          fbRemove(fbRef(db, `history/${wid}/${k}`));
-        }
+        const match = guestId && v.guestId ? (v.guestId === guestId && sameDate) : (sameDate && sameLabel);
+        if (match) fbRemove(fbRef(db, `history/${wid}/${k}`));
       });
     });
   });

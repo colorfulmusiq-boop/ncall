@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ncall-v30';
+const CACHE_NAME = 'ncall-v31';
 
 self.addEventListener('install', e => {
   self.skipWaiting();

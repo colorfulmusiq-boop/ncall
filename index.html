@@ -1049,11 +1049,22 @@ function playBeep(type) {
 }
 
 // 통합 알림 함수 - 앱/웹 중 현재 활성화된 것에서만 울림
+let notifyQueue = [];
+let notifyTimer = null;
 function notify(type, tableLabel, guestMsg, extra) {
-  vibrate(type);
-  playBeep(type);
-  showPush(type, guestMsg, tableLabel);
-  showInAppBanner(type, tableLabel, guestMsg, extra);
+  notifyQueue.push({type, tableLabel, guestMsg, extra});
+  if (notifyTimer) return;
+  notifyTimer = setTimeout(() => {
+    const item = notifyQueue.shift();
+    if (item) {
+      vibrate(item.type);
+      playBeep(item.type);
+      showPush(item.type, item.guestMsg, item.tableLabel);
+      showInAppBanner(item.type, item.tableLabel, item.guestMsg, item.extra);
+    }
+    notifyQueue = [];
+    notifyTimer = null;
+  }, 100);
 }
 
 let inAppBannerTimer;

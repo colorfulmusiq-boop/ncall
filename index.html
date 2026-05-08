@@ -557,17 +557,17 @@ function startListeners() {
       .filter(n => !n.done)
       .sort((a,b) => b._key.localeCompare(a._key));
 
-    // 가장 최신 key 기준으로 새 알림인지 판단
+    // lastNotifKey보다 큰 key만 새 알림으로 처리 (lastNotifKey는 최대값만 업데이트)
     const latestKey = notifs.length > 0 ? notifs[0]._key : null;
-    if (latestKey && latestKey !== lastNotifKey && prevNotifCount >= 0) {
-      // lastNotifKey보다 큰 key만 새 알림으로 처리
-      notifs.forEach(n => {
-        if (!lastNotifKey || n._key > lastNotifKey) {
+    notifs.forEach(n => {
+      if (prevNotifCount >= 0 && (!lastNotifKey || n._key > lastNotifKey)) {
         notify(n.type, n.tableLabel, n.guestMsg, n.msgText || n.beerQty || '');
-        }
-      });
+      }
+    });
+    // lastNotifKey는 감소하지 않음 (이미 처리된 알림 삭제돼도 뒤로 안 밀림)
+    if (latestKey && (!lastNotifKey || latestKey > lastNotifKey)) {
+      lastNotifKey = latestKey;
     }
-    lastNotifKey = latestKey;
     prevNotifCount = notifs.length;
 
     const badge = document.getElementById('notifBadge');

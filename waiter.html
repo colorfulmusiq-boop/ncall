@@ -359,7 +359,8 @@ function waitFb(fn) {
   if (window._fbReady) { _assignFb(); fn(); }
   else document.addEventListener('fb-ready', () => { _assignFb(); fn(); }, {once:true});
 }
-function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
+function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
+function nowFull() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 function todayStr() { const n=new Date(); return n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일'; }
 
 // ── 인증 ──
@@ -712,7 +713,7 @@ const checkoutItem = tItems.find(n => n.type === 'checkout');
           </span>
         `).join('');
 
-        const itemsHtml = tItems.slice().sort((a,b) => { if(a.type==='enter') return -1; if(b.type==='enter') return 1; if(a.type==='checkout') return 1; if(b.type==='checkout') return -1; return a._key.localeCompare(b._key); }).map(n => `
+        const itemsHtml = tItems.slice().sort((a,b) => { if(a.type==='enter') return -1; if(b.type==='enter') return 1; if(a.type==='checkout') return 1; if(b.type==='checkout') return -1; return (a.sortKey||a._key).localeCompare(b.sortKey||b._key); }).map(n => `
           <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-bottom:0.5px solid var(--border);">
             <span style="font-size:1rem;">${typeIcon[n.type]||'•'}</span>
             <div style="flex:1;">
@@ -776,7 +777,7 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       fbRemove(fbRef(db, `notifs/${wid}/${key}`));
-      const histData = {type, tableLabel, time, date:todayStr(), doneAt:nowStr()};
+      const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr(), sortKey:nowFull()};
       if (type === 'beer' && beerQty) histData.beerQty = beerQty;
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
       fbPush(fbRef(db, `history/${wid}`), histData);

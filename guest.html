@@ -288,7 +288,8 @@ document.addEventListener('fb-ready', () => {
   init();
 });
 function waitFb(fn) { if(window._fbReady) fn(); else document.addEventListener('fb-ready',fn,{once:true}); }
-function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
+function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
+function nowFull() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 function todayStr() {
   const n = new Date();
   if (n.getHours() < 6) n.setDate(n.getDate() - 1);
@@ -553,15 +554,10 @@ function doSend() {
 function sendNotif(type) {
   const sentTime = nowStr();
   const sentDate = todayStr();
-  const histRef = fbPush(fbRef(db, `history/${waiterData.id}`), {
-    type, tableLabel: guestData.label, guestMsg: guestData.label,
-    waiterName: waiterData.name, guestId,
-    time: sentTime, date: sentDate, status: 'requested', source: 'guest'
-  });
   fbPush(fbRef(db, `notifs/${waiterData.id}`), {
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,
-    time: sentTime, date: sentDate, historyKey: histRef.key, done: false
+    time: sentTime, date: sentDate, done: false
   });
   if (type === 'booking') {
     const countRef = fbRef(db, `guests/${waiterData.id}/${guestId}/bookingCount`);

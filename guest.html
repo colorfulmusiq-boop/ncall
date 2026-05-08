@@ -288,7 +288,7 @@ document.addEventListener('fb-ready', () => {
   init();
 });
 function waitFb(fn) { if(window._fbReady) fn(); else document.addEventListener('fb-ready',fn,{once:true}); }
-function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
+function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 function todayStr() {
   const n = new Date();
   if (n.getHours() < 6) n.setDate(n.getDate() - 1);

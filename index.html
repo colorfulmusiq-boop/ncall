@@ -367,7 +367,7 @@ function waitFb(fn) {
   if (window._fbReady) { _assignFb(); fn(); }
   else document.addEventListener('fb-ready', () => { _assignFb(); fn(); }, {once:true});
 }
-function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
+function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 function todayStr() {
   const n=new Date();
   // 새벽 6시 이전이면 전날 날짜 사용 (나이트 영업 대응)
@@ -748,7 +748,7 @@ function startListeners() {
           </span>
         `).join('');
 
-        const itemsHtml = tItems.slice().sort((a,b) => { if(a.type==='enter') return -1; if(b.type==='enter') return 1; return a._key.localeCompare(b._key); }).map(n => `
+        const itemsHtml = tItems.slice().sort((a,b) => { if(a.type==='enter') return -1; if(b.type==='enter') return 1; if(a.type==='checkout') return 1; if(b.type==='checkout') return -1; return (a.time||'').localeCompare(b.time||''); }).map(n => `
           <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-bottom:0.5px solid var(--border);">
             <span style="font-size:1rem;">${typeIcon[n.type]||'•'}</span>
             <div style="flex:1;">

@@ -420,7 +420,7 @@ function enterDash() {
 function doLogout() {
   W = null; prevNotifCount = -1;
   listenersStarted = false;
-  lastNotifKey = null; lastSeenNotifCreatedAt = 0;
+  lastNotifKey = null;
   localStorage.removeItem('ncall_waiter');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('dashScreen').style.display = 'none';
@@ -601,8 +601,7 @@ function checkoutGuest(guestId, label) {
 }
 
 // ── Firebase 리스너 ──
-let lastNotifKey = null; lastSeenNotifCreatedAt = 0;
-let lastSeenNotifCreatedAt = 0;
+let lastNotifKey = null;
 let listenersStarted = false;
 
 function startListeners() {
@@ -620,24 +619,17 @@ function startListeners() {
       .filter(n => !n.done)
       .sort((a,b) => b._key.localeCompare(a._key));
 
-    // createdAt 기준으로 새 알림인지 판단한다.
-    // 문자 링크/QR 링크 어느 쪽에서 들어와도 Firebase key 정렬에 흔들리지 않게 처리.
-    const latestCreatedAt = notifs.reduce((max, n) => Math.max(max, Number(n.createdAt || 0)), lastSeenNotifCreatedAt);
-
-    if (prevNotifCount >= 0) {
+    // 가장 최신 key 기준으로 새 알림인지 판단
+    const latestKey = notifs.length > 0 ? notifs[0]._key : null;
+    if (latestKey && latestKey !== lastNotifKey && prevNotifCount >= 0) {
+      // lastNotifKey보다 큰 key만 새 알림으로 처리
       notifs.forEach(n => {
-        const createdAt = Number(n.createdAt || 0);
-        const isNewByTime = createdAt && createdAt > lastSeenNotifCreatedAt;
-        const isNewByKey = !createdAt && lastNotifKey && n._key > lastNotifKey;
-
-        if (isNewByTime || isNewByKey) {
-          notify(n.type, n.tableLabel, n.guestMsg, n.msgText || n.beerQty || '');
+        if (!lastNotifKey || n._key > lastNotifKey) {
+        notify(n.type, n.tableLabel, n.guestMsg, n.msgText || n.beerQty || '');
         }
       });
     }
-
-    lastSeenNotifCreatedAt = latestCreatedAt;
-    lastNotifKey = notifs.length > 0 ? notifs[0]._key : lastNotifKey;
+    lastNotifKey = latestKey;
     prevNotifCount = notifs.length;
 
     const badge = document.getElementById('notifBadge');
@@ -892,16 +884,8 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
       };
       if (finalBeerQty) histUpdate.beerQty = finalBeerQty;
       if (finalMsgText) histUpdate.msgText = finalMsgText;
-      if (historyKey) {
-        fbUpdate(fbRef(db, `history/${wid}/${historyKey}`), histUpdate);
-      } else {
-        // 혹시 문자 링크/캐시 문제로 historyKey가 빠진 알림도 내역에 남긴다.
-        fbPush(fbRef(db, `history/${wid}`), {
-          ...histUpdate,
-          source: 'notifs',
-          createdAt: notifData.createdAt || Date.now()
-        });
-      }
+      if (historyKey) fbUpdate(fbRef(db, `history/${wid}/${historyKey}`), histUpdate);
+
     });
   });
   toast('✓ 처리 완료');
@@ -940,16 +924,7 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
         };
         if (finalMsgText) histUpdate.msgText = finalMsgText;
         if (notifData.beerQty) histUpdate.beerQty = notifData.beerQty;
-        if (historyKey) {
-        fbUpdate(fbRef(db, `history/${wid}/${historyKey}`), histUpdate);
-      } else {
-        // 혹시 문자 링크/캐시 문제로 historyKey가 빠진 알림도 내역에 남긴다.
-        fbPush(fbRef(db, `history/${wid}`), {
-          ...histUpdate,
-          source: 'notifs',
-          createdAt: notifData.createdAt || Date.now()
-        });
-      }
+        if (historyKey) fbUpdate(fbRef(db, `history/${wid}/${historyKey}`), histUpdate);
 
       });
     });

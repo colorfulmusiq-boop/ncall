@@ -476,7 +476,9 @@ function doAddGuest() {
 }
 
 // ── QR 보여주기 ──
+let currentQRGuestId = '';
 function showQR(guestId, label) {
+  currentQRGuestId = guestId;
   const url = location.origin + '/guest?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
@@ -496,7 +498,7 @@ function showQR(guestId, label) {
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
 
 function sendSMS() {
-  const link = 'https://ncall.kr/guest.html?wg=' + encodeURIComponent(W.name) + currentQRGuestId;
+  const link = 'https://ncall.kr/guest?w=' + encodeURIComponent(W.name) + '&g=' + currentQRGuestId;
   const body = '형님, 오늘 담당 호출 링크입니다\n부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요\n' + link;
   const a = document.createElement('a');
   a.href = 'sms:?body=' + encodeURIComponent(body);

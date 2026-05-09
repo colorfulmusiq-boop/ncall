@@ -783,6 +783,7 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
     fbGet(fbRef(db, `notifs/${wid}/${key}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
+      const finalGuestId = notifData.guestId || '';
       fbRemove(fbRef(db, `notifs/${wid}/${key}`));
       if (type === 'booking' && finalGuestId) {
         const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);

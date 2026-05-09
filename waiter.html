@@ -471,7 +471,6 @@ function doAddGuest() {
     });
     const guestId = guestRef.key;
     toast('✓ 손님 추가됨');
-    // 모달 닫힌 후 충분히 기다렸다가 QR 팝업
     setTimeout(() => showQR(guestId, label), 400);
   });
 }
@@ -521,7 +520,6 @@ let lastNotifKey = null;
 let listenersStarted = false;
 
 function startListeners() {
-  // waitFb 콜백 안에서 플래그 체크 — 타이밍 무관하게 딱 1번만 실행
   waitFb(() => {
     if (listenersStarted) return;
     listenersStarted = true;
@@ -535,15 +533,17 @@ function startListeners() {
       .filter(n => !n.done)
       .sort((a,b) => b._key.localeCompare(a._key));
 
-    // 가장 최신 key 기준으로 새 알림인지 판단
     const latestKey = notifs.length > 0 ? notifs[0]._key : null;
+
+    // ★ 버그2 수정: 새 알림이 있어도 notify는 딱 1번만 (가장 최신 1개)
     if (latestKey && latestKey !== lastNotifKey && prevNotifCount >= 0) {
-      notifs.forEach(n => {
-        if (!lastNotifKey || n._key > lastNotifKey) {
-          notify(n.type, n.tableLabel, n.guestMsg, n.msgText || n.beerQty || '');
-        }
-      });
+      const newNotifs = notifs.filter(n => !lastNotifKey || n._key > lastNotifKey);
+      if (newNotifs.length > 0) {
+        const n = newNotifs[0];
+        notify(n.type, n.tableLabel, n.guestMsg, n.msgText || n.beerQty || '');
+      }
     }
+
     if (!lastNotifKey || (latestKey && latestKey > lastNotifKey)) {
       lastNotifKey = latestKey;
     }
@@ -590,22 +590,21 @@ function startListeners() {
             const b1 = document.createElement('button');
             b1.textContent = '곧 갈게요';
             b1.style.cssText = 'background:#e8f0fe;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#3a5a8a;cursor:pointer;font-family:inherit;';
-            b1.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '곧 갈게요', n.msgText||'');
+            b1.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '곧 갈게요', n.msgText||'', n.beerQty||0);
             const b2 = document.createElement('button');
             b2.textContent = '잠시만요';
             b2.style.cssText = 'background:#fef3e8;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#e67e22;cursor:pointer;font-family:inherit;';
-            b2.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '잠시만요', n.msgText||'');
+            b2.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '잠시만요', n.msgText||'', n.beerQty||0);
             btns.append(b1, b2);
           } else {
-            // 메시지 타입만 곧갈게요 잠시만요 + 답장
             const b1 = document.createElement('button');
             b1.textContent = '곧 갈게요';
             b1.style.cssText = 'background:#e8f0fe;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#3a5a8a;cursor:pointer;font-family:inherit;';
-            b1.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '곧 갈게요', n.msgText||'');
+            b1.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '곧 갈게요', n.msgText||'', n.beerQty||0);
             const b2 = document.createElement('button');
             b2.textContent = '잠시만요';
             b2.style.cssText = 'background:#fef3e8;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#e67e22;cursor:pointer;font-family:inherit;';
-            b2.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '잠시만요', n.msgText||'');
+            b2.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '잠시만요', n.msgText||'', n.beerQty||0);
             const b4 = document.createElement('button');
             b4.textContent = '✏️ 답장';
             b4.style.cssText = 'background:#e8f8ee;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:var(--green);cursor:pointer;font-family:inherit;';
@@ -668,14 +667,13 @@ function startListeners() {
     const data = snap.val() || {};
     const hist = Object.entries(data)
       .map(([k,v]) => ({...v, _key:k}))
-      .sort((a,b) => a._key.localeCompare(b._key)); // 시간순 오름차순
+      .sort((a,b) => a._key.localeCompare(b._key));
     const list = document.getElementById('histList');
     if (hist.length === 0) {
       list.innerHTML = '<div class="empty"><div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div></div>';
       return;
     }
 
-    // 날짜별 그룹핑
     const dateGroups = {};
     hist.forEach(n => {
       const date = n.date || '날짜 미상';
@@ -687,7 +685,6 @@ function startListeners() {
     const typeLabel = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
     const typeColor = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
 
-    // 날짜 내림차순 정렬
     const sortedDates = Object.keys(dateGroups).sort((a,b) => b.localeCompare(a));
 
     list.innerHTML = sortedDates.map(date => {
@@ -695,7 +692,6 @@ function startListeners() {
       const isToday = date === todayStr();
       const dateFolderId = `date-${date.replace(/\s/g,'-')}`;
 
-      // 날짜 안에서 테이블별 그룹핑
       const tableGroups = {};
       items.forEach(n => {
         const tbl = n.tableLabel || n.guestMsg || '손님';
@@ -709,10 +705,9 @@ function startListeners() {
         const safeDate = date.replace(/\s/g,'-');
         const folderId = `tf-${safeDate}-${safeTbl}`;
 
-        // 타입별 카운트
         const counts = { booking:0, call:0, checkout:0, beer:0, message:0, enter:0 };
         tItems.forEach(n => { if(counts[n.type]!==undefined) counts[n.type]++; });
-const checkoutItem = tItems.find(n => n.type === 'checkout');
+        const checkoutItem = tItems.find(n => n.type === 'checkout');
         const checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
         const summaryHtml = Object.entries(counts).filter(([,c])=>c>0).map(([t,c])=>`
           <span style="display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:${typeColor[t]};">
@@ -743,7 +738,7 @@ const checkoutItem = tItems.find(n => n.type === 'checkout');
                 <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${summaryHtml}</div>
               </div>
               <div style="display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;flex-shrink:0;">
-                <button onclick="event.stopPropagation();deleteTableGroup('${wid}','${date}','${tbl}','${grpKey}')" style="background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;">삭제</button>
+                <button onclick="event.stopPropagation();deleteTableGroup('${wid}','${date}','${tbl}','')" style="background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;">삭제</button>
                 <span id="arrow-${folderId}" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;">▼</span>
               </div>
             </div>
@@ -754,7 +749,6 @@ const checkoutItem = tItems.find(n => n.type === 'checkout');
         `;
       }).join('');
 
-      // 총 건수
       const totalCount = items.length;
 
       return `
@@ -779,18 +773,18 @@ const checkoutItem = tItems.find(n => n.type === 'checkout');
 
 function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
   waitFb(() => {
-    // msgText가 없으면 Firebase에서 직접 읽어오기
     fbGet(fbRef(db, `notifs/${wid}/${key}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = notifData.guestId || '';
+      const finalBeerQty = beerQty || notifData.beerQty || 0;
       fbRemove(fbRef(db, `notifs/${wid}/${key}`));
       if (type === 'booking' && finalGuestId) {
         const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
         fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
       }
       const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr(), sortKey:nowFull()};
-      if (type === 'beer' && beerQty) histData.beerQty = beerQty;
+      if (type === 'beer' && finalBeerQty) histData.beerQty = finalBeerQty;
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
       fbPush(fbRef(db, `history/${wid}`), histData);
     });
@@ -798,8 +792,8 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
   toast('✓ 처리 완료');
 }
 
-function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText) {
-  // replies 저장을 먼저 바로 실행 (타이밍 문제 방지)
+// ★ 버그1 수정: 곧갈게요/잠시만요 누를 때도 history에 저장
+function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText, beerQty) {
   if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: guestId, time: nowStr()});
   toast('✓ ' + replyMsg + ' 전송!');
   waitFb(() => {
@@ -807,15 +801,27 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = notifData.guestId || guestId || '';
+      const finalBeerQty = beerQty || notifData.beerQty || 0;
+
       fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
+
       if (!guestId && finalGuestId) {
-        if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
+        fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
       }
+
       if (type === 'booking' && finalGuestId) {
         const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
         fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
       }
-      // history 저장은 확인 버튼(doneNotif)에서만 처리
+
+      // ★ history 저장 (답장 시에도 기록)
+      const histData = {
+        type, tableLabel, guestId: finalGuestId,
+        time, date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
+      };
+      if (type === 'beer' && finalBeerQty) histData.beerQty = finalBeerQty;
+      if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
+      fbPush(fbRef(db, `history/${wid}`), histData);
     });
   });
 }
@@ -892,7 +898,7 @@ function sendReplyInput() {
   if (!pendingReply) return;
   const { notifKey, guestId, wid, type, tableLabel, time, msgText } = pendingReply;
   closeModal('replyInputModal');
-  replyGuest(notifKey, guestId, wid, type, tableLabel, time, text, msgText||'');
+  replyGuest(notifKey, guestId, wid, type, tableLabel, time, text, msgText||'', 0);
   pendingReply = null;
 }
 
@@ -907,7 +913,6 @@ function toggleFolder(id) {
 
 function deleteTableGroup(wid, date, tableLabel, grpKey) {
   if (!confirm(date + '\n[' + tableLabel + '] 폴더 전체를 삭제할까요?')) return;
-  // grpKey에서 guestId 추출
   const parts = grpKey ? grpKey.split('___') : [];
   const guestId = parts.length === 2 ? parts[1] : null;
   waitFb(() => {
@@ -930,7 +935,6 @@ function deleteHistItem(key) {
 }
 
 // ── 알림/진동/소리 ──
-// 앱 모드 감지
 function isStandalone() {
   return window.matchMedia('(display-mode: standalone)').matches
     || window.navigator.standalone === true;
@@ -947,7 +951,6 @@ async function requestNotifPerm() {
   }
 }
 
-// 이모지를 PNG dataURL로 변환
 function emojiToPng(emoji) {
   try {
     const canvas = document.createElement('canvas');
@@ -988,10 +991,12 @@ async function showPush(type, msg, tableLabel) {
   }
   try { new Notification(title, options); } catch(e) {}
 }
+
 function vibrate(type) {
   if (!navigator.vibrate) return;
   navigator.vibrate(type==='booking' ? [200,100,200,100,400] : [150,80,150]);
 }
+
 let audioCtx;
 function playBeep(type) {
   try {
@@ -1016,7 +1021,6 @@ function playBeep(type) {
   } catch(e) {}
 }
 
-// 통합 알림 함수 - 앱/웹 중 현재 활성화된 것에서만 울림
 let notifyQueue = [];
 let notifyTimer = null;
 function notify(type, tableLabel, guestMsg, extra) {
@@ -1078,7 +1082,6 @@ function installApp() {
   });
 }
 
-// 자동 로그인 실행
 function tryAutoLogin() {
   if (window._fbReady) {
     autoLogin();
@@ -1086,7 +1089,6 @@ function tryAutoLogin() {
     document.addEventListener('fb-ready', () => autoLogin(), {once:true});
   }
 }
-// DOM 로드 후 실행
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', tryAutoLogin);
 } else {

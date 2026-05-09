@@ -60,7 +60,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .scroll::-webkit-scrollbar{width:0;}
 .pad{padding:1rem 1.25rem;}
 
-/* 로그인 */
 #loginScreen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;}
 .logo{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--navy);line-height:1;font-variant-emoji:text;}
 .login-logo{font-family:'DM Serif Display',serif;font-size:3rem;color:var(--navy);margin-bottom:0.2rem;font-variant-emoji:text;}.login-sub{font-size:0.68rem;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:2.5rem;}
@@ -82,7 +81,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .wpick-check{color:var(--muted);font-size:0.9rem;opacity:0;}
 .wpick.selected .wpick-check{opacity:1;color:#fff;}
 
-/* 헤더 */
 #dashScreen{display:none;flex-direction:column;height:100vh;overflow:hidden;}
 .hdr{padding:1rem 1.25rem 0.9rem;display:flex;align-items:center;justify-content:space-between;background:var(--card);border-bottom:0.5px solid var(--border);flex-shrink:0;}
 .logo{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--navy);line-height:1;}
@@ -91,13 +89,11 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite;}
 .logout-btn{background:var(--bg2);border:none;border-radius:6px;padding:0.4rem 0.75rem;font-size:0.7rem;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:500;}
 
-/* 탭 */
 .tabs{display:flex;gap:0.4rem;padding:0.75rem 1.25rem 0;flex-shrink:0;}
 .tab{flex:1;padding:0.6rem;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;transition:all 0.15s;}
 .tab.active{background:var(--navy);border-color:var(--navy);color:#fff;}
 .badge{display:inline-block;background:var(--red);color:#fff;font-size:0.58rem;font-weight:700;border-radius:8px;padding:0.05rem 0.35rem;margin-left:0.2rem;vertical-align:middle;}
 
-/* 알림 카드 */
 .notif-card{background:var(--card);border-radius:12px;padding:0.95rem 1.1rem;display:flex;align-items:flex-start;gap:0.85rem;margin-bottom:0.6rem;border:0.5px solid var(--border);animation:slideIn 0.2s ease both;}
 .notif-card.type-call{border-left:3px solid var(--navy);}
 .notif-card.type-booking{border-left:3px solid var(--red);}
@@ -115,7 +111,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:0.85rem;}
 .empty-icon{font-size:2rem;margin-bottom:0.5rem;}
 
-/* 손님 카드 */
 .guest-card{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:0.75rem;}
 .guest-card-top{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;}
 .guest-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
@@ -127,7 +122,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .guest-checkout-btn{flex:1;padding:0.55rem;border-radius:8px;border:none;background:#fbeaea;font-family:inherit;font-size:0.75rem;font-weight:600;color:var(--red);cursor:pointer;transition:all 0.15s;text-align:center;}
 .guest-checkout-btn:active{transform:scale(0.97);}
 
-/* QR 팝업 */
 .qr-popup{display:none;position:fixed;inset:0;background:rgba(26,37,53,0.6);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;}
 .qr-popup.open{display:flex;}
 .qr-sheet{background:var(--card);border-radius:16px;padding:1.75rem;width:calc(100% - 3rem);max-width:320px;text-align:center;}
@@ -138,14 +132,12 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .qr-url-text{font-size:0.68rem;color:var(--muted);word-break:break-all;margin-bottom:1.25rem;line-height:1.4;}
 .qr-close{width:100%;padding:0.85rem;border-radius:10px;border:none;background:var(--navy);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:600;cursor:pointer;}
 
-/* 모달 */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(26,37,53,0.5);backdrop-filter:blur(4px);z-index:300;align-items:flex-end;justify-content:center;}
 .modal-bg.open{display:flex;}
 .modal{background:var(--card);border-radius:20px 20px 0 0;padding:1.75rem 1.5rem 2.5rem;width:100%;max-width:480px;animation:slideUp 0.25s ease;}
 .modal-handle{width:36px;height:4px;background:var(--bg2);border-radius:2px;margin:0 auto 1.5rem;}
 .modal-title{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--navy);margin-bottom:1.25rem;}
 
-/* 내역 */
 .hist-card{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:0.85rem 1rem;display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;opacity:0.65;}
 .hist-ico{font-size:1rem;flex-shrink:0;}
 .hist-body{flex:1;}
@@ -168,7 +160,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 #toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:8px;padding:0.7rem 1.25rem;font-size:0.82rem;white-space:nowrap;z-index:400;opacity:0;pointer-events:none;transition:opacity 0.25s;}
 #toast.show{opacity:1;}
 
-/* 인앱 알림 배너 */
 #inAppBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:500;padding:0.6rem 1rem;animation:slideDown 0.3s ease;overflow:hidden;}
 #inAppBanner.show{display:flex;align-items:center;gap:0.75rem;}
 .iab-call{background:#1a2535;}
@@ -182,7 +173,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .iab-close{background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.2rem;cursor:pointer;padding:0.2rem;flex-shrink:0;}
 @keyframes slideDown{from{transform:translateY(-100%);}to{transform:translateY(0);}}
 
-/* 설치 배너 */
 #installBanner{display:none;position:fixed;bottom:1.5rem;left:1.25rem;right:1.25rem;background:var(--navy);border-radius:12px;padding:0.85rem 1rem;align-items:center;gap:0.75rem;z-index:300;}
 .install-text{flex:1;}
 .install-title{font-size:0.75rem;font-weight:600;color:#fff;}
@@ -257,19 +247,16 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <button class="tab" id="tab-hist" onclick="switchTab('hist')">내역</button>
   </div>
 
-  <!-- 알림 -->
   <div id="panel-notif" class="scroll"><div class="pad">
     <button class="btn btn-danger" style="margin-bottom:1rem;" id="clearNotifsBtn" onclick="clearAllNotifs()" style="display:none;">✓ 알림 전체 확인</button>
     <div id="notifFeed"><div class="empty"><div class="empty-icon">🔕</div>호출 없음</div></div>
   </div></div>
 
-  <!-- 내 손님 -->
   <div id="panel-guests" class="scroll" style="display:none;"><div class="pad">
     <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="openAddGuest()">+ 손님 추가</button>
     <div id="guestList"><div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div></div>
   </div></div>
 
-  <!-- 내역 -->
   <div id="panel-hist" class="scroll" style="display:none;"><div class="pad">
     <button class="btn btn-danger" style="margin-bottom:1rem;" onclick="clearHistory()">🗑 내역 전체 삭제</button>
     <div id="histList"><div class="empty"><div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div></div></div>
@@ -371,12 +358,10 @@ function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinu
 function nowFull() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 function todayStr() {
   const n=new Date();
-  // 새벽 6시 이전이면 전날 날짜 사용 (나이트 영업 대응)
   if (n.getHours() < 6) n.setDate(n.getDate() - 1);
   return n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일';
 }
 
-// ── 인증 ──
 function switchAuthTab(tab) {
   document.getElementById('atab-login').classList.toggle('active', tab==='login');
   document.getElementById('atab-reg').classList.toggle('active', tab==='reg');
@@ -439,7 +424,6 @@ function doLogout() {
   document.getElementById('loginPass').value = '';
 }
 
-// 자동 로그인
 function autoLogin() {
   const saved = localStorage.getItem('ncall_waiter');
   if (!saved) return;
@@ -459,7 +443,6 @@ function autoLogin() {
   } catch(e) { localStorage.removeItem('ncall_waiter'); }
 }
 
-// ── 탭 ──
 function switchTab(tab) {
   ['notif','guests','hist'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
@@ -467,7 +450,6 @@ function switchTab(tab) {
   });
 }
 
-// ── 손님 추가 ──
 function openAddGuest() {
   document.getElementById('addGuestLabel').value = '';
   document.getElementById('addGuestModal').classList.add('open');
@@ -483,21 +465,21 @@ function doAddGuest() {
       label, bookingCount: 0, createdAt: nowStr(), createdDate: todayStr(), active: true
     });
     const guestId = guestRef.key;
-    // 입장 시간 내역에 기록
     fbPush(fbRef(db, `history/${W.id}`), {
       type: 'enter', guestMsg: label, tableLabel: label, guestId, time: nowStr(), date: todayStr()
     });
     toast('✓ 손님 추가됨');
-    // 모달 닫힌 후 충분히 기다렸다가 QR 팝업
     setTimeout(() => showQR(guestId, label), 400);
   });
 }
 
-// ── QR 보여주기 ──
+// ── QR / 문자 링크 ──
 let currentQRUrl = '';
 let currentQRGuestId = '';
+
 function showQR(guestId, label) {
-  const url = location.origin + '/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
+  // ★ 수정: 올바른 URL 형식 w=...&g=...
+  const url = 'https://ncall.kr/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   currentQRUrl = url;
   currentQRGuestId = guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
@@ -518,14 +500,14 @@ function showQR(guestId, label) {
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
 
 function sendSMS() {
-  const link = 'https://ncall.kr/guest.html?wg=' + encodeURIComponent(W.name) + currentQRGuestId;
+  // ★ 수정: ?w=이름&g=손님ID 올바른 형식
+  const link = 'https://ncall.kr/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + currentQRGuestId;
   const body = '형님, 오늘 담당 호출 링크입니다\n부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요\n' + link;
   const a = document.createElement('a');
   a.href = 'sms:?body=' + encodeURIComponent(body);
   a.click();
 }
 
-// ── 계산 완료 ──
 function checkoutGuest(guestId, label) {
   if (!confirm(label + '\n계산 완료 처리할까요?')) return;
   waitFb(() => {
@@ -540,18 +522,15 @@ function checkoutGuest(guestId, label) {
   toast('✓ 계산 완료');
 }
 
-// ── Firebase 리스너 ──
 let lastNotifKey = null;
 let listenersStarted = false;
 
 function startListeners() {
-  // waitFb 콜백 안에서 플래그 체크 — 타이밍 무관하게 딱 1번만 실행
   waitFb(() => {
     if (listenersStarted) return;
     listenersStarted = true;
     const wid = W.id;
 
-  // 알림
   fbOnValue(fbRef(db, `notifs/${wid}`), snap => {
     const data = snap.val() || {};
     const notifs = Object.entries(data)
@@ -559,14 +538,15 @@ function startListeners() {
       .filter(n => !n.done)
       .sort((a,b) => b._key.localeCompare(a._key));
 
-    // 가장 최신 key 기준으로 새 알림인지 판단
     const latestKey = notifs.length > 0 ? notifs[0]._key : null;
+
+    // ★ 수정: 알림 중복 방지 - 새 알림 1개만
     if (latestKey && latestKey !== lastNotifKey && prevNotifCount >= 0) {
-      notifs.forEach(n => {
-        if (!lastNotifKey || n._key > lastNotifKey) {
-          notify(n.type, n.tableLabel, n.guestMsg, n.msgText || n.beerQty || '');
-        }
-      });
+      const newNotifs = notifs.filter(n => !lastNotifKey || n._key > lastNotifKey);
+      if (newNotifs.length > 0) {
+        const n = newNotifs[0];
+        notify(n.type, n.tableLabel, n.guestMsg, n.msgText || n.beerQty || '');
+      }
     }
     if (!lastNotifKey || (latestKey && latestKey > lastNotifKey)) {
       lastNotifKey = latestKey;
@@ -601,8 +581,6 @@ function startListeners() {
         msgEl.className = 'notif-msg';
         msgEl.textContent = n.type === 'beer'
           ? (n.tableLabel || '손님') + ' — ' + (n.beerQty || 1) + '병'
-          : n.type === 'message'
-          ? (n.tableLabel || '손님')
           : (n.tableLabel || '손님');
         const timeEl = document.createElement('div');
         timeEl.className = 'notif-time';
@@ -614,22 +592,21 @@ function startListeners() {
             const b1 = document.createElement('button');
             b1.textContent = '곧 갈게요';
             b1.style.cssText = 'background:#e8f0fe;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#3a5a8a;cursor:pointer;font-family:inherit;';
-            b1.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '곧 갈게요', n.msgText||'');
+            b1.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '곧 갈게요', n.msgText||'', n.beerQty||0);
             const b2 = document.createElement('button');
             b2.textContent = '잠시만요';
             b2.style.cssText = 'background:#fef3e8;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#e67e22;cursor:pointer;font-family:inherit;';
-            b2.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '잠시만요', n.msgText||'');
+            b2.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '잠시만요', n.msgText||'', n.beerQty||0);
             btns.append(b1, b2);
           } else {
-            // 메시지 타입만 곧갈게요 잠시만요 + 답장
             const b1 = document.createElement('button');
             b1.textContent = '곧 갈게요';
             b1.style.cssText = 'background:#e8f0fe;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#3a5a8a;cursor:pointer;font-family:inherit;';
-            b1.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '곧 갈게요', n.msgText||'');
+            b1.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '곧 갈게요', n.msgText||'', 0);
             const b2 = document.createElement('button');
             b2.textContent = '잠시만요';
             b2.style.cssText = 'background:#fef3e8;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#e67e22;cursor:pointer;font-family:inherit;';
-            b2.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '잠시만요', n.msgText||'');
+            b2.onclick = () => replyGuest(n._key, n.guestId||'', wid, n.type, n.tableLabel||'손님', n.time, '잠시만요', n.msgText||'', 0);
             const b4 = document.createElement('button');
             b4.textContent = '✏️ 답장';
             b4.style.cssText = 'background:#e8f8ee;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:var(--green);cursor:pointer;font-family:inherit;';
@@ -660,7 +637,6 @@ function startListeners() {
     }
   });
 
-  // 손님 목록
   fbOnValue(fbRef(db, `guests/${wid}`), snap => {
     const data = snap.val() || {};
     const guests = Object.entries(data)
@@ -688,19 +664,17 @@ function startListeners() {
     }
   });
 
-  // 내역
   fbOnValue(fbRef(db, `history/${wid}`), snap => {
     const data = snap.val() || {};
     const hist = Object.entries(data)
       .map(([k,v]) => ({...v, _key:k}))
-      .sort((a,b) => a._key.localeCompare(b._key)); // 시간순 오름차순
+      .sort((a,b) => a._key.localeCompare(b._key));
     const list = document.getElementById('histList');
     if (hist.length === 0) {
       list.innerHTML = '<div class="empty"><div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div></div>';
       return;
     }
 
-    // 날짜별 그룹핑
     const dateGroups = {};
     hist.forEach(n => {
       const date = n.date || '날짜 미상';
@@ -712,7 +686,6 @@ function startListeners() {
     const typeLabel = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
     const typeColor = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
 
-    // 날짜 내림차순 정렬
     const sortedDates = Object.keys(dateGroups).sort((a,b) => b.localeCompare(a));
 
     list.innerHTML = sortedDates.map(date => {
@@ -720,7 +693,6 @@ function startListeners() {
       const isToday = date === todayStr();
       const dateFolderId = `date-${date.replace(/\s/g,'-')}`;
 
-      // 날짜 안에서 테이블별 그룹핑
       const tableGroups = {};
       items.forEach(n => {
         const tbl = n.tableLabel || n.guestMsg || '손님';
@@ -738,11 +710,10 @@ function startListeners() {
       const tableFolders = sortedTableEntries2.slice().reverse().map(([grpKey, tItems], revIdx) => {
         const tbl = tItems[0].tableLabel || tItems[0].guestMsg || '손님';
         const tableNum = String(totalTables - revIdx).padStart(2, '0');
-        const safeTbl = grpKey.replace(/'/g,"\'").replace(/\s/g,'-');
+        const safeTbl = grpKey.replace(/'/g,"'").replace(/\s/g,'-');
         const safeDate = date.replace(/\s/g,'-');
         const folderId = `tf-${safeDate}-${safeTbl}`;
 
-        // 타입별 카운트
         const counts = { booking:0, call:0, checkout:0, beer:0, message:0, enter:0 };
         tItems.forEach(n => { if(counts[n.type]!==undefined) counts[n.type]++; });
 
@@ -790,9 +761,7 @@ function startListeners() {
         `;
       }).join('');
 
-      // 총 건수
       const totalCount = items.length;
-
       return `
         <div style="margin-bottom:1rem;">
           <div onclick="toggleFolder('${dateFolderId}')" style="display:flex;align-items:center;justify-content:space-between;background:${isToday?'var(--navy)':'var(--bg2)'};border-radius:12px;padding:0.85rem 1rem;cursor:pointer;user-select:none;margin-bottom:0.5rem;">
@@ -819,15 +788,11 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = notifData.guestId || '';
-      fbRemove(fbRef(db, `notifs/${wid}/${key}`));
-      // 부킹 확인 시 bookingCount 업데이트
-      if (type === 'booking' && finalGuestId) {
-        const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
-        fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
-      }
+      const finalBeerQty = beerQty || notifData.beerQty || 0;
+      // ★ 수정: history 먼저 저장 후 notif 삭제 (타이밍 버그 방지)
       const saveHist = (date) => {
         const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr(), sortKey:nowFull()};
-        if (type === 'beer' && beerQty) histData.beerQty = beerQty;
+        if (type === 'beer' && finalBeerQty) histData.beerQty = finalBeerQty;
         if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
         fbPush(fbRef(db, `history/${wid}`), histData);
       };
@@ -838,30 +803,52 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
       } else {
         saveHist(todayStr());
       }
+      fbRemove(fbRef(db, `notifs/${wid}/${key}`));
+      // ★ 수정: booking 카운팅은 확인 버튼에서만 (guest.html에서 제거됐으므로 여기서만)
+      if (type === 'booking' && finalGuestId) {
+        const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
+        fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
+      }
     });
   });
   toast('✓ 처리 완료');
 }
 
-function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText) {
-  // replies 저장을 먼저 바로 실행 (타이밍 문제 방지)
-  if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: guestId, time: nowStr()});
+// ★ 수정: replyGuest - fbGet 후 fbRemove, history도 저장, 이중 카운팅 제거
+function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText, beerQty) {
   toast('✓ ' + replyMsg + ' 전송!');
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = guestId || notifData.guestId || '';
+      const finalBeerQty = beerQty || notifData.beerQty || 0;
+
+      // 손님에게 답장
+      if (notifKey && finalGuestId) {
+        fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
+      }
+
+      // history 저장
+      const saveHist = (date) => {
+        const histData = {type, tableLabel, guestId: finalGuestId, time, date, doneAt:nowStr(), sortKey:nowFull()};
+        if (type === 'beer' && finalBeerQty) histData.beerQty = finalBeerQty;
+        if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
+        fbPush(fbRef(db, `history/${wid}`), histData);
+      };
+      if (finalGuestId) {
+        fbGet(fbRef(db, `guests/${wid}/${finalGuestId}/createdDate`)).then(ds => {
+          saveHist(ds.val() || todayStr());
+        });
+      } else {
+        saveHist(todayStr());
+      }
+
+      // notif 삭제
       fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
-      if (!guestId && finalGuestId) {
-        if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
-      }
-      // 부킹 카운팅
-      if (type === 'booking' && finalGuestId) {
-        const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
-        fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
-      }
-      // history 저장은 확인 버튼(doneNotif)에서만 처리 - replyGuest는 replies만 저장
+
+      // ★ booking 카운팅 제거 (guest.html에서도 제거됨 → 이중 카운팅 해결)
+      // 카운팅은 doneNotif(확인 버튼)에서만 처리
     });
   });
 }
@@ -939,7 +926,7 @@ function sendReplyInput() {
   if (!pendingReply) return;
   const { notifKey, guestId, wid, type, tableLabel, time, msgText } = pendingReply;
   closeModal('replyInputModal');
-  replyGuest(notifKey, guestId, wid, type, tableLabel, time, text, msgText||'');
+  replyGuest(notifKey, guestId, wid, type, tableLabel, time, text, msgText||'', 0);
   pendingReply = null;
 }
 
@@ -954,7 +941,6 @@ function toggleFolder(id) {
 
 function deleteTableGroup(wid, date, tableLabel, grpKey) {
   if (!confirm(date + '\n[' + tableLabel + '] 폴더 전체를 삭제할까요?')) return;
-  // grpKey에서 guestId 추출
   const parts = grpKey ? grpKey.split('___') : [];
   const guestId = parts.length === 2 ? parts[1] : null;
   waitFb(() => {
@@ -976,8 +962,6 @@ function deleteHistItem(key) {
   toast('✓ 삭제됨');
 }
 
-// ── 알림/진동/소리 ──
-// 앱 모드 감지
 function isStandalone() {
   return window.matchMedia('(display-mode: standalone)').matches
     || window.navigator.standalone === true;
@@ -994,7 +978,6 @@ async function requestNotifPerm() {
   }
 }
 
-// 이모지를 PNG dataURL로 변환
 function emojiToPng(emoji) {
   try {
     const canvas = document.createElement('canvas');
@@ -1018,13 +1001,9 @@ async function showPush(type, msg, tableLabel) {
   const body = (tableLabel || msg || '손님') + (type === 'booking' ? ' — 부킹 요청' : ' — 호출');
   const emojiIcon = emojiToPng(type === 'call' ? '🙋' : '🔔');
   const options = {
-    body,
-    icon: emojiIcon,
-    badge: emojiIcon,
+    body, icon: emojiIcon, badge: emojiIcon,
     vibrate: type === 'booking' ? [200, 100, 200, 100, 400] : [150, 80, 150],
-    tag: type + '-' + Date.now(),
-    renotify: true,
-    requireInteraction: false
+    tag: type + '-' + Date.now(), renotify: true, requireInteraction: false
   };
   if ('serviceWorker' in navigator) {
     try {
@@ -1035,10 +1014,12 @@ async function showPush(type, msg, tableLabel) {
   }
   try { new Notification(title, options); } catch(e) {}
 }
+
 function vibrate(type) {
   if (!navigator.vibrate) return;
   navigator.vibrate(type==='booking' ? [200,100,200,100,400] : [150,80,150]);
 }
+
 let audioCtx;
 function playBeep(type) {
   try {
@@ -1063,7 +1044,6 @@ function playBeep(type) {
   } catch(e) {}
 }
 
-// 통합 알림 함수 - 앱/웹 중 현재 활성화된 것에서만 울림
 let notifyQueue = [];
 let notifyTimer = null;
 function notify(type, tableLabel, guestMsg, extra) {
@@ -1109,7 +1089,6 @@ function toast(msg) {
   toastT = setTimeout(() => el.classList.remove('show'), 2000);
 }
 
-// PWA
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', e => {
@@ -1125,15 +1104,10 @@ function installApp() {
   });
 }
 
-// 자동 로그인 실행
 function tryAutoLogin() {
-  if (window._fbReady) {
-    autoLogin();
-  } else {
-    document.addEventListener('fb-ready', () => autoLogin(), {once:true});
-  }
+  if (window._fbReady) { autoLogin(); }
+  else { document.addEventListener('fb-ready', () => autoLogin(), {once:true}); }
 }
-// DOM 로드 후 실행
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', tryAutoLogin);
 } else {

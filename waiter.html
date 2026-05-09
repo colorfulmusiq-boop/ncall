@@ -614,7 +614,11 @@ function startListeners() {
         const b3 = document.createElement('button');
         b3.textContent = '확인';
         b3.style.cssText = 'background:var(--bg2);border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;';
-        b3.onclick = () => doneNotif(n._key, wid, n.type, n.tableLabel||'손님', n.time, n.beerQty||0, n.msgText||'');
+        b3.onclick = () => {
+          if (b3.disabled) return;
+          b3.disabled = true;
+          doneNotif(n._key, wid, n.type, n.tableLabel||'손님', n.time, n.beerQty||0, n.msgText||'');
+        };
         btns.append(b3);
         body.append(tag, msgEl);
         if (n.type === 'message') {
@@ -778,6 +782,10 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       fbRemove(fbRef(db, `notifs/${wid}/${key}`));
+      if (type === 'booking' && finalGuestId) {
+        const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
+        fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
+      }
       const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr(), sortKey:nowFull()};
       if (type === 'beer' && beerQty) histData.beerQty = beerQty;
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;

@@ -361,10 +361,11 @@ function init() {
     const wg = params.get('wg');
     if (wg) {
       const decoded = decodeURIComponent(wg);
-      const parts = decoded.split('|');
-      if (parts.length === 2) {
-        wname = parts[0];
-        savedGuestId = parts[1];
+      // Firebase key는 - 로 시작하므로 첫 번째 - 기준으로 분리
+      const dashIdx = decoded.indexOf('-');
+      if (dashIdx > 0) {
+        wname = decoded.substring(0, dashIdx);
+        savedGuestId = decoded.substring(dashIdx);
       }
     }
   }
@@ -573,6 +574,12 @@ function sendNotif(type) {
     waiterName: waiterData.name, guestId,
     time: sentTime, date: sentDate, done: false
   });
+  if (type === 'booking') {
+    setTimeout(() => {
+      const countRef = fbRef(db, `guests/${waiterData.id}/${guestId}/bookingCount`);
+      fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
+    }, 500);
+  }
   const bar = document.getElementById('sentBar');
   document.getElementById('sentMsg').textContent = type==='call' ? '호출이 전송됐어요' : '부킹 요청이 전송됐어요';
   bar.classList.add('show');

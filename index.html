@@ -851,9 +851,13 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = guestId || notifData.guestId || '';
       fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
-      // guestId 없었으면 finalGuestId로 다시 저장
       if (!guestId && finalGuestId) {
         if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
+      }
+      // 부킹 카운팅
+      if (type === 'booking' && finalGuestId) {
+        const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
+        fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
       }
       // history 저장은 확인 버튼(doneNotif)에서만 처리 - replyGuest는 replies만 저장
     });

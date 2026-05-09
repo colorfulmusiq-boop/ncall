@@ -808,6 +808,10 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       if (!guestId && finalGuestId) {
         if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
       }
+      if (type === 'booking' && finalGuestId) {
+        const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
+        fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
+      }
       // history 저장은 확인 버튼(doneNotif)에서만 처리
     });
   });

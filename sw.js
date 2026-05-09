@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ncall-v48';
+const CACHE_NAME = 'ncall-v47';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -29,4 +29,9 @@ self.addEventListener('push', e => {
     data: { url: '/waiter.html' }
   };
   e.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow('/waiter.html'));
 });

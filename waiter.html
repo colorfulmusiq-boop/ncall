@@ -778,15 +778,18 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = notifData.guestId || '';
       const finalBeerQty = beerQty || notifData.beerQty || 0;
-      fbRemove(fbRef(db, `notifs/${wid}/${key}`));
+      // ★ booking 카운팅은 웨이터가 '확인' 버튼 눌렀을 때만 (guest.html에서 제거했으므로 여기서만)
       if (type === 'booking' && finalGuestId) {
         const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
         fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
       }
+      // history 저장 먼저
       const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr(), sortKey:nowFull()};
       if (type === 'beer' && finalBeerQty) histData.beerQty = finalBeerQty;
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
       fbPush(fbRef(db, `history/${wid}`), histData);
+      // history 저장 후 notif 삭제
+      fbRemove(fbRef(db, `notifs/${wid}/${key}`));
     });
   });
   toast('✓ 처리 완료');
@@ -794,27 +797,21 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
 
 // ★ 버그1 수정: 곧갈게요/잠시만요 누를 때도 history에 저장
 function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText, beerQty) {
-  if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: guestId, time: nowStr()});
   toast('✓ ' + replyMsg + ' 전송!');
   waitFb(() => {
+    // fbGet 먼저 → 데이터 읽은 뒤 Remove (타이밍 버그 수정)
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
       const notifData = snap.val() || {};
       const finalMsgText = msgText || notifData.msgText || '';
       const finalGuestId = notifData.guestId || guestId || '';
       const finalBeerQty = beerQty || notifData.beerQty || 0;
 
-      fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
-
-      if (!guestId && finalGuestId) {
+      // 손님에게 답장 전송
+      if (notifKey && finalGuestId) {
         fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
       }
 
-      if (type === 'booking' && finalGuestId) {
-        const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
-        fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
-      }
-
-      // ★ history 저장 (답장 시에도 기록)
+      // history 저장 먼저
       const histData = {
         type, tableLabel, guestId: finalGuestId,
         time, date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
@@ -822,6 +819,12 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       if (type === 'beer' && finalBeerQty) histData.beerQty = finalBeerQty;
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
       fbPush(fbRef(db, `history/${wid}`), histData);
+
+      // history 저장 후 notif 삭제
+      fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
+
+      // ★ 이중카운팅 수정: 웨이터가 버튼 누를 때는 booking 카운트 올리지 않음
+      // (손님이 부킹 요청 누를 때 guest.html에서 이미 카운팅함 → 거기서도 제거 필요)
     });
   });
 }

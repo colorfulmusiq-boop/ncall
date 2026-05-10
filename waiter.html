@@ -687,8 +687,13 @@ function startListeners() {
     const typeLabel = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
     const typeColor = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
 
-    // 날짜 내림차순 정렬
-    const sortedDates = Object.keys(dateGroups).sort((a,b) => b.localeCompare(a));
+    // 날짜 내림차순 정렬 (숫자 파싱 — "5월 10일"이 "5월 1일"보다 앞)
+    function parseDateNum(s) {
+      const m = s.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+      if (!m) return 0;
+      return parseInt(m[1])*10000 + parseInt(m[2])*100 + parseInt(m[3]);
+    }
+    const sortedDates = Object.keys(dateGroups).sort((a,b) => parseDateNum(b) - parseDateNum(a));
 
     list.innerHTML = sortedDates.map(date => {
       const items = dateGroups[date];
@@ -815,7 +820,16 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
         const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
         fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
       }
-      // history 저장은 확인 버튼(doneNotif)에서만 처리
+      // history 저장 — 곧갈게요/잠시만요로 처리한 경우도 내역에 남김
+      const histData = {
+        type, tableLabel: tableLabel || notifData.tableLabel,
+        guestId: finalGuestId, time, date: todayStr(),
+        doneAt: nowStr(), sortKey: nowFull(),
+        reply: replyMsg
+      };
+      if (type === 'beer' && notifData.beerQty) histData.beerQty = notifData.beerQty;
+      if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
+      fbPush(fbRef(db, `history/${wid}`), histData);
     });
   });
 }

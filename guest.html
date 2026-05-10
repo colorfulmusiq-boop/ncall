@@ -373,16 +373,22 @@ function init() {
   let wname = params.get('w');
   let savedGuestId = params.get('g');
 
-  // 문자 링크용 wg 파라미터 파싱 (w와 g를 | 로 구분)
+  // 문자 링크용 wg 파라미터 파싱 (웨이터명|손님ID 형식)
   if (!wname || !savedGuestId) {
     const wg = params.get('wg');
     if (wg) {
       const decoded = decodeURIComponent(wg);
-      // Firebase key는 - 로 시작하므로 첫 번째 - 기준으로 분리
-      const dashIdx = decoded.indexOf('-');
-      if (dashIdx > 0) {
-        wname = decoded.substring(0, dashIdx);
-        savedGuestId = decoded.substring(dashIdx);
+      const pipeIdx = decoded.indexOf('|');
+      if (pipeIdx > 0) {
+        wname = decoded.substring(0, pipeIdx);
+        savedGuestId = decoded.substring(pipeIdx + 1);
+      } else {
+        // 구버전 호환: - 기준으로 분리
+        const dashIdx = decoded.indexOf('-');
+        if (dashIdx > 0) {
+          wname = decoded.substring(0, dashIdx);
+          savedGuestId = decoded.substring(dashIdx);
+        }
       }
     }
   }
@@ -432,6 +438,15 @@ function init() {
 
       document.getElementById('infoWaiter').textContent = wname + ' 웨이터';
       document.getElementById('mainScreen').style.display = 'flex';
+
+      // 입장 기록 저장
+      const enterTime = nowStr();
+      const enterDate = todayStr();
+      fbPush(fbRef(db, 'history/' + waiterData.id), {
+        type: 'enter', tableLabel: guestData.label, guestMsg: guestData.label,
+        guestId: guestId, waiterName: waiterData.name,
+        time: enterTime, date: enterDate, sortKey: nowFull()
+      });
 
       // 웨이터 답장 실시간 감지
       // 1) 기존 replies 경로도 감지

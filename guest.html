@@ -503,11 +503,6 @@ function sendMsg() {
     const sentTime = nowStr();
     const sentDate = todayStr();
     const sortKey = nowFull();
-    fbPush(fbRef(db, `history/${waiterData.id}`), {
-      type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
-      msgText: text, waiterName: waiterData.name, guestId,
-      time: sentTime, date: sentDate, sortKey, status: 'requested'
-    });
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
       type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
       msgText: text, waiterName: waiterData.name, guestId,
@@ -541,11 +536,6 @@ function sendBeer() {
     const sentTime = nowStr();
     const sentDate = todayStr();
     const sortKey = nowFull();
-    fbPush(fbRef(db, `history/${waiterData.id}`), {
-      type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
-      beerQty, waiterName: waiterData.name, guestId,
-      time: sentTime, date: sentDate, sortKey, status: 'requested'
-    });
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
       type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
       beerQty, waiterName: waiterData.name, guestId,

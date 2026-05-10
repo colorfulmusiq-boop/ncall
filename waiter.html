@@ -746,7 +746,13 @@ function startListeners() {
       dateArrow.style.cssText = 'color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (isToday?'transform:rotate(180deg);':'');
       dateArrow.textContent = '▼';
 
+      var dateDel = document.createElement('button');
+      dateDel.style.cssText = 'background:rgba(255,255,255,0.15);border:none;color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.65rem;font-weight:600;cursor:pointer;padding:0.2rem 0.5rem;border-radius:6px;margin-right:0.5rem;flex-shrink:0;';
+      dateDel.textContent = '삭제';
+      (function(d){ dateDel.onclick = function(e){ e.stopPropagation(); deleteDateGroup(wid, d); }; })(date);
+
       dateHdr.appendChild(dateLeft);
+      dateHdr.appendChild(dateDel);
       dateHdr.appendChild(dateArrow);
       dateWrap.appendChild(dateHdr);
 
@@ -1001,6 +1007,19 @@ function clearAllNotifs() {
     });
   });
   toast('✓ 알림 전체 확인');
+}
+
+function deleteDateGroup(wid, date) {
+  if (!confirm(date + ' 내역을 삭제할까요?')) return;
+  waitFb(() => {
+    fbGet(fbRef(db, 'history/' + wid)).then(snap => {
+      const data = snap.val() || {};
+      Object.entries(data).forEach(function(entry) {
+        if (entry[1].date === date) fbRemove(fbRef(db, 'history/' + wid + '/' + entry[0]));
+      });
+      toast('✓ ' + date + ' 내역 삭제됨');
+    });
+  });
 }
 
 function clearHistory() {

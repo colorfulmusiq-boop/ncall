@@ -14,24 +14,32 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, set, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-const cfg = {
-  apiKey:"AIzaSyDpToFo3_0q35eRxpZ6iIWC5nUZqZKGZqw",
-  authDomain:"nightcall-47430.firebaseapp.com",
-  databaseURL:"https://nightcall-47430-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:"nightcall-47430",
-  storageBucket:"nightcall-47430.firebasestorage.app",
-  messagingSenderId:"522787869614",
-  appId:"1:522787869614:web:785a75ed1219ed078f2e3f"
-};
-const app = initializeApp(cfg);
-const db = getDatabase(app);
-window._db=db; window._ref=ref; window._push=push;
-window._onValue=onValue; window._remove=remove; window._set=set; window._get=get; window._update=update;
-window._fbReady=true;
-document.dispatchEvent(new Event('fb-ready'));
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+(function() {
+  var cfg = {
+    apiKey:"AIzaSyDpToFo3_0q35eRxpZ6iIWC5nUZqZKGZqw",
+    authDomain:"nightcall-47430.firebaseapp.com",
+    databaseURL:"https://nightcall-47430-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:"nightcall-47430",
+    storageBucket:"nightcall-47430.firebasestorage.app",
+    messagingSenderId:"522787869614",
+    appId:"1:522787869614:web:785a75ed1219ed078f2e3f"
+  };
+  firebase.initializeApp(cfg);
+  var db = firebase.database();
+  window._db = db;
+  window._ref = function(db, path) { return db.ref(path); };
+  window._push = function(ref, data) { return ref.push(data); };
+  window._set = function(ref, data) { return ref.set(data); };
+  window._get = function(ref) { return ref.once('value'); };
+  window._update = function(ref, data) { return ref.update(data); };
+  window._remove = function(ref) { return ref.remove(); };
+  window._onValue = function(ref, cb) { ref.on('value', cb); };
+  window._fbReady = true;
+  document.dispatchEvent(new Event('fb-ready'));
+})();
 </script>
 
 <style>

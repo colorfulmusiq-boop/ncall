@@ -507,7 +507,7 @@ function showQR(guestId, label) {
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
 
 function sendSMS() {
-  const link = 'https://ncall.kr/guest.html?wg=' + encodeURIComponent(W.name) + currentQRGuestId;
+  const link = 'https://ncall.kr/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + currentQRGuestId;
   const body = '형님, 오늘 담당 호출 링크입니다\n부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요\n' + link;
   const a = document.createElement('a');
   a.href = 'sms:?body=' + encodeURIComponent(body);
@@ -678,33 +678,28 @@ function startListeners() {
 
   // 내역
   fbOnValue(fbRef(db, `history/${wid}`), snap => {
-    const raw = snap.val() || {};
-    const hist = Object.entries(raw)
-      .map(([k,v]) => Object.assign({}, v, {_key: k}))
+    var raw = snap.val() || {};
+    var hist = Object.entries(raw)
+      .map(function(entry){ return Object.assign({}, entry[1], {_key: entry[0]}); })
       .sort(function(a,b){ return (a.sortKey||a._key) < (b.sortKey||b._key) ? -1 : 1; });
 
-    const list = document.getElementById('histList');
+    var list = document.getElementById('histList');
     list.innerHTML = '';
 
     if (hist.length === 0) {
-      const emp = document.createElement('div');
-      emp.className = 'empty';
-      emp.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div>';
-      list.appendChild(emp);
+      list.innerHTML = '<div class="empty"><div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div></div>';
       return;
     }
 
-    const ICON  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪' };
-    const LABEL = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
-    const COLOR = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
+    var ICON  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪' };
+    var LABEL = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
+    var COLOR = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
 
-    // 날짜 파싱 (문자열 정렬 버그 방지)
     function parseDateNum(s) {
       var m = s.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
       return m ? parseInt(m[1])*10000 + parseInt(m[2])*100 + parseInt(m[3]) : 0;
     }
 
-    // 날짜별 그룹핑
     var dateGroups = {};
     hist.forEach(function(n) {
       var d = n.date || '날짜 미상';
@@ -712,7 +707,6 @@ function startListeners() {
       dateGroups[d].push(n);
     });
 
-    // 날짜 내림차순
     var sortedDates = Object.keys(dateGroups).sort(function(a,b){ return parseDateNum(b) - parseDateNum(a); });
 
     sortedDates.forEach(function(date) {
@@ -720,13 +714,12 @@ function startListeners() {
       var isToday = date === todayStr();
       var dateFolderId = 'date-' + date.replace(/\s/g,'-');
 
-      // 날짜 헤더
       var dateWrap = document.createElement('div');
       dateWrap.style.marginBottom = '1rem';
 
       var dateHdr = document.createElement('div');
       dateHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:' + (isToday?'var(--navy)':'var(--bg2)') + ';border-radius:12px;padding:0.85rem 1rem;cursor:pointer;user-select:none;margin-bottom:0.5rem;';
-      dateHdr.onclick = function(){ toggleFolder(dateFolderId); };
+      (function(id){ dateHdr.onclick = function(){ toggleFolder(id); }; })(dateFolderId);
 
       var dateLeft = document.createElement('div');
       dateLeft.style.cssText = 'display:flex;align-items:center;gap:0.5rem;';
@@ -742,10 +735,10 @@ function startListeners() {
       dateLeft.appendChild(dateCnt);
 
       if (isToday) {
-        var todayTag = document.createElement('span');
-        todayTag.style.cssText = 'font-size:0.65rem;color:rgba(255,255,255,0.7);';
-        todayTag.textContent = '오늘';
-        dateLeft.appendChild(todayTag);
+        var todayBadge = document.createElement('span');
+        todayBadge.style.cssText = 'font-size:0.65rem;color:rgba(255,255,255,0.7);';
+        todayBadge.textContent = '오늘';
+        dateLeft.appendChild(todayBadge);
       }
 
       var dateArrow = document.createElement('span');
@@ -761,7 +754,7 @@ function startListeners() {
       dateBody.id = dateFolderId;
       dateBody.style.display = isToday ? 'block' : 'none';
 
-      // 테이블별 그룹핑
+      // 테이블별 그룹
       var tableGroups = {};
       items.forEach(function(n) {
         var tbl = n.tableLabel || n.guestMsg || '손님';
@@ -780,21 +773,19 @@ function startListeners() {
         var tbl = entry[0];
         var tItems = entry[1];
         var tableNum = String(total - revIdx).padStart(2,'0');
-        var folderId = 'tf-' + date.replace(/\s/g,'-') + '-' + tbl.replace(/\s/g,'-').replace(/'/g,'');
+        var folderId = 'tf-' + date.replace(/\s/g,'-') + '-' + tbl.replace(/[\s']/g,'');
 
-        // 타입별 카운트
         var counts = { booking:0, call:0, checkout:0, beer:0, message:0, enter:0 };
         tItems.forEach(function(n){ if(counts[n.type]!==undefined) counts[n.type]++; });
         var checkoutItem = tItems.find(function(n){ return n.type==='checkout'; });
         var checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
 
-        // 테이블 카드
         var tCard = document.createElement('div');
         tCard.style.cssText = 'margin-bottom:0.6rem;background:var(--card);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;';
 
         var tHdr = document.createElement('div');
         tHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;cursor:pointer;user-select:none;';
-        tHdr.onclick = function(){ toggleFolder(folderId); };
+        (function(id){ tHdr.onclick = function(){ toggleFolder(id); }; })(folderId);
 
         var tLeft = document.createElement('div');
         tLeft.style.flex = '1';
@@ -818,7 +809,6 @@ function startListeners() {
         tTitleRow.appendChild(tCnt);
         tLeft.appendChild(tTitleRow);
 
-        // 요약 태그
         var tSummary = document.createElement('div');
         tSummary.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.3rem;';
         Object.entries(counts).forEach(function(ce) {
@@ -826,8 +816,7 @@ function startListeners() {
           if (!c) return;
           var badge = document.createElement('span');
           badge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:' + (COLOR[t]||'var(--navy)') + ';';
-          var label = t==='checkout' ? ('✓ 계산 완료' + (checkoutTime?' '+checkoutTime:'')) : t==='enter' ? '🚪 입장' : (ICON[t]||'') + ' ' + (LABEL[t]||t) + ' ' + c + '회';
-          badge.textContent = label;
+          badge.textContent = t==='checkout' ? ('✓ 계산 완료' + (checkoutTime?' '+checkoutTime:'')) : t==='enter' ? '🚪 입장' : ((ICON[t]||'') + ' ' + (LABEL[t]||t) + ' ' + c + '회');
           tSummary.appendChild(badge);
         });
         tLeft.appendChild(tSummary);
@@ -838,7 +827,7 @@ function startListeners() {
         var delBtn = document.createElement('button');
         delBtn.style.cssText = 'background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;';
         delBtn.textContent = '삭제';
-        (function(d, t){ delBtn.onclick = function(e){ e.stopPropagation(); deleteTableGroup(wid, d, t, ''); }; })(date, tbl);
+        (function(d,t){ delBtn.onclick = function(e){ e.stopPropagation(); deleteTableGroup(wid,d,t,''); }; })(date,tbl);
         tRight.appendChild(delBtn);
 
         var tArrow = document.createElement('span');
@@ -851,7 +840,6 @@ function startListeners() {
         tHdr.appendChild(tRight);
         tCard.appendChild(tHdr);
 
-        // 아이템 목록
         var tBody = document.createElement('div');
         tBody.id = folderId;
         tBody.style.cssText = 'display:none;border-top:0.5px solid var(--border);';

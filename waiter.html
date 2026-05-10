@@ -477,7 +477,9 @@ function doAddGuest() {
 }
 
 // ── QR 보여주기 ──
+let currentQRGuestId = '';
 function showQR(guestId, label) {
+  currentQRGuestId = guestId;
   const url = location.origin + '/guest?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
@@ -501,7 +503,10 @@ function sendSMS() {
   const body = '형님, 오늘 담당 호출 링크입니다\n부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요\n' + link;
   const a = document.createElement('a');
   a.href = 'sms:?body=' + encodeURIComponent(body);
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
+  setTimeout(() => document.body.removeChild(a), 500);
 }
 
 // ── 계산 완료 ──
@@ -687,13 +692,8 @@ function startListeners() {
     const typeLabel = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
     const typeColor = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
 
-    // 날짜 내림차순 정렬 (숫자 파싱 — "5월 10일"이 "5월 1일"보다 앞)
-    function parseDateNum(s) {
-      const m = s.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
-      if (!m) return 0;
-      return parseInt(m[1])*10000 + parseInt(m[2])*100 + parseInt(m[3]);
-    }
-    const sortedDates = Object.keys(dateGroups).sort((a,b) => parseDateNum(b) - parseDateNum(a));
+    // 날짜 내림차순 정렬
+    const sortedDates = Object.keys(dateGroups).sort((a,b) => b.localeCompare(a));
 
     list.innerHTML = sortedDates.map(date => {
       const items = dateGroups[date];
@@ -820,16 +820,7 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
         const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
         fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
       }
-      // history 저장 — 곧갈게요/잠시만요로 처리한 경우도 내역에 남김
-      const histData = {
-        type, tableLabel: tableLabel || notifData.tableLabel,
-        guestId: finalGuestId, time, date: todayStr(),
-        doneAt: nowStr(), sortKey: nowFull(),
-        reply: replyMsg
-      };
-      if (type === 'beer' && notifData.beerQty) histData.beerQty = notifData.beerQty;
-      if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
-      fbPush(fbRef(db, `history/${wid}`), histData);
+      // history 저장은 확인 버튼(doneNotif)에서만 처리
     });
   });
 }

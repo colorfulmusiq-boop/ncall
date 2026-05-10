@@ -678,119 +678,236 @@ function startListeners() {
 
   // 내역
   fbOnValue(fbRef(db, `history/${wid}`), snap => {
-    const data = snap.val() || {};
-    const hist = Object.entries(data)
-      .map(([k,v]) => ({...v, _key:k}))
-      .sort((a,b) => a._key.localeCompare(b._key)); // 시간순 오름차순
+    const raw = snap.val() || {};
+    const hist = Object.entries(raw)
+      .map(([k,v]) => Object.assign({}, v, {_key: k}))
+      .sort(function(a,b){ return (a.sortKey||a._key) < (b.sortKey||b._key) ? -1 : 1; });
+
     const list = document.getElementById('histList');
+    list.innerHTML = '';
+
     if (hist.length === 0) {
-      list.innerHTML = '<div class="empty"><div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div></div>';
+      const emp = document.createElement('div');
+      emp.className = 'empty';
+      emp.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div>';
+      list.appendChild(emp);
       return;
     }
 
+    const ICON  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪' };
+    const LABEL = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
+    const COLOR = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
+
+    // 날짜 파싱 (문자열 정렬 버그 방지)
+    function parseDateNum(s) {
+      var m = s.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+      return m ? parseInt(m[1])*10000 + parseInt(m[2])*100 + parseInt(m[3]) : 0;
+    }
+
     // 날짜별 그룹핑
-    const dateGroups = {};
-    hist.forEach(n => {
-      const date = n.date || '날짜 미상';
-      if (!dateGroups[date]) dateGroups[date] = [];
-      dateGroups[date].push(n);
+    var dateGroups = {};
+    hist.forEach(function(n) {
+      var d = n.date || '날짜 미상';
+      if (!dateGroups[d]) dateGroups[d] = [];
+      dateGroups[d].push(n);
     });
 
-    const typeIcon  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪' };
-    const typeLabel = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
-    const typeColor = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
+    // 날짜 내림차순
+    var sortedDates = Object.keys(dateGroups).sort(function(a,b){ return parseDateNum(b) - parseDateNum(a); });
 
-    // 날짜 내림차순 정렬 (숫자 파싱 — "5월 10일"이 "5월 1일"보다 앞)
-    function parseDateNum(s) {
-      const m = s.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
-      if (!m) return 0;
-      return parseInt(m[1])*10000 + parseInt(m[2])*100 + parseInt(m[3]);
-    }
-    const sortedDates = Object.keys(dateGroups).sort((a,b) => parseDateNum(b) - parseDateNum(a));
+    sortedDates.forEach(function(date) {
+      var items = dateGroups[date];
+      var isToday = date === todayStr();
+      var dateFolderId = 'date-' + date.replace(/\s/g,'-');
 
-    list.innerHTML = sortedDates.map(date => {
-      const items = dateGroups[date];
-      const isToday = date === todayStr();
-      const dateFolderId = `date-${date.replace(/\s/g,'-')}`;
+      // 날짜 헤더
+      var dateWrap = document.createElement('div');
+      dateWrap.style.marginBottom = '1rem';
 
-      // 날짜 안에서 테이블별 그룹핑
-      const tableGroups = {};
-      items.forEach(n => {
-        const tbl = n.tableLabel || n.guestMsg || '손님';
+      var dateHdr = document.createElement('div');
+      dateHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:' + (isToday?'var(--navy)':'var(--bg2)') + ';border-radius:12px;padding:0.85rem 1rem;cursor:pointer;user-select:none;margin-bottom:0.5rem;';
+      dateHdr.onclick = function(){ toggleFolder(dateFolderId); };
+
+      var dateLeft = document.createElement('div');
+      dateLeft.style.cssText = 'display:flex;align-items:center;gap:0.5rem;';
+
+      var dateTxt = document.createElement('span');
+      dateTxt.style.cssText = 'font-size:0.85rem;font-weight:700;color:' + (isToday?'#fff':'var(--muted)') + ';';
+      dateTxt.textContent = '📅 ' + date;
+      dateLeft.appendChild(dateTxt);
+
+      var dateCnt = document.createElement('span');
+      dateCnt.style.cssText = 'background:' + (isToday?'rgba(255,255,255,0.2)':'var(--border)') + ';color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
+      dateCnt.textContent = items.length + '건';
+      dateLeft.appendChild(dateCnt);
+
+      if (isToday) {
+        var todayTag = document.createElement('span');
+        todayTag.style.cssText = 'font-size:0.65rem;color:rgba(255,255,255,0.7);';
+        todayTag.textContent = '오늘';
+        dateLeft.appendChild(todayTag);
+      }
+
+      var dateArrow = document.createElement('span');
+      dateArrow.id = 'arrow-' + dateFolderId;
+      dateArrow.style.cssText = 'color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (isToday?'transform:rotate(180deg);':'');
+      dateArrow.textContent = '▼';
+
+      dateHdr.appendChild(dateLeft);
+      dateHdr.appendChild(dateArrow);
+      dateWrap.appendChild(dateHdr);
+
+      var dateBody = document.createElement('div');
+      dateBody.id = dateFolderId;
+      dateBody.style.display = isToday ? 'block' : 'none';
+
+      // 테이블별 그룹핑
+      var tableGroups = {};
+      items.forEach(function(n) {
+        var tbl = n.tableLabel || n.guestMsg || '손님';
         if (!tableGroups[tbl]) tableGroups[tbl] = [];
         tableGroups[tbl].push(n);
       });
 
-      const sortedTableEntries = Object.entries(tableGroups).sort((a,b) => { const aKey = a[1].map(n=>n._key||'').sort().pop()||''; const bKey = b[1].map(n=>n._key||'').sort().pop()||''; return aKey>bKey?1:aKey<bKey?-1:0; }); const totalTables = sortedTableEntries.length; const tableFolders = sortedTableEntries.slice().reverse().map(([tbl, tItems], revIdx) => { const tableNum = String(totalTables - revIdx).padStart(2, '0');
+      var tableEntries = Object.entries(tableGroups).sort(function(a,b){
+        var aKey = a[1].map(function(n){ return n._key||''; }).sort().pop()||'';
+        var bKey = b[1].map(function(n){ return n._key||''; }).sort().pop()||'';
+        return aKey > bKey ? 1 : aKey < bKey ? -1 : 0;
+      });
+      var total = tableEntries.length;
 
-        const safeTbl = tbl.replace(/'/g,"\\'").replace(/\s/g,'-');
-        const safeDate = date.replace(/\s/g,'-');
-        const folderId = `tf-${safeDate}-${safeTbl}`;
+      tableEntries.slice().reverse().forEach(function(entry, revIdx) {
+        var tbl = entry[0];
+        var tItems = entry[1];
+        var tableNum = String(total - revIdx).padStart(2,'0');
+        var folderId = 'tf-' + date.replace(/\s/g,'-') + '-' + tbl.replace(/\s/g,'-').replace(/'/g,'');
 
         // 타입별 카운트
-        const counts = { booking:0, call:0, checkout:0, beer:0, message:0, enter:0 };
-        tItems.forEach(n => { if(counts[n.type]!==undefined) counts[n.type]++; });
-const checkoutItem = tItems.find(n => n.type === 'checkout');
-        const checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
-        const summaryHtml = Object.entries(counts).filter(([,c])=>c>0).map(([t,c])=>`
-          <span style="display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:${typeColor[t]};">
-            ${typeIcon[t]} ${t==='checkout' ? '계산 완료' + (checkoutTime ? ' ' + checkoutTime : '') : t==='enter' ? '입장' : typeLabel[t]+' '+c+'회'}
-          </span>
-        `).join('');
+        var counts = { booking:0, call:0, checkout:0, beer:0, message:0, enter:0 };
+        tItems.forEach(function(n){ if(counts[n.type]!==undefined) counts[n.type]++; });
+        var checkoutItem = tItems.find(function(n){ return n.type==='checkout'; });
+        var checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
 
-        const itemsHtml = tItems.slice().sort((a,b) => { if(a.type==='enter') return -1; if(b.type==='enter') return 1; if(a.type==='checkout') return 1; if(b.type==='checkout') return -1; return (a.sortKey||a._key).localeCompare(b.sortKey||b._key); }).map(n => `
-          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-bottom:0.5px solid var(--border);">
-            <span style="font-size:1rem;">${typeIcon[n.type]||'•'}</span>
-            <div style="flex:1;">
-              <div style="font-size:0.8rem;font-weight:600;color:${typeColor[n.type]||'var(--navy)'};">${typeLabel[n.type]||n.type}${n.type==='beer'&&n.beerQty?' '+n.beerQty+'병':''}</div>
-              ${n.type==='message'?`<div style="font-size:0.72rem;color:var(--muted);margin-top:0.15rem;">"${n.msgText||'내용 없음'}"</div>`:''}
-              <div style="font-size:0.7rem;color:var(--muted);">${n.time}</div>
-            </div>
-            <button onclick="event.stopPropagation();deleteHistItem('${n._key}')" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 0.2rem;">×</button>
-          </div>
-        `).join('');
+        // 테이블 카드
+        var tCard = document.createElement('div');
+        tCard.style.cssText = 'margin-bottom:0.6rem;background:var(--card);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;';
 
-        return `
-          <div style="margin-bottom:0.6rem;background:var(--card);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;">
-            <div onclick="toggleFolder('${folderId}')" style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;cursor:pointer;user-select:none;">
-              <div style="flex:1;">
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
-                  <span style="font-size:0.65rem;font-weight:700;color:var(--muted);margin-right:0.1rem;">#${tableNum}</span><span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 ${tbl}</span>
-                  <span style="background:var(--navy);color:#fff;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;">${tItems.length}건</span>
-                </div>
-                <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${summaryHtml}</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;flex-shrink:0;">
-                <button onclick="event.stopPropagation();deleteTableGroup('${wid}','${date}','${tbl}','')" style="background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;">삭제</button>
-                <span id="arrow-${folderId}" style="color:var(--muted);font-size:0.8rem;transition:transform 0.2s;">▼</span>
-              </div>
-            </div>
-            <div id="${folderId}" style="display:none;border-top:0.5px solid var(--border);">
-              ${itemsHtml}
-            </div>
-          </div>
-        `;
-      }).join('');
+        var tHdr = document.createElement('div');
+        tHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;cursor:pointer;user-select:none;';
+        tHdr.onclick = function(){ toggleFolder(folderId); };
 
-      // 총 건수
-      const totalCount = items.length;
+        var tLeft = document.createElement('div');
+        tLeft.style.flex = '1';
 
-      return `
-        <div style="margin-bottom:1rem;">
-          <div onclick="toggleFolder('${dateFolderId}')" style="display:flex;align-items:center;justify-content:space-between;background:${isToday?'var(--navy)':'var(--bg2)'};border-radius:12px;padding:0.85rem 1rem;cursor:pointer;user-select:none;margin-bottom:0.5rem;">
-            <div style="display:flex;align-items:center;gap:0.5rem;">
-              <span style="font-size:0.85rem;font-weight:700;color:${isToday?'#fff':'var(--muted)'};">📅 ${date}</span>
-              <span style="background:${isToday?'rgba(255,255,255,0.2)':'var(--border)'};color:${isToday?'#fff':'var(--muted)'};font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;">${totalCount}건</span>
-              ${isToday?'<span style="font-size:0.65rem;color:rgba(255,255,255,0.7);">오늘</span>':''}
-            </div>
-            <span id="arrow-${dateFolderId}" style="color:${isToday?'#fff':'var(--muted)'};font-size:0.8rem;transition:transform 0.2s;${isToday?'transform:rotate(180deg);':''}">▼</span>
-          </div>
-          <div id="${dateFolderId}" style="display:${isToday?'block':'none'};">
-            ${tableFolders}
-          </div>
-        </div>
-      `;
-    }).join('');
+        var tTitleRow = document.createElement('div');
+        tTitleRow.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;';
+
+        var tNum = document.createElement('span');
+        tNum.style.cssText = 'font-size:0.65rem;font-weight:700;color:var(--muted);';
+        tNum.textContent = '#' + tableNum;
+        tTitleRow.appendChild(tNum);
+
+        var tName = document.createElement('span');
+        tName.style.cssText = 'font-size:0.95rem;font-weight:700;color:var(--navy);';
+        tName.textContent = '📁 ' + tbl;
+        tTitleRow.appendChild(tName);
+
+        var tCnt = document.createElement('span');
+        tCnt.style.cssText = 'background:var(--navy);color:#fff;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
+        tCnt.textContent = tItems.length + '건';
+        tTitleRow.appendChild(tCnt);
+        tLeft.appendChild(tTitleRow);
+
+        // 요약 태그
+        var tSummary = document.createElement('div');
+        tSummary.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.3rem;';
+        Object.entries(counts).forEach(function(ce) {
+          var t = ce[0]; var c = ce[1];
+          if (!c) return;
+          var badge = document.createElement('span');
+          badge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:' + (COLOR[t]||'var(--navy)') + ';';
+          var label = t==='checkout' ? ('✓ 계산 완료' + (checkoutTime?' '+checkoutTime:'')) : t==='enter' ? '🚪 입장' : (ICON[t]||'') + ' ' + (LABEL[t]||t) + ' ' + c + '회';
+          badge.textContent = label;
+          tSummary.appendChild(badge);
+        });
+        tLeft.appendChild(tSummary);
+
+        var tRight = document.createElement('div');
+        tRight.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;flex-shrink:0;';
+
+        var delBtn = document.createElement('button');
+        delBtn.style.cssText = 'background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;';
+        delBtn.textContent = '삭제';
+        (function(d, t){ delBtn.onclick = function(e){ e.stopPropagation(); deleteTableGroup(wid, d, t, ''); }; })(date, tbl);
+        tRight.appendChild(delBtn);
+
+        var tArrow = document.createElement('span');
+        tArrow.id = 'arrow-' + folderId;
+        tArrow.style.cssText = 'color:var(--muted);font-size:0.8rem;transition:transform 0.2s;';
+        tArrow.textContent = '▼';
+        tRight.appendChild(tArrow);
+
+        tHdr.appendChild(tLeft);
+        tHdr.appendChild(tRight);
+        tCard.appendChild(tHdr);
+
+        // 아이템 목록
+        var tBody = document.createElement('div');
+        tBody.id = folderId;
+        tBody.style.cssText = 'display:none;border-top:0.5px solid var(--border);';
+
+        var sorted = tItems.slice().sort(function(a,b){
+          if(a.type==='enter') return -1; if(b.type==='enter') return 1;
+          if(a.type==='checkout') return 1; if(b.type==='checkout') return -1;
+          return (a.sortKey||a._key) < (b.sortKey||b._key) ? -1 : 1;
+        });
+
+        sorted.forEach(function(n) {
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-bottom:0.5px solid var(--border);';
+
+          var ico = document.createElement('span');
+          ico.style.fontSize = '1rem';
+          ico.textContent = ICON[n.type] || '•';
+          row.appendChild(ico);
+
+          var info = document.createElement('div');
+          info.style.flex = '1';
+
+          var lbl = document.createElement('div');
+          lbl.style.cssText = 'font-size:0.8rem;font-weight:600;color:' + (COLOR[n.type]||'var(--navy)') + ';';
+          lbl.textContent = (LABEL[n.type]||n.type) + (n.type==='beer'&&n.beerQty?' '+n.beerQty+'병':'');
+          info.appendChild(lbl);
+
+          if (n.type==='message' && n.msgText) {
+            var mt = document.createElement('div');
+            mt.style.cssText = 'font-size:0.72rem;color:var(--muted);margin-top:0.15rem;';
+            mt.textContent = '"' + n.msgText + '"';
+            info.appendChild(mt);
+          }
+
+          var tm = document.createElement('div');
+          tm.style.cssText = 'font-size:0.7rem;color:var(--muted);';
+          tm.textContent = n.time || '';
+          info.appendChild(tm);
+          row.appendChild(info);
+
+          var xBtn = document.createElement('button');
+          xBtn.style.cssText = 'background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 0.2rem;';
+          xBtn.textContent = '×';
+          (function(k){ xBtn.onclick = function(e){ e.stopPropagation(); deleteHistItem(k); }; })(n._key);
+          row.appendChild(xBtn);
+
+          tBody.appendChild(row);
+        });
+
+        tCard.appendChild(tBody);
+        dateBody.appendChild(tCard);
+      });
+
+      dateWrap.appendChild(dateBody);
+      list.appendChild(dateWrap);
+    });
   });
   }); // waitFb 끝
 }

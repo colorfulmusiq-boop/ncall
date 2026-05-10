@@ -291,12 +291,20 @@ let pendingType = null;
 let isActive = true;
 let db, fbRef, fbPush, fbGet, fbSet, fbUpdate, fbOnValue, fbRemove;
 
-document.addEventListener('fb-ready', () => {
+function _assignFb() {
   db=window._db; fbRef=window._ref; fbPush=window._push;
   fbGet=window._get; fbSet=window._set; fbUpdate=window._update; fbOnValue=window._onValue; fbRemove=window._remove;
-  init();
-});
-function waitFb(fn) { if(window._fbReady) fn(); else document.addEventListener('fb-ready',fn,{once:true}); }
+}
+function waitFb(fn) {
+  if (window._fbReady) { _assignFb(); fn(); }
+  else document.addEventListener('fb-ready', function(){ _assignFb(); fn(); }, {once:true});
+}
+// compat SDK는 동기 로드 — DOMContentLoaded 후 바로 init
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function(){ _assignFb(); init(); });
+} else {
+  _assignFb(); init();
+}
 function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
 function nowFull() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
 function todayStr() {

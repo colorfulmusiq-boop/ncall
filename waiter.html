@@ -14,24 +14,32 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, set, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-const cfg = {
-  apiKey:"AIzaSyDpToFo3_0q35eRxpZ6iIWC5nUZqZKGZqw",
-  authDomain:"nightcall-47430.firebaseapp.com",
-  databaseURL:"https://nightcall-47430-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:"nightcall-47430",
-  storageBucket:"nightcall-47430.firebasestorage.app",
-  messagingSenderId:"522787869614",
-  appId:"1:522787869614:web:785a75ed1219ed078f2e3f"
-};
-const app = initializeApp(cfg);
-const db = getDatabase(app);
-window._db=db; window._ref=ref; window._push=push;
-window._onValue=onValue; window._remove=remove; window._set=set; window._get=get; window._update=update;
-window._fbReady=true;
-document.dispatchEvent(new Event('fb-ready'));
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+(function() {
+  var cfg = {
+    apiKey:"AIzaSyDpToFo3_0q35eRxpZ6iIWC5nUZqZKGZqw",
+    authDomain:"nightcall-47430.firebaseapp.com",
+    databaseURL:"https://nightcall-47430-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:"nightcall-47430",
+    storageBucket:"nightcall-47430.firebasestorage.app",
+    messagingSenderId:"522787869614",
+    appId:"1:522787869614:web:785a75ed1219ed078f2e3f"
+  };
+  firebase.initializeApp(cfg);
+  var db = firebase.database();
+  window._db = db;
+  window._ref = function(db, path) { return db.ref(path); };
+  window._push = function(ref, data) { return ref.push(data); };
+  window._set = function(ref, data) { return ref.set(data); };
+  window._get = function(ref) { return ref.once('value'); };
+  window._update = function(ref, data) { return ref.update(data); };
+  window._remove = function(ref) { return ref.remove(); };
+  window._onValue = function(ref, cb) { ref.on('value', cb); };
+  window._fbReady = true;
+  document.dispatchEvent(new Event('fb-ready'));
+})();
 </script>
 
 <style>
@@ -477,7 +485,9 @@ function doAddGuest() {
 }
 
 // ── QR 보여주기 ──
+let currentQRGuestId = '';
 function showQR(guestId, label) {
+  currentQRGuestId = guestId;
   const url = location.origin + '/guest?w=' + encodeURIComponent(W.name) + '&g=' + guestId;
   document.getElementById('qrPopupTitle').textContent = '손님 호출 QR';
   document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
@@ -497,11 +507,14 @@ function showQR(guestId, label) {
 function closeQR() { document.getElementById('qrPopup').classList.remove('open'); }
 
 function sendSMS() {
-  const link = 'https://ncall.kr/guest.html?wg=' + encodeURIComponent(W.name + currentQRGuestId);
+  const link = 'https://ncall.kr/guest.html?wg=' + encodeURIComponent(W.name) + currentQRGuestId;
   const body = '형님, 오늘 담당 호출 링크입니다\n부킹 요청 / 맥주 추가 / 웨이터 호출은 여기서 눌러주세요\n' + link;
   const a = document.createElement('a');
   a.href = 'sms:?body=' + encodeURIComponent(body);
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
+  setTimeout(() => document.body.removeChild(a), 500);
 }
 
 // ── 계산 완료 ──
@@ -687,8 +700,13 @@ function startListeners() {
     const typeLabel = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
     const typeColor = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
 
-    // 날짜 내림차순 정렬
-    const sortedDates = Object.keys(dateGroups).sort((a,b) => b.localeCompare(a));
+    // 날짜 내림차순 정렬 (숫자 파싱 — "5월 10일"이 "5월 1일"보다 앞)
+    function parseDateNum(s) {
+      const m = s.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
+      if (!m) return 0;
+      return parseInt(m[1])*10000 + parseInt(m[2])*100 + parseInt(m[3]);
+    }
+    const sortedDates = Object.keys(dateGroups).sort((a,b) => parseDateNum(b) - parseDateNum(a));
 
     list.innerHTML = sortedDates.map(date => {
       const items = dateGroups[date];
@@ -815,7 +833,16 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
         const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
         fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
       }
-      // history 저장은 확인 버튼(doneNotif)에서만 처리
+      // history 저장 — 곧갈게요/잠시만요도 내역에 남김
+      const histData = {
+        type, tableLabel: tableLabel || notifData.tableLabel,
+        guestId: finalGuestId, time, date: todayStr(),
+        doneAt: nowStr(), sortKey: nowFull(),
+        reply: replyMsg
+      };
+      if (type === 'beer' && notifData.beerQty) histData.beerQty = notifData.beerQty;
+      if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
+      fbPush(fbRef(db, `history/${wid}`), histData);
     });
   });
 }

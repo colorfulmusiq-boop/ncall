@@ -526,15 +526,6 @@ function checkoutGuest(guestId, label) {
       type:'checkout', tableLabel: label, guestMsg: label, guestId: guestId,
       time: nowStr(), date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
     });
-    // 이전 enter 기록 제거 (다음 손님과 폴더 충돌 방지)
-    fbGet(fbRef(db, `history/${W.id}`)).then(snap => {
-      const data = snap.val() || {};
-      Object.entries(data).forEach(([k, v]) => {
-        if (v.guestId === guestId && v.type === 'enter') {
-          fbRemove(fbRef(db, `history/${W.id}/${k}`));
-        }
-      });
-    });
   });
   toast('✓ 계산 완료');
 }
@@ -851,7 +842,7 @@ function startListeners() {
         var delBtn = document.createElement('button');
         delBtn.style.cssText = 'background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;';
         delBtn.textContent = '삭제';
-        (function(d,t){ delBtn.onclick = function(e){ e.stopPropagation(); deleteTableGroup(wid,d,t,''); }; })(date,tbl);
+        (function(d,t,g){ delBtn.onclick = function(e){ e.stopPropagation(); deleteTableGroup(wid,d,t,g); }; })(date, tbl, (tItems[0]&&tItems[0].guestId)||'');
         tRight.appendChild(delBtn);
 
         var tArrow = document.createElement('span');
@@ -1074,11 +1065,8 @@ function toggleFolder(id) {
   if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
-function deleteTableGroup(wid, date, tableLabel, grpKey) {
+function deleteTableGroup(wid, date, tableLabel, guestId) {
   if (!confirm(date + '\n[' + tableLabel + '] 폴더 전체를 삭제할까요?')) return;
-  // grpKey에서 guestId 추출
-  const parts = grpKey ? grpKey.split('___') : [];
-  const guestId = parts.length === 2 ? parts[1] : null;
   waitFb(() => {
     fbGet(fbRef(db, `history/${wid}`)).then(snap => {
       const data = snap.val() || {};

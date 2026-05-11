@@ -523,7 +523,8 @@ function checkoutGuest(guestId, label) {
   waitFb(() => {
     fbUpdate(fbRef(db, `guests/${W.id}/${guestId}`), {active: false});
     fbPush(fbRef(db, `history/${W.id}`), {
-      type:'checkout', guestMsg: label, time: nowStr(), date: todayStr()
+      type:'checkout', tableLabel: label, guestMsg: label, guestId: guestId,
+      time: nowStr(), date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
     });
   });
   toast('✓ 계산 완료');

@@ -596,12 +596,7 @@ function sendNotif(type) {
     waiterName: waiterData.name, guestId,
     time: sentTime, date: sentDate, done: false
   });
-  if (type === 'booking') {
-    setTimeout(() => {
-      const countRef = fbRef(db, `guests/${waiterData.id}/${guestId}/bookingCount`);
-      fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
-    }, 500);
-  }
+
   const bar = document.getElementById('sentBar');
   document.getElementById('sentMsg').textContent = type==='call' ? '호출이 전송됐어요' : '부킹 요청이 전송됐어요';
   bar.classList.add('show');

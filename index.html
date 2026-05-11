@@ -787,7 +787,8 @@ function startListeners() {
         var tbl = entry[1][0].tableLabel || entry[1][0].guestMsg || '손님';
         var tItems = entry[1];
         var tableNum = String(total - revIdx).padStart(2,'0');
-        var folderId = 'tf-' + date.replace(/\s/g,'-') + '-' + tbl.replace(/[\s']/g,'');
+        var grpGuestId = (tItems[0] && tItems[0].guestId) ? tItems[0].guestId.replace(/[^a-zA-Z0-9]/g,'') : '';
+        var folderId = 'tf-' + date.replace(/\s/g,'-') + '-' + tbl.replace(/[\s']/g,'') + '-' + grpGuestId;
 
         var counts = { booking:0, call:0, checkout:0, beer:0, message:0, enter:0 };
         tItems.forEach(function(n){ if(counts[n.type]!==undefined) counts[n.type]++; });

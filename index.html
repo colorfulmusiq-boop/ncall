@@ -842,7 +842,7 @@ function startListeners() {
         var delBtn = document.createElement('button');
         delBtn.style.cssText = 'background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;';
         delBtn.textContent = '삭제';
-        (function(d,t){ delBtn.onclick = function(e){ e.stopPropagation(); deleteTableGroup(wid,d,t,''); }; })(date,tbl);
+        (function(d,t,g){ delBtn.onclick = function(e){ e.stopPropagation(); deleteTableGroup(wid,d,t,g); }; })(date, tbl, (tItems[0]&&tItems[0].guestId)||'');
         tRight.appendChild(delBtn);
 
         var tArrow = document.createElement('span');

@@ -747,8 +747,8 @@ function startListeners() {
       dateArrow.textContent = '▼';
 
       var dateDel = document.createElement('button');
-      dateDel.style.cssText = 'background:rgba(255,255,255,0.15);border:none;color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.65rem;font-weight:600;cursor:pointer;padding:0.2rem 0.5rem;border-radius:6px;margin-right:0.5rem;flex-shrink:0;';
-      dateDel.textContent = '삭제';
+      dateDel.style.cssText = 'background:' + (isToday?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.06)') + ';border:0.5px solid ' + (isToday?'rgba(255,255,255,0.25)':'var(--border)') + ';color:' + (isToday?'rgba(255,255,255,0.8)':'var(--muted)') + ';font-size:0.62rem;font-weight:600;cursor:pointer;padding:0.18rem 0.55rem;border-radius:20px;margin-right:0.4rem;flex-shrink:0;letter-spacing:0.02em;';
+      dateDel.textContent = '🗑 삭제';
       (function(d){ dateDel.onclick = function(e){ e.stopPropagation(); deleteDateGroup(wid, d); }; })(date);
 
       dateHdr.appendChild(dateLeft);

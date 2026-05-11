@@ -764,8 +764,9 @@ function startListeners() {
       var tableGroups = {};
       items.forEach(function(n) {
         var tbl = n.tableLabel || n.guestMsg || '손님';
-        if (!tableGroups[tbl]) tableGroups[tbl] = [];
-        tableGroups[tbl].push(n);
+        var grpKey = tbl + '___' + (n.guestId || '');
+        if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
+        tableGroups[grpKey].push(n);
       });
 
       var tableEntries = Object.entries(tableGroups).sort(function(a,b){
@@ -776,7 +777,7 @@ function startListeners() {
       var total = tableEntries.length;
 
       tableEntries.slice().reverse().forEach(function(entry, revIdx) {
-        var tbl = entry[0];
+        var tbl = entry[1][0].tableLabel || entry[1][0].guestMsg || '손님';
         var tItems = entry[1];
         var tableNum = String(total - revIdx).padStart(2,'0');
         var folderId = 'tf-' + date.replace(/\s/g,'-') + '-' + tbl.replace(/[\s']/g,'');

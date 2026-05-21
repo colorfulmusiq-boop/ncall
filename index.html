@@ -383,7 +383,7 @@ function waitFb(fn) {
 }
 function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
 function nowFull() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
-function todayStr() { const n=new Date(); return n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일'; }
+function todayStr() { const n=new Date(); if (n.getHours() < 6) n.setDate(n.getDate() - 1); return n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일'; }
 
 // ── 인증 ──
 function switchAuthTab(tab) {

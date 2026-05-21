@@ -715,6 +715,22 @@ function startListeners() {
       var isToday = date === todayStr();
       var dateFolderId = 'date-' + date.replace(/\s/g,'-');
 
+      // 테이블별 그룹 — 날짜 건수 계산을 위해 먼저 구성
+      var tableGroups = {};
+      items.forEach(function(n) {
+        var tbl = n.tableLabel || n.guestMsg || '손님';
+        var grpKey = tbl + '___' + (n.guestId || '');
+        if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
+        tableGroups[grpKey].push(n);
+      });
+
+      var tableEntries = Object.entries(tableGroups).sort(function(a,b){
+        var aKey = a[1].map(function(n){ return n._key||''; }).sort().pop()||'';
+        var bKey = b[1].map(function(n){ return n._key||''; }).sort().pop()||'';
+        return aKey > bKey ? 1 : aKey < bKey ? -1 : 0;
+      });
+      var total = tableEntries.length;
+
       var dateWrap = document.createElement('div');
       dateWrap.style.marginBottom = '1rem';
 
@@ -738,8 +754,28 @@ function startListeners() {
 
       var dateCnt = document.createElement('span');
       dateCnt.style.cssText = 'background:' + (isToday?'rgba(255,255,255,0.2)':'var(--border)') + ';color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
-      dateCnt.textContent = items.length + '건';
+      dateCnt.textContent = total + '건';
       dateLeft.appendChild(dateCnt);
+
+      // 메이드 배지
+      var maidCntBadge = document.createElement('span');
+      maidCntBadge.style.cssText = 'background:' + (isToday?'rgba(255,100,100,0.35)':'#fde8e8') + ';color:' + (isToday?'#ffcccc':'#c0392b') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;display:none;';
+      dateLeft.appendChild(maidCntBadge);
+      (function(badge, entries) {
+        var gids = entries.map(function(e){ return ((e[1][0]&&e[1][0].guestId)||'').replace(/[^a-zA-Z0-9]/g,'_'); }).filter(Boolean);
+        if (!gids.length) return;
+        var count = 0; var done = 0;
+        gids.forEach(function(gid) {
+          fbGet(fbRef(db, 'maid/' + wid + '/' + gid)).then(function(snap) {
+            if (snap.val() === true) count++;
+            done++;
+            if (done === gids.length && count > 0) {
+              badge.textContent = '❤️ ' + count;
+              badge.style.display = 'inline';
+            }
+          }).catch(function(){ done++; });
+        });
+      })(maidCntBadge, tableEntries);
 
       if (isToday) {
         var todayBadge = document.createElement('span');
@@ -766,22 +802,6 @@ function startListeners() {
       var dateBody = document.createElement('div');
       dateBody.id = dateFolderId;
       dateBody.style.display = isToday ? 'block' : 'none';
-
-      // 테이블별 그룹
-      var tableGroups = {};
-      items.forEach(function(n) {
-        var tbl = n.tableLabel || n.guestMsg || '손님';
-        var grpKey = tbl + '___' + (n.guestId || '');
-        if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
-        tableGroups[grpKey].push(n);
-      });
-
-      var tableEntries = Object.entries(tableGroups).sort(function(a,b){
-        var aKey = a[1].map(function(n){ return n._key||''; }).sort().pop()||'';
-        var bKey = b[1].map(function(n){ return n._key||''; }).sort().pop()||'';
-        return aKey > bKey ? 1 : aKey < bKey ? -1 : 0;
-      });
-      var total = tableEntries.length;
 
       tableEntries.slice().reverse().forEach(function(entry, revIdx) {
         var tbl = entry[1][0].tableLabel || entry[1][0].guestMsg || '손님';
@@ -834,6 +854,50 @@ function startListeners() {
           badge.textContent = t==='checkout' ? ('✓ 계산 완료' + (checkoutTime?' '+checkoutTime:'')) : t==='enter' ? '🚪 입장' : ((ICON[t]||'') + ' ' + (LABEL[t]||t) + ' ' + c + '회');
           tSummary.appendChild(badge);
         });
+        // 메이드 하트 버튼 — tSummary 배지 줄 끝에 삽입
+        var maidGid = ((tItems[0]&&tItems[0].guestId) || tbl).replace(/[^a-zA-Z0-9]/g,'_');
+        var maidRef = fbRef(db, 'maid/' + wid + '/' + maidGid);
+        var maidHeartBadge = document.createElement('span');
+        maidHeartBadge.style.cssText = 'display:none;align-items:center;gap:0.2rem;background:#fde8e8;border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:#c0392b;cursor:pointer;';
+        maidHeartBadge.title = '메이드 완료 (취소하려면 터치)';
+        maidHeartBadge.textContent = '❤️ 메이드';
+        var maidAddBadge = document.createElement('span');
+        maidAddBadge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--muted);cursor:pointer;border:0.5px dashed var(--border);';
+        maidAddBadge.title = '커플 메이드 완료 시 터치';
+        maidAddBadge.textContent = '+ 메이드';
+        (function(addB, heartB, ref, cntBadge) {
+          fbGet(ref).then(function(snap) {
+            if (snap.val() === true) {
+              addB.style.display = 'none';
+              heartB.style.display = 'inline-flex';
+            }
+          }).catch(function(){});
+          addB.onclick = function(e) {
+            e.stopPropagation();
+            fbSet(ref, true);
+            addB.style.display = 'none';
+            heartB.style.display = 'inline-flex';
+            var cur = parseInt((cntBadge.textContent||'').replace(/[^0-9]/g,''))||0;
+            cntBadge.textContent = '❤️ ' + (cur + 1);
+            cntBadge.style.display = 'inline';
+          };
+          heartB.onclick = function(e) {
+            e.stopPropagation();
+            fbSet(ref, false);
+            heartB.style.display = 'none';
+            addB.style.display = 'inline-flex';
+            var cur = parseInt((cntBadge.textContent||'').replace(/[^0-9]/g,''))||0;
+            if (cur <= 1) {
+              cntBadge.style.display = 'none';
+              cntBadge.textContent = '';
+            } else {
+              cntBadge.textContent = '❤️ ' + (cur - 1);
+            }
+          };
+        })(maidAddBadge, maidHeartBadge, maidRef, maidCntBadge);
+        tSummary.appendChild(maidAddBadge);
+        tSummary.appendChild(maidHeartBadge);
+
         tLeft.appendChild(tSummary);
 
         var tRight = document.createElement('div');
@@ -1005,14 +1069,12 @@ function clearAllNotifs() {
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${W.id}`)).then(snap => {
       const data = snap.val() || {};
-      // 같은 guestId의 부킹을 먼저 집계해서 한번에 카운팅
       const bookingCounts = {};
       Object.entries(data).forEach(([k,v]) => {
         if (!v.done && v.type === 'booking' && v.guestId) {
           bookingCounts[v.guestId] = (bookingCounts[v.guestId] || 0) + 1;
         }
       });
-      // 집계된 수만큼 한번에 업데이트
       Object.entries(bookingCounts).forEach(([guestId, cnt]) => {
         const countRef = fbRef(db, `guests/${W.id}/${guestId}/bookingCount`);
         fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + cnt));
@@ -1089,7 +1151,9 @@ function deleteTableGroup(wid, date, tableLabel, guestId) {
       Object.entries(data).forEach(([k, v]) => {
         const tbl = v.tableLabel || v.guestMsg || '손님';
         const sameDate = (v.date || '날짜 미상') === date;
-        const match = guestId ? (v.guestId === guestId && sameDate) : (sameDate && tbl === tableLabel);
+        const match = guestId
+          ? (v.guestId === guestId && sameDate && tbl === tableLabel)
+          : (sameDate && tbl === tableLabel && !v.guestId);
         if (match) fbRemove(fbRef(db, `history/${wid}/${k}`));
       });
     });

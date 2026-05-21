@@ -715,6 +715,22 @@ function startListeners() {
       var isToday = date === todayStr();
       var dateFolderId = 'date-' + date.replace(/\s/g,'-');
 
+      // 테이블별 그룹 — 날짜 건수 계산을 위해 먼저 구성
+      var tableGroups = {};
+      items.forEach(function(n) {
+        var tbl = n.tableLabel || n.guestMsg || '손님';
+        var grpKey = tbl + '___' + (n.guestId || '');
+        if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
+        tableGroups[grpKey].push(n);
+      });
+
+      var tableEntries = Object.entries(tableGroups).sort(function(a,b){
+        var aKey = a[1].map(function(n){ return n._key||''; }).sort().pop()||'';
+        var bKey = b[1].map(function(n){ return n._key||''; }).sort().pop()||'';
+        return aKey > bKey ? 1 : aKey < bKey ? -1 : 0;
+      });
+      var total = tableEntries.length;
+
       var dateWrap = document.createElement('div');
       dateWrap.style.marginBottom = '1rem';
 
@@ -738,8 +754,28 @@ function startListeners() {
 
       var dateCnt = document.createElement('span');
       dateCnt.style.cssText = 'background:' + (isToday?'rgba(255,255,255,0.2)':'var(--border)') + ';color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
-      dateCnt.textContent = items.length + '건';
+      dateCnt.textContent = total + '건';
       dateLeft.appendChild(dateCnt);
+
+      // 메이드 배지 — Firebase에서 해당 날짜 손님들 메이드 수 비동기로 읽어와서 표시
+      var maidCntBadge = document.createElement('span');
+      maidCntBadge.style.cssText = 'background:' + (isToday?'rgba(255,100,100,0.35)':'#fde8e8') + ';color:' + (isToday?'#ffcccc':'#c0392b') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;display:none;';
+      dateLeft.appendChild(maidCntBadge);
+      (function(badge, entries) {
+        var gids = entries.map(function(e){ return ((e[1][0]&&e[1][0].guestId)||'').replace(/[^a-zA-Z0-9]/g,'_'); }).filter(Boolean);
+        if (!gids.length) return;
+        var count = 0; var done = 0;
+        gids.forEach(function(gid) {
+          fbGet(fbRef(db, 'maid/' + wid + '/' + gid)).then(function(snap) {
+            if (snap.val() === true) count++;
+            done++;
+            if (done === gids.length && count > 0) {
+              badge.textContent = '❤️ ' + count;
+              badge.style.display = 'inline';
+            }
+          }).catch(function(){ done++; });
+        });
+      })(maidCntBadge, tableEntries);
 
       if (isToday) {
         var todayBadge = document.createElement('span');
@@ -767,21 +803,6 @@ function startListeners() {
       dateBody.id = dateFolderId;
       dateBody.style.display = isToday ? 'block' : 'none';
 
-      // 테이블별 그룹
-      var tableGroups = {};
-      items.forEach(function(n) {
-        var tbl = n.tableLabel || n.guestMsg || '손님';
-        var grpKey = tbl + '___' + (n.guestId || '');
-        if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
-        tableGroups[grpKey].push(n);
-      });
-
-      var tableEntries = Object.entries(tableGroups).sort(function(a,b){
-        var aKey = a[1].map(function(n){ return n._key||''; }).sort().pop()||'';
-        var bKey = b[1].map(function(n){ return n._key||''; }).sort().pop()||'';
-        return aKey > bKey ? 1 : aKey < bKey ? -1 : 0;
-      });
-      var total = tableEntries.length;
 
       tableEntries.slice().reverse().forEach(function(entry, revIdx) {
         var tbl = entry[1][0].tableLabel || entry[1][0].guestMsg || '손님';

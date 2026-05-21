@@ -247,6 +247,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     </div>
     <div class="hdr-right">
       <div class="live-dot"></div>
+      <button class="logout-btn" onclick="showUpdates()">📋 업데이트</button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -274,6 +275,16 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <button class="btn btn-danger" style="margin-bottom:1rem;" onclick="clearHistory()">🗑 내역 전체 삭제</button>
     <div id="histList"><div class="empty"><div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div></div></div>
   </div></div>
+</div>
+
+<!-- 업데이트 내역 모달 -->
+<div class="modal-bg" id="updatesModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">업데이트 내역</div>
+    <div id="updatesList" style="max-height:60vh;overflow-y:auto;"></div>
+    <button class="btn btn-ghost" onclick="closeModal('updatesModal')" style="margin-top:1rem;">닫기</button>
+  </div>
 </div>
 
 <!-- 직접 답장 모달 -->
@@ -422,6 +433,32 @@ function enterDash() {
   document.getElementById('dashName').textContent = W.name + ' 웨이터님';
   requestNotifPerm();
   startListeners();
+}
+
+// ── 업데이트 내역 ──
+// 새 업데이트 추가할 때 여기에 한 줄씩 추가하면 됩니다
+const APP_UPDATES = [
+  { date: "2026.05.21", content: "❤️ 커플 메이드 입력 기능 추가 — 내역 탭 손님 폴더에서 메이드 완료 체크 가능" },
+  { date: "2026.05.21", content: "📊 날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
+  { date: "2026.05.21", content: "🗑 같은 이름 손님 삭제 버그 수정" },
+];
+
+function showUpdates() {
+  const list = document.getElementById('updatesList');
+  list.innerHTML = '';
+  APP_UPDATES.forEach(function(u) {
+    var item = document.createElement('div');
+    item.style.cssText = 'padding:0.85rem 0;border-bottom:0.5px solid var(--border);';
+    var date = document.createElement('div');
+    date.style.cssText = 'font-size:0.65rem;color:var(--muted);margin-bottom:0.3rem;font-weight:600;letter-spacing:0.05em;';
+    date.textContent = u.date;
+    var content = document.createElement('div');
+    content.style.cssText = 'font-size:0.85rem;color:var(--navy);line-height:1.5;';
+    content.textContent = u.content;
+    item.append(date, content);
+    list.appendChild(item);
+  });
+  document.getElementById('updatesModal').classList.add('open');
 }
 
 function doLogout() {

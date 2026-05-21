@@ -247,6 +247,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     </div>
     <div class="hdr-right">
       <div class="live-dot"></div>
+      <button class="logout-btn" onclick="showUpdates()">📋 공지사항</button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -274,6 +275,19 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <button class="btn btn-danger" style="margin-bottom:1rem;" onclick="clearHistory()">🗑 내역 전체 삭제</button>
     <div id="histList"><div class="empty"><div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div></div></div>
   </div></div>
+</div>
+
+<!-- 공지사항 모달 -->
+<div class="modal-bg" id="updatesModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="background:#fff8e8;border:0.5px solid #f0d080;border-radius:10px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:#7a5a00;line-height:1.6;">
+      📢 업데이트 후 앱이 최신 버전으로 적용되지 않는 경우, 앱을 삭제 후 ncall.kr 에서 다시 설치해주세요.
+    </div>
+    <div id="updatesList" style="max-height:45vh;overflow-y:auto;"></div>
+    <a href="https://open.kakao.com/o/s1qOE0mi" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:1rem;padding:0.85rem;background:#fee500;border-radius:10px;font-size:0.85rem;font-weight:700;color:#3a1d1d;text-decoration:none;">💬 문의사항은 여기로</a>
+    <button class="btn btn-ghost" onclick="closeModal('updatesModal')" style="margin-top:0.5rem;">닫기</button>
+  </div>
 </div>
 
 <!-- 직접 답장 모달 -->
@@ -424,6 +438,61 @@ function enterDash() {
   startListeners();
 }
 
+const APP_UPDATES = [
+  { date: "2026.05.21", type: "업데이트", content: "커플 메이드 입력 기능 추가 — 내역 탭 손님 폴더에서 메이드 완료 체크 가능" },
+  { date: "2026.05.21", type: "업데이트", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
+  { date: "2026.05.21", type: "업데이트", content: "같은 이름 손님 삭제 버그 수정" },
+];
+function showUpdates() {
+  const list = document.getElementById('updatesList');
+  list.innerHTML = '';
+  const groups = {};
+  APP_UPDATES.forEach(function(u) {
+    if (!groups[u.date]) groups[u.date] = [];
+    groups[u.date].push({ type: u.type, content: u.content });
+  });
+  Object.keys(groups).forEach(function(date, idx) {
+    const folderId = 'update-' + date.replace(/\./g, '-');
+    const types = [...new Set(groups[date].map(function(i){ return i.type; }))].join(' · ');
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'var(--navy)':'var(--bg2)') + ';cursor:pointer;';
+    hdr.onclick = function() {
+      const body = document.getElementById(folderId);
+      const arrow = document.getElementById('arrow-' + folderId);
+      const isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+    };
+    const left = document.createElement('div');
+    const typeSpan = document.createElement('div');
+    typeSpan.style.cssText = 'font-size:0.6rem;font-weight:700;color:' + (idx===0?'rgba(255,255,255,0.6)':'var(--muted)') + ';margin-bottom:0.15rem;';
+    typeSpan.textContent = types;
+    const dateSpan = document.createElement('div');
+    dateSpan.style.cssText = 'font-size:0.82rem;font-weight:700;color:' + (idx===0?'#fff':'var(--muted)') + ';';
+    dateSpan.textContent = date;
+    left.append(typeSpan, dateSpan);
+    const arrow = document.createElement('span');
+    arrow.id = 'arrow-' + folderId;
+    arrow.style.cssText = 'color:' + (idx===0?'#fff':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (idx===0?'transform:rotate(180deg);':'');
+    arrow.textContent = '▼';
+    hdr.append(left, arrow);
+    wrap.appendChild(hdr);
+    const body = document.createElement('div');
+    body.id = folderId;
+    body.style.display = idx === 0 ? 'block' : 'none';
+    groups[date].forEach(function(item) {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;color:var(--navy);line-height:1.5;';
+      row.textContent = item.content;
+      body.appendChild(row);
+    });
+    wrap.appendChild(body);
+    list.appendChild(wrap);
+  });
+  document.getElementById('updatesModal').classList.add('open');
+}
 function doLogout() {
   W = null; prevNotifCount = -1;
   listenersStarted = false;
@@ -833,6 +902,30 @@ function startListeners() {
           badge.textContent = t==='checkout' ? ('✓ 계산 완료' + (checkoutTime?' '+checkoutTime:'')) : t==='enter' ? '🚪 입장' : ((ICON[t]||'') + ' ' + (LABEL[t]||t) + ' ' + c + '회');
           tSummary.appendChild(badge);
         });
+        var maidGid = ((tItems[0]&&tItems[0].guestId) || tbl).replace(/[^a-zA-Z0-9]/g,'_');
+        var maidRef = fbRef(db, 'maid/' + wid + '/' + maidGid);
+        var maidHeartBadge = document.createElement('span');
+        maidHeartBadge.style.cssText = 'display:none;align-items:center;gap:0.2rem;background:#fde8e8;border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:#c0392b;cursor:pointer;';
+        maidHeartBadge.textContent = '❤️ 메이드';
+        var maidAddBadge = document.createElement('span');
+        maidAddBadge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--muted);cursor:pointer;border:0.5px dashed var(--border);';
+        maidAddBadge.textContent = '+ 메이드';
+        (function(addB, heartB, ref) {
+          fbGet(ref).then(function(snap) {
+            if (snap.val() === true) { addB.style.display = 'none'; heartB.style.display = 'inline-flex'; }
+          }).catch(function(){});
+          addB.onclick = function(e) {
+            e.stopPropagation(); fbSet(ref, true);
+            addB.style.display = 'none'; heartB.style.display = 'inline-flex';
+          };
+          heartB.onclick = function(e) {
+            e.stopPropagation(); fbSet(ref, false);
+            heartB.style.display = 'none'; addB.style.display = 'inline-flex';
+          };
+        })(maidAddBadge, maidHeartBadge, maidRef);
+        tSummary.appendChild(maidAddBadge);
+        tSummary.appendChild(maidHeartBadge);
+
         tLeft.appendChild(tSummary);
 
         var tRight = document.createElement('div');

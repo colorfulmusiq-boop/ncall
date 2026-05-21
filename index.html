@@ -866,7 +866,7 @@ function startListeners() {
         maidAddBadge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--muted);cursor:pointer;border:0.5px dashed var(--border);';
         maidAddBadge.title = '커플 메이드 완료 시 터치';
         maidAddBadge.textContent = '+ 메이드';
-        (function(addB, heartB, ref) {
+        (function(addB, heartB, ref, cntBadge) {
           fbGet(ref).then(function(snap) {
             if (snap.val() === true) {
               addB.style.display = 'none';
@@ -878,14 +878,24 @@ function startListeners() {
             fbSet(ref, true);
             addB.style.display = 'none';
             heartB.style.display = 'inline-flex';
+            var cur = parseInt((cntBadge.textContent||'').replace(/[^0-9]/g,''))||0;
+            cntBadge.textContent = '❤️ ' + (cur + 1);
+            cntBadge.style.display = 'inline';
           };
           heartB.onclick = function(e) {
             e.stopPropagation();
             fbSet(ref, false);
             heartB.style.display = 'none';
             addB.style.display = 'inline-flex';
+            var cur = parseInt((cntBadge.textContent||'').replace(/[^0-9]/g,''))||0;
+            if (cur <= 1) {
+              cntBadge.style.display = 'none';
+              cntBadge.textContent = '';
+            } else {
+              cntBadge.textContent = '❤️ ' + (cur - 1);
+            }
           };
-        })(maidAddBadge, maidHeartBadge, maidRef);
+        })(maidAddBadge, maidHeartBadge, maidRef, maidCntBadge);
         tSummary.appendChild(maidAddBadge);
         tSummary.appendChild(maidHeartBadge);
 

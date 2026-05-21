@@ -436,28 +436,67 @@ function enterDash() {
 }
 
 // ── 업데이트 내역 ──
-// 새 업데이트 추가할 때 여기에 한 줄씩 추가하면 됩니다
 const APP_UPDATES = [
-  { date: "2026.05.21", content: "❤️ 커플 메이드 입력 기능 추가 — 내역 탭 손님 폴더에서 메이드 완료 체크 가능" },
-  { date: "2026.05.21", content: "📊 날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
-  { date: "2026.05.21", content: "🗑 같은 이름 손님 삭제 버그 수정" },
+  { date: "2026.05.21", content: "커플 메이드 입력 기능 추가 — 내역 탭 손님 폴더에서 메이드 완료 체크 가능" },
+  { date: "2026.05.21", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
+  { date: "2026.05.21", content: "같은 이름 손님 삭제 버그 수정" },
 ];
 
 function showUpdates() {
   const list = document.getElementById('updatesList');
   list.innerHTML = '';
+
+  // 날짜별로 그룹핑
+  const groups = {};
   APP_UPDATES.forEach(function(u) {
-    var item = document.createElement('div');
-    item.style.cssText = 'padding:0.85rem 0;border-bottom:0.5px solid var(--border);';
-    var date = document.createElement('div');
-    date.style.cssText = 'font-size:0.65rem;color:var(--muted);margin-bottom:0.3rem;font-weight:600;letter-spacing:0.05em;';
-    date.textContent = u.date;
-    var content = document.createElement('div');
-    content.style.cssText = 'font-size:0.85rem;color:var(--navy);line-height:1.5;';
-    content.textContent = u.content;
-    item.append(date, content);
-    list.appendChild(item);
+    if (!groups[u.date]) groups[u.date] = [];
+    groups[u.date].push(u.content);
   });
+
+  const dates = Object.keys(groups);
+  dates.forEach(function(date, idx) {
+    const folderId = 'update-' + date.replace(/\./g, '-');
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
+
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'var(--navy)':'var(--bg2)') + ';cursor:pointer;user-select:none;';
+    hdr.onclick = function() {
+      const body = document.getElementById(folderId);
+      const arrow = document.getElementById('arrow-' + folderId);
+      const isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+    };
+
+    const dateSpan = document.createElement('span');
+    dateSpan.style.cssText = 'font-size:0.82rem;font-weight:700;color:' + (idx===0?'#fff':'var(--muted)') + ';';
+    dateSpan.textContent = date;
+
+    const arrow = document.createElement('span');
+    arrow.id = 'arrow-' + folderId;
+    arrow.style.cssText = 'color:' + (idx===0?'#fff':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (idx===0?'transform:rotate(180deg);':'');
+    arrow.textContent = '▼';
+
+    hdr.append(dateSpan, arrow);
+    wrap.appendChild(hdr);
+
+    const body = document.createElement('div');
+    body.id = folderId;
+    body.style.display = idx === 0 ? 'block' : 'none';
+
+    groups[date].forEach(function(content) {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;color:var(--navy);line-height:1.5;';
+      row.textContent = content;
+      body.appendChild(row);
+    });
+
+    wrap.appendChild(body);
+    list.appendChild(wrap);
+  });
+
   document.getElementById('updatesModal').classList.add('open');
 }
 

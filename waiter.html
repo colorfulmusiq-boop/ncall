@@ -1123,13 +1123,22 @@ function clearAllNotifs() {
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${W.id}`)).then(snap => {
       const data = snap.val() || {};
-      Object.entries(data).forEach(([k,v]) => {
-        if (!v.done) {
-          fbRemove(fbRef(db, `notifs/${W.id}/${k}`));
-          if (v.type === 'booking' && v.guestId) {
-            const countRef = fbRef(db, `guests/${W.id}/${v.guestId}/bookingCount`);
-            fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
-          }
+      const entries = Object.entries(data).filter(([k,v]) => !v.done);
+      // 부킹 카운트 먼저 집계
+      const bookingCounts = {};
+      entries.forEach(([k,v]) => {
+        if (v.type === 'booking' && v.guestId) {
+          bookingCounts[v.guestId] = (bookingCounts[v.guestId] || 0) + 1;
+        }
+      });
+      Object.entries(bookingCounts).forEach(([guestId, cnt]) => {
+        const countRef = fbRef(db, `guests/${W.id}/${guestId}/bookingCount`);
+        fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + cnt));
+      });
+      // 각 항목을 1ms 간격으로 history 저장 (sortKey 겹침 방지)
+      entries.forEach(([k,v], i) => {
+        fbRemove(fbRef(db, `notifs/${W.id}/${k}`));
+        setTimeout(() => {
           const histData = {
             type: v.type, tableLabel: v.tableLabel, guestId: v.guestId || '',
             time: v.time, date: v.date || todayStr(), doneAt: nowStr(), sortKey: nowFull()
@@ -1137,7 +1146,7 @@ function clearAllNotifs() {
           if (v.type === 'beer' && v.beerQty) histData.beerQty = v.beerQty;
           if (v.type === 'message' && v.msgText) histData.msgText = v.msgText;
           fbPush(fbRef(db, `history/${W.id}`), histData);
-        }
+        }, i * 10);
       });
     });
   });

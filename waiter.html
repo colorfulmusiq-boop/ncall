@@ -810,6 +810,22 @@ function startListeners() {
       dateCnt.textContent = total + '건';
       dateLeft.appendChild(dateCnt);
 
+      var maidCntBadge = document.createElement('span');
+      maidCntBadge.style.cssText = 'background:#fde8e8;color:#c0392b;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;display:none;';
+      dateLeft.appendChild(maidCntBadge);
+      (function(badge, entries) {
+        var gids = entries.map(function(e){ return ((e[1][0]&&e[1][0].guestId)||'').replace(/[^a-zA-Z0-9]/g,'_'); }).filter(Boolean);
+        if (!gids.length) return;
+        var count = 0; var done = 0;
+        gids.forEach(function(gid) {
+          fbGet(fbRef(db, 'maid/' + wid + '/' + gid)).then(function(snap) {
+            if (snap.val() === true) count++;
+            done++;
+            if (done === gids.length && count > 0) { badge.textContent = '❤️ ' + count; badge.style.display = 'inline'; }
+          }).catch(function(){ done++; });
+        });
+      })(maidCntBadge, tableEntries);
+
       if (isToday) {
         var todayBadge = document.createElement('span');
         todayBadge.style.cssText = 'font-size:0.65rem;color:rgba(255,255,255,0.7);';
@@ -903,6 +919,34 @@ function startListeners() {
           badge.textContent = t==='checkout' ? ('✓ 계산 완료' + (checkoutTime?' '+checkoutTime:'')) : t==='enter' ? '🚪 입장' : ((ICON[t]||'') + ' ' + (LABEL[t]||t) + ' ' + c + '회');
           tSummary.appendChild(badge);
         });
+        var maidGid = ((tItems[0]&&tItems[0].guestId) || tbl).replace(/[^a-zA-Z0-9]/g,'_');
+        var maidRef = fbRef(db, 'maid/' + wid + '/' + maidGid);
+        var maidHeartBadge = document.createElement('span');
+        maidHeartBadge.style.cssText = 'display:none;align-items:center;gap:0.2rem;background:#fde8e8;border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:#c0392b;cursor:pointer;';
+        maidHeartBadge.title = '메이드 완료 (취소하려면 터치)';
+        maidHeartBadge.textContent = '❤️ 메이드';
+        var maidAddBadge = document.createElement('span');
+        maidAddBadge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--muted);cursor:pointer;border:0.5px dashed var(--border);';
+        maidAddBadge.title = '커플 메이드 완료 시 터치';
+        maidAddBadge.textContent = '+ 메이드';
+        (function(addB, heartB, ref, cntB) {
+          fbGet(ref).then(function(snap) {
+            if (snap.val() === true) { addB.style.display = 'none'; heartB.style.display = 'inline-flex'; }
+          }).catch(function(){});
+          addB.onclick = function(e) {
+            e.stopPropagation(); fbSet(ref, true);
+            addB.style.display = 'none'; heartB.style.display = 'inline-flex';
+            if (cntB) { var cur = parseInt((cntB.textContent||'').replace(/[^0-9]/g,''))||0; cntB.textContent = '❤️ '+(cur+1); cntB.style.display = 'inline'; }
+          };
+          heartB.onclick = function(e) {
+            e.stopPropagation(); fbSet(ref, false);
+            heartB.style.display = 'none'; addB.style.display = 'inline-flex';
+            if (cntB) { var cur = parseInt((cntB.textContent||'').replace(/[^0-9]/g,''))||0; if(cur<=1){cntB.style.display='none';cntB.textContent='';}else{cntB.textContent='❤️ '+(cur-1);} }
+          };
+        })(maidAddBadge, maidHeartBadge, maidRef, maidCntBadge);
+        tSummary.appendChild(maidAddBadge);
+        tSummary.appendChild(maidHeartBadge);
+
         tLeft.appendChild(tSummary);
 
         var tRight = document.createElement('div');

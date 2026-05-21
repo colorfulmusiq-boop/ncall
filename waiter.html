@@ -754,6 +754,11 @@ function startListeners() {
       .sort(function(a,b){ return (a.sortKey||a._key) < (b.sortKey||b._key) ? -1 : 1; });
 
     var list = document.getElementById('histList');
+    // 현재 열린 폴더 상태 저장
+    var openFolders = {};
+    list.querySelectorAll('[id^="date-"], [id^="tf-"]').forEach(function(el) {
+      if (el.style.display !== 'none') openFolders[el.id] = true;
+    });
     list.innerHTML = '';
 
     if (hist.length === 0) {
@@ -864,7 +869,7 @@ function startListeners() {
 
       var dateBody = document.createElement('div');
       dateBody.id = dateFolderId;
-      dateBody.style.display = isToday ? 'block' : 'none';
+      dateBody.style.display = (openFolders[dateFolderId] || isToday) ? 'block' : 'none';
 
 
       tableEntries.slice().reverse().forEach(function(entry, revIdx) {
@@ -960,7 +965,7 @@ function startListeners() {
 
         var tArrow = document.createElement('span');
         tArrow.id = 'arrow-' + folderId;
-        tArrow.style.cssText = 'color:var(--muted);font-size:0.8rem;transition:transform 0.2s;';
+        tArrow.style.cssText = 'color:var(--muted);font-size:0.8rem;transition:transform 0.2s;' + (openFolders[folderId] ? 'transform:rotate(180deg);' : '');
         tArrow.textContent = '▼';
         tRight.appendChild(tArrow);
 
@@ -970,7 +975,7 @@ function startListeners() {
 
         var tBody = document.createElement('div');
         tBody.id = folderId;
-        tBody.style.cssText = 'display:none;border-top:0.5px solid var(--border);';
+        tBody.style.cssText = 'display:' + (openFolders[folderId] ? 'block' : 'none') + ';border-top:0.5px solid var(--border);';
 
         var sorted = tItems.slice().sort(function(a,b){
           if(a.type==='enter') return -1; if(b.type==='enter') return 1;

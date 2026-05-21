@@ -247,7 +247,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     </div>
     <div class="hdr-right">
       <div class="live-dot"></div>
-      <button class="logout-btn" onclick="showUpdates()">📋 업데이트</button>
+      <button class="logout-btn" onclick="showUpdates()">📋 공지사항</button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -277,11 +277,10 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   </div></div>
 </div>
 
-<!-- 업데이트 내역 모달 -->
+<!-- 공지사항 모달 -->
 <div class="modal-bg" id="updatesModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">업데이트 내역</div>
     <div style="background:#fff8e8;border:0.5px solid #f0d080;border-radius:10px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:#7a5a00;line-height:1.6;">
       📢 업데이트 후 앱이 최신 버전으로 적용되지 않는 경우, 앱을 삭제 후 ncall.kr 에서 다시 설치해주세요.
     </div>
@@ -441,7 +440,7 @@ function enterDash() {
   startListeners();
 }
 
-// ── 업데이트 내역 ──
+// ── 공지사항 ──
 const APP_UPDATES = [
   { date: "2026.05.21", type: "업데이트", content: "커플 메이드 입력 기능 추가 — 내역 탭 손님 폴더에서 메이드 완료 체크 가능" },
   { date: "2026.05.21", type: "업데이트", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
@@ -451,21 +450,17 @@ const APP_UPDATES = [
 function showUpdates() {
   const list = document.getElementById('updatesList');
   list.innerHTML = '';
-
   const groups = {};
   APP_UPDATES.forEach(function(u) {
     if (!groups[u.date]) groups[u.date] = [];
     groups[u.date].push({ type: u.type, content: u.content });
   });
-
   const dates = Object.keys(groups);
   dates.forEach(function(date, idx) {
     const folderId = 'update-' + date.replace(/\./g, '-');
     const types = [...new Set(groups[date].map(function(i){ return i.type; }))].join(' · ');
-
     const wrap = document.createElement('div');
     wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
-
     const hdr = document.createElement('div');
     hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'var(--navy)':'var(--bg2)') + ';cursor:pointer;user-select:none;';
     hdr.onclick = function() {
@@ -475,7 +470,6 @@ function showUpdates() {
       body.style.display = isOpen ? 'none' : 'block';
       if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
     };
-
     const left = document.createElement('div');
     const typeSpan = document.createElement('div');
     typeSpan.style.cssText = 'font-size:0.6rem;font-weight:700;letter-spacing:0.08em;color:' + (idx===0?'rgba(255,255,255,0.6)':'var(--muted)') + ';margin-bottom:0.15rem;';
@@ -484,33 +478,26 @@ function showUpdates() {
     dateSpan.style.cssText = 'font-size:0.82rem;font-weight:700;color:' + (idx===0?'#fff':'var(--muted)') + ';';
     dateSpan.textContent = date;
     left.append(typeSpan, dateSpan);
-
     const arrow = document.createElement('span');
     arrow.id = 'arrow-' + folderId;
     arrow.style.cssText = 'color:' + (idx===0?'#fff':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (idx===0?'transform:rotate(180deg);':'');
     arrow.textContent = '▼';
-
     hdr.append(left, arrow);
     wrap.appendChild(hdr);
-
     const body = document.createElement('div');
     body.id = folderId;
     body.style.display = idx === 0 ? 'block' : 'none';
-
     groups[date].forEach(function(item) {
       const row = document.createElement('div');
       row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;color:var(--navy);line-height:1.5;';
       row.textContent = item.content;
       body.appendChild(row);
     });
-
     wrap.appendChild(body);
     list.appendChild(wrap);
   });
-
   document.getElementById('updatesModal').classList.add('open');
 }
-
 
 function doLogout() {
   W = null; prevNotifCount = -1;
@@ -803,22 +790,6 @@ function startListeners() {
       var isToday = date === todayStr();
       var dateFolderId = 'date-' + date.replace(/\s/g,'-');
 
-      // 테이블별 그룹 — 날짜 건수 계산을 위해 먼저 구성
-      var tableGroups = {};
-      items.forEach(function(n) {
-        var tbl = n.tableLabel || n.guestMsg || '손님';
-        var grpKey = tbl + '___' + (n.guestId || '');
-        if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
-        tableGroups[grpKey].push(n);
-      });
-
-      var tableEntries = Object.entries(tableGroups).sort(function(a,b){
-        var aKey = a[1].map(function(n){ return n._key||''; }).sort().pop()||'';
-        var bKey = b[1].map(function(n){ return n._key||''; }).sort().pop()||'';
-        return aKey > bKey ? 1 : aKey < bKey ? -1 : 0;
-      });
-      var total = tableEntries.length;
-
       var dateWrap = document.createElement('div');
       dateWrap.style.marginBottom = '1rem';
 
@@ -842,28 +813,8 @@ function startListeners() {
 
       var dateCnt = document.createElement('span');
       dateCnt.style.cssText = 'background:' + (isToday?'rgba(255,255,255,0.2)':'var(--border)') + ';color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
-      dateCnt.textContent = total + '건';
+      dateCnt.textContent = items.length + '건';
       dateLeft.appendChild(dateCnt);
-
-      // 메이드 배지
-      var maidCntBadge = document.createElement('span');
-      maidCntBadge.style.cssText = 'background:' + (isToday?'rgba(255,100,100,0.35)':'#fde8e8') + ';color:' + (isToday?'#ffcccc':'#c0392b') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;display:none;';
-      dateLeft.appendChild(maidCntBadge);
-      (function(badge, entries) {
-        var gids = entries.map(function(e){ return ((e[1][0]&&e[1][0].guestId)||'').replace(/[^a-zA-Z0-9]/g,'_'); }).filter(Boolean);
-        if (!gids.length) return;
-        var count = 0; var done = 0;
-        gids.forEach(function(gid) {
-          fbGet(fbRef(db, 'maid/' + wid + '/' + gid)).then(function(snap) {
-            if (snap.val() === true) count++;
-            done++;
-            if (done === gids.length && count > 0) {
-              badge.textContent = '❤️ ' + count;
-              badge.style.display = 'inline';
-            }
-          }).catch(function(){ done++; });
-        });
-      })(maidCntBadge, tableEntries);
 
       if (isToday) {
         var todayBadge = document.createElement('span');
@@ -890,6 +841,22 @@ function startListeners() {
       var dateBody = document.createElement('div');
       dateBody.id = dateFolderId;
       dateBody.style.display = isToday ? 'block' : 'none';
+
+      // 테이블별 그룹
+      var tableGroups = {};
+      items.forEach(function(n) {
+        var tbl = n.tableLabel || n.guestMsg || '손님';
+        var grpKey = tbl + '___' + (n.guestId || '');
+        if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
+        tableGroups[grpKey].push(n);
+      });
+
+      var tableEntries = Object.entries(tableGroups).sort(function(a,b){
+        var aKey = a[1].map(function(n){ return n._key||''; }).sort().pop()||'';
+        var bKey = b[1].map(function(n){ return n._key||''; }).sort().pop()||'';
+        return aKey > bKey ? 1 : aKey < bKey ? -1 : 0;
+      });
+      var total = tableEntries.length;
 
       tableEntries.slice().reverse().forEach(function(entry, revIdx) {
         var tbl = entry[1][0].tableLabel || entry[1][0].guestMsg || '손님';
@@ -942,50 +909,6 @@ function startListeners() {
           badge.textContent = t==='checkout' ? ('✓ 계산 완료' + (checkoutTime?' '+checkoutTime:'')) : t==='enter' ? '🚪 입장' : ((ICON[t]||'') + ' ' + (LABEL[t]||t) + ' ' + c + '회');
           tSummary.appendChild(badge);
         });
-        // 메이드 하트 버튼 — tSummary 배지 줄 끝에 삽입
-        var maidGid = ((tItems[0]&&tItems[0].guestId) || tbl).replace(/[^a-zA-Z0-9]/g,'_');
-        var maidRef = fbRef(db, 'maid/' + wid + '/' + maidGid);
-        var maidHeartBadge = document.createElement('span');
-        maidHeartBadge.style.cssText = 'display:none;align-items:center;gap:0.2rem;background:#fde8e8;border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:#c0392b;cursor:pointer;';
-        maidHeartBadge.title = '메이드 완료 (취소하려면 터치)';
-        maidHeartBadge.textContent = '❤️ 메이드';
-        var maidAddBadge = document.createElement('span');
-        maidAddBadge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--muted);cursor:pointer;border:0.5px dashed var(--border);';
-        maidAddBadge.title = '커플 메이드 완료 시 터치';
-        maidAddBadge.textContent = '+ 메이드';
-        (function(addB, heartB, ref, cntBadge) {
-          fbGet(ref).then(function(snap) {
-            if (snap.val() === true) {
-              addB.style.display = 'none';
-              heartB.style.display = 'inline-flex';
-            }
-          }).catch(function(){});
-          addB.onclick = function(e) {
-            e.stopPropagation();
-            fbSet(ref, true);
-            addB.style.display = 'none';
-            heartB.style.display = 'inline-flex';
-            var cur = parseInt((cntBadge.textContent||'').replace(/[^0-9]/g,''))||0;
-            cntBadge.textContent = '❤️ ' + (cur + 1);
-            cntBadge.style.display = 'inline';
-          };
-          heartB.onclick = function(e) {
-            e.stopPropagation();
-            fbSet(ref, false);
-            heartB.style.display = 'none';
-            addB.style.display = 'inline-flex';
-            var cur = parseInt((cntBadge.textContent||'').replace(/[^0-9]/g,''))||0;
-            if (cur <= 1) {
-              cntBadge.style.display = 'none';
-              cntBadge.textContent = '';
-            } else {
-              cntBadge.textContent = '❤️ ' + (cur - 1);
-            }
-          };
-        })(maidAddBadge, maidHeartBadge, maidRef, maidCntBadge);
-        tSummary.appendChild(maidAddBadge);
-        tSummary.appendChild(maidHeartBadge);
-
         tLeft.appendChild(tSummary);
 
         var tRight = document.createElement('div');
@@ -1157,19 +1080,13 @@ function clearAllNotifs() {
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${W.id}`)).then(snap => {
       const data = snap.val() || {};
-      const bookingCounts = {};
-      Object.entries(data).forEach(([k,v]) => {
-        if (!v.done && v.type === 'booking' && v.guestId) {
-          bookingCounts[v.guestId] = (bookingCounts[v.guestId] || 0) + 1;
-        }
-      });
-      Object.entries(bookingCounts).forEach(([guestId, cnt]) => {
-        const countRef = fbRef(db, `guests/${W.id}/${guestId}/bookingCount`);
-        fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + cnt));
-      });
       Object.entries(data).forEach(([k,v]) => {
         if (!v.done) {
           fbRemove(fbRef(db, `notifs/${W.id}/${k}`));
+          if (v.type === 'booking' && v.guestId) {
+            const countRef = fbRef(db, `guests/${W.id}/${v.guestId}/bookingCount`);
+            fbGet(countRef).then(snap => fbSet(countRef, (snap.val() || 0) + 1));
+          }
           const histData = {
             type: v.type, tableLabel: v.tableLabel, guestId: v.guestId || '',
             time: v.time, date: v.date || todayStr(), doneAt: nowStr(), sortKey: nowFull()
@@ -1239,9 +1156,7 @@ function deleteTableGroup(wid, date, tableLabel, guestId) {
       Object.entries(data).forEach(([k, v]) => {
         const tbl = v.tableLabel || v.guestMsg || '손님';
         const sameDate = (v.date || '날짜 미상') === date;
-        const match = guestId
-          ? (v.guestId === guestId && sameDate && tbl === tableLabel)
-          : (sameDate && tbl === tableLabel && !v.guestId);
+        const match = guestId ? (v.guestId === guestId && sameDate) : (sameDate && tbl === tableLabel);
         if (match) fbRemove(fbRef(db, `history/${wid}/${k}`));
       });
     });

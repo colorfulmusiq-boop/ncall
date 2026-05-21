@@ -247,7 +247,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     </div>
     <div class="hdr-right">
       <div class="live-dot"></div>
-      <button class="logout-btn" onclick="showUpdates()">📋 업데이트</button>
+      <button class="logout-btn" onclick="showUpdates()">📋 공지사항</button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -281,7 +281,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 <div class="modal-bg" id="updatesModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">업데이트 내역</div>
     <div style="background:#fff8e8;border:0.5px solid #f0d080;border-radius:10px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:#7a5a00;line-height:1.6;">
       📢 업데이트 후 앱이 최신 버전으로 적용되지 않는 경우, 앱을 삭제 후 ncall.kr 에서 다시 설치해주세요.
     </div>
@@ -443,25 +442,25 @@ function enterDash() {
 
 // ── 업데이트 내역 ──
 const APP_UPDATES = [
-  { date: "2026.05.21", content: "커플 메이드 입력 기능 추가 — 내역 탭 손님 폴더에서 메이드 완료 체크 가능" },
-  { date: "2026.05.21", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
-  { date: "2026.05.21", content: "같은 이름 손님 삭제 버그 수정" },
+  { date: "2026.05.21", type: "업데이트", content: "커플 메이드 입력 기능 추가 — 내역 탭 손님 폴더에서 메이드 완료 체크 가능" },
+  { date: "2026.05.21", type: "업데이트", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
+  { date: "2026.05.21", type: "업데이트", content: "같은 이름 손님 삭제 버그 수정" },
 ];
 
 function showUpdates() {
   const list = document.getElementById('updatesList');
   list.innerHTML = '';
 
-  // 날짜별로 그룹핑
   const groups = {};
   APP_UPDATES.forEach(function(u) {
     if (!groups[u.date]) groups[u.date] = [];
-    groups[u.date].push(u.content);
+    groups[u.date].push({ type: u.type, content: u.content });
   });
 
   const dates = Object.keys(groups);
   dates.forEach(function(date, idx) {
     const folderId = 'update-' + date.replace(/\./g, '-');
+    const types = [...new Set(groups[date].map(function(i){ return i.type; }))].join(' · ');
 
     const wrap = document.createElement('div');
     wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
@@ -476,26 +475,31 @@ function showUpdates() {
       if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
     };
 
-    const dateSpan = document.createElement('span');
+    const left = document.createElement('div');
+    const typeSpan = document.createElement('div');
+    typeSpan.style.cssText = 'font-size:0.6rem;font-weight:700;letter-spacing:0.08em;color:' + (idx===0?'rgba(255,255,255,0.6)':'var(--muted)') + ';margin-bottom:0.15rem;';
+    typeSpan.textContent = types;
+    const dateSpan = document.createElement('div');
     dateSpan.style.cssText = 'font-size:0.82rem;font-weight:700;color:' + (idx===0?'#fff':'var(--muted)') + ';';
     dateSpan.textContent = date;
+    left.append(typeSpan, dateSpan);
 
     const arrow = document.createElement('span');
     arrow.id = 'arrow-' + folderId;
     arrow.style.cssText = 'color:' + (idx===0?'#fff':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (idx===0?'transform:rotate(180deg);':'');
     arrow.textContent = '▼';
 
-    hdr.append(dateSpan, arrow);
+    hdr.append(left, arrow);
     wrap.appendChild(hdr);
 
     const body = document.createElement('div');
     body.id = folderId;
     body.style.display = idx === 0 ? 'block' : 'none';
 
-    groups[date].forEach(function(content) {
+    groups[date].forEach(function(item) {
       const row = document.createElement('div');
       row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;color:var(--navy);line-height:1.5;';
-      row.textContent = content;
+      row.textContent = item.content;
       body.appendChild(row);
     });
 
@@ -505,6 +509,7 @@ function showUpdates() {
 
   document.getElementById('updatesModal').classList.add('open');
 }
+
 
 function doLogout() {
   W = null; prevNotifCount = -1;

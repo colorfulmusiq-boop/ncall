@@ -1115,7 +1115,11 @@ function deleteTableGroup(wid, date, tableLabel, guestId) {
       Object.entries(data).forEach(([k, v]) => {
         const tbl = v.tableLabel || v.guestMsg || '손님';
         const sameDate = (v.date || '날짜 미상') === date;
-        const match = guestId ? (v.guestId === guestId && sameDate) : (sameDate && tbl === tableLabel);
+        // guestId가 있으면 guestId + 날짜 + 테이블명 모두 일치해야 삭제
+        // guestId 없으면 날짜 + 테이블명만 비교
+        const match = guestId
+          ? (v.guestId === guestId && sameDate && tbl === tableLabel)
+          : (sameDate && tbl === tableLabel && !v.guestId);
         if (match) fbRemove(fbRef(db, `history/${wid}/${k}`));
       });
     });

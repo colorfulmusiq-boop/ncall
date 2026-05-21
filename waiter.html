@@ -282,8 +282,14 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">업데이트 내역</div>
-    <div id="updatesList" style="max-height:60vh;overflow-y:auto;"></div>
-    <button class="btn btn-ghost" onclick="closeModal('updatesModal')" style="margin-top:1rem;">닫기</button>
+    <div style="background:#fff8e8;border:0.5px solid #f0d080;border-radius:10px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:#7a5a00;line-height:1.6;">
+      📢 업데이트 후 앱이 최신 버전으로 적용되지 않는 경우, 앱을 삭제 후 ncall.kr 에서 다시 설치해주세요.
+    </div>
+    <div id="updatesList" style="max-height:45vh;overflow-y:auto;"></div>
+    <a href="https://open.kakao.com/o/s1qOE0mi" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:1rem;padding:0.85rem;background:#fee500;border-radius:10px;font-size:0.85rem;font-weight:700;color:#3a1d1d;text-decoration:none;">
+      💬 문의사항은 여기로
+    </a>
+    <button class="btn btn-ghost" onclick="closeModal('updatesModal')" style="margin-top:0.5rem;">닫기</button>
   </div>
 </div>
 

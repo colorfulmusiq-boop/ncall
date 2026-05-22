@@ -779,7 +779,8 @@ function startListeners() {
         card.append(top, btns);
         list.appendChild(card);
       });
-    });
+    }
+  });
   // 내역
   fbOnValue(fbRef(db, `history/${wid}`), snap => {
     var raw = snap.val() || {};
@@ -1065,7 +1066,6 @@ function startListeners() {
     });
   });
   }); // waitFb 끝
-}
 }
 
 function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {

@@ -636,7 +636,7 @@ function startListeners() {
     }
     prevNotifCount = notifs.length;
 
-('notifBadge');
+    const badge = document.getElementById('notifBadge');
     badge.style.display = notifs.length > 0 ? 'inline' : 'none';
     badge.textContent = notifs.length;
 

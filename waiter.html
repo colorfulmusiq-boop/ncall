@@ -199,6 +199,10 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .install-close{background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.1rem;cursor:pointer;padding:0.2rem;}
 
 @keyframes slideIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
+.notif-card.type-checkout_req{border-left:3px solid #27ae60;}
+.type-checkout_req .notif-tag{color:#27ae60;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.checkout-blink{animation:blink 1s ease infinite;background:#e8f8ee!important;color:#27ae60!important;border-color:#27ae60!important;}
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
@@ -632,6 +636,10 @@ function startListeners() {
     }
     prevNotifCount = notifs.length;
 
+    // 계산 요청한 손님 추적
+    window._checkoutReqGuests = new Set(
+      notifs.filter(n => n.type === 'checkout_req' && n.guestId).map(n => n.guestId)
+    );
     const badge = document.getElementById('notifBadge');
     badge.style.display = notifs.length > 0 ? 'inline' : 'none';
     badge.textContent = notifs.length;
@@ -650,12 +658,12 @@ function startListeners() {
         card.id = 'nc-' + n._key;
         const ico = document.createElement('div');
         ico.className = 'notif-ico';
-        ico.textContent = n.type === 'call' ? '🙋' : n.type === 'beer' ? '🍾' : n.type === 'message' ? '💬' : '🔔';
+        ico.textContent = n.type === 'call' ? '🙋' : n.type === 'beer' ? '🍾' : n.type === 'message' ? '💬' : n.type === 'checkout_req' ? '🧾' : '🔔';
         const body = document.createElement('div');
         body.className = 'notif-body';
         const tag = document.createElement('div');
         tag.className = 'notif-tag';
-        tag.textContent = n.type === 'call' ? '웨이터 호출' : n.type === 'beer' ? '맥주 추가' : n.type === 'message' ? '메시지' : '부킹 요청';
+        tag.textContent = n.type === 'call' ? '웨이터 호출' : n.type === 'beer' ? '맥주 추가' : n.type === 'message' ? '메시지' : n.type === 'checkout_req' ? '계산 요청' : '부킹 요청';
         const msgEl = document.createElement('div');
         msgEl.className = 'notif-msg';
         msgEl.textContent = n.type === 'beer'
@@ -668,7 +676,7 @@ function startListeners() {
         timeEl.textContent = n.time;
         const btns = document.createElement('div');
         btns.style.cssText = 'display:flex;gap:0.4rem;margin-top:0.5rem;';
-        if (n.type !== 'beer') {
+        if (n.type !== 'beer' && n.type !== 'checkout_req') {
           if (n.type !== 'message') {
             const b1 = document.createElement('button');
             b1.textContent = '곧 갈게요';
@@ -739,7 +747,7 @@ function startListeners() {
           <div class="guest-card-btns">
             <button class="guest-qr-btn" onclick="showQR('${g._key}','${g.label.replace(/'/g,"\\'")}')">📱 QR 보기</button>
             <button class="guest-qr-btn" onclick="toggleMute('${g._key}')" style="background:${g.muted ? '#e8f8ee' : '#fbeaea'};color:${g.muted ? 'var(--green)' : 'var(--red)'};">${g.muted ? '🔔 호출 허용' : '🔕 호출 차단'}</button>
-            <button class="guest-checkout-btn" onclick="checkoutGuest('${g._key}','${g.label.replace(/'/g,"\\'")}')">✓ 계산 완료</button>
+            <button class="guest-checkout-btn ${(window._checkoutReqGuests&&window._checkoutReqGuests.has(g._key))?'checkout-blink':''}" onclick="checkoutGuest('${g._key}','${g.label.replace(/'/g,"\\'")}')">✓ 계산 완료</button>
           </div>
         </div>
       `).join('');
@@ -1331,8 +1339,8 @@ let inAppBannerTimer;
 function showInAppBanner(type, tableLabel, guestMsg, extra) {
   const banner = document.getElementById('inAppBanner');
   banner.className = 'show iab-' + type;
-  document.getElementById('iabIcon').textContent = type === 'call' ? '🙋' : type === 'beer' ? '🍾' : type === 'message' ? '💬' : '🔔';
-  document.getElementById('iabTitle').textContent = type === 'call' ? '웨이터 호출' : type === 'beer' ? '맥주 추가' : type === 'message' ? '메시지' : '부킹 요청';
+  document.getElementById('iabIcon').textContent = type === 'call' ? '🙋' : type === 'beer' ? '🍾' : type === 'message' ? '💬' : type === 'checkout_req' ? '🧾' : '🔔';
+  document.getElementById('iabTitle').textContent = type === 'call' ? '웨이터 호출' : type === 'beer' ? '맥주 추가' : type === 'message' ? '메시지' : type === 'checkout_req' ? '계산 요청' : '부킹 요청';
   document.getElementById('iabSub').textContent = type === 'message' && extra ? (tableLabel || guestMsg) + ' — ' + extra : (tableLabel || guestMsg || '손님');
   clearTimeout(inAppBannerTimer);
   inAppBannerTimer = setTimeout(hideInAppBanner, 5000);

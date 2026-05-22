@@ -93,6 +93,9 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .btn-msg{background:var(--card);border:0.5px solid var(--border);}
 .btn-msg .btn-title{color:var(--navy);}
 .btn-msg .btn-desc{color:var(--muted);}
+.btn-checkout-req{background:var(--card);border:0.5px solid var(--border);}
+.btn-checkout-req .btn-title{color:var(--navy);}
+.btn-checkout-req .btn-desc{color:var(--muted);}
 .msg-textarea{width:100%;background:var(--bg);border:0.5px solid var(--border);border-radius:10px;padding:0.9rem 1rem;font-family:inherit;font-size:0.9rem;color:var(--navy);outline:none;resize:none;height:120px;margin-bottom:1rem;transition:border-color 0.2s;}
 .msg-textarea:focus{border-color:var(--navy);}
 .msg-textarea::placeholder{color:var(--muted);}
@@ -227,6 +230,13 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
         <div class="btn-desc">웨이터에게 직접 메시지를 보내요</div>
       </div>
     </button>
+    <button class="action-btn btn-checkout-req" onclick="openCheckoutReqModal()">
+      <div class="btn-icon">🧾</div>
+      <div class="btn-texts">
+        <div class="btn-title">계산해 주세요</div>
+        <div class="btn-desc">웨이터에게 계산 요청을 보내요</div>
+      </div>
+    </button>
   </div>
 </div>
 
@@ -263,6 +273,20 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div class="btn-row">
       <button class="btn btn-cancel" onclick="closeBeerModal()">취소</button>
       <button class="btn btn-confirm" onclick="sendBeer()">주문</button>
+    </div>
+  </div>
+</div>
+
+<!-- 계산 요청 모달 -->
+<div class="modal-bg" id="checkoutReqModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <span class="modal-icon">🧾</span>
+    <div class="modal-title">계산해 주세요</div>
+    <div class="modal-sub">웨이터에게 계산 요청을 보낼게요</div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeCheckoutReqModal()">취소</button>
+      <button class="btn btn-confirm" onclick="sendCheckoutReq()">요청</button>
     </div>
   </div>
 </div>
@@ -606,6 +630,29 @@ function sendNotif(type) {
   bar.classList.add('show');
   setTimeout(() => bar.classList.remove('show'), 4000);
   toast(type==='call' ? '✓ 호출 전송!' : '✓ 부킹 요청 전송!');
+}
+
+function openCheckoutReqModal() {
+  document.getElementById('checkoutReqModal').classList.add('open');
+}
+function closeCheckoutReqModal() {
+  document.getElementById('checkoutReqModal').classList.remove('open');
+}
+function sendCheckoutReq() {
+  closeCheckoutReqModal();
+  if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
+  waitFb(() => {
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+      type: 'checkout_req', tableLabel: guestData.label, guestMsg: guestData.label,
+      waiterName: waiterData.name, guestId,
+      time: nowStr(), date: todayStr(), done: false
+    });
+    const bar = document.getElementById('sentBar');
+    document.getElementById('sentMsg').textContent = '계산 요청이 전송됐어요';
+    bar.classList.add('show');
+    setTimeout(() => bar.classList.remove('show'), 4000);
+    toast('🧾 계산 요청 전송!');
+  });
 }
 
 let toastT;

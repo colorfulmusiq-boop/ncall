@@ -177,11 +177,12 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 #toast.show{opacity:1;}
 
 /* 인앱 알림 배너 */
-#inAppBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:500;padding:0.6rem 1rem;animation:slideDown 0.3s ease;overflow:hidden;}
+#inAppBanner{display:none;position:fixed;top:72px;left:0;right:0;z-index:500;padding:0.6rem 1rem;animation:slideDown 0.3s ease;overflow:hidden;}
 #inAppBanner.show{display:flex;align-items:center;gap:0.75rem;}
 .iab-call{background:#1a2535;}
 .iab-booking{background:var(--red);}
 .iab-beer{background:#e67e22;}
+.iab-checkout_req{background:#27ae60;}
 .iab-message{background:#8e44ad;}
 .iab-icon{font-size:1.4rem;flex-shrink:0;}
 .iab-body{flex:1;}
@@ -1355,7 +1356,7 @@ function notify(type, tableLabel, guestMsg, extra) {
       vibrate(item.type);
       playBeep(item.type);
       showPush(item.type, item.guestMsg, item.tableLabel);
-      showInAppBanner(item.type, item.tableLabel, item.guestMsg, item.extra);
+      if (item.type !== 'checkout_req') showInAppBanner(item.type, item.tableLabel, item.guestMsg, item.extra);
     }
     notifyQueue = [];
     notifyTimer = null;

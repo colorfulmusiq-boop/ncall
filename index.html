@@ -636,11 +636,7 @@ function startListeners() {
     }
     prevNotifCount = notifs.length;
 
-    // 계산 요청한 손님 추적
-    window._checkoutReqGuests = new Set(
-      notifs.filter(n => n.type === 'checkout_req' && n.guestId).map(n => n.guestId)
-    );
-    const badge = document.getElementById('notifBadge');
+('notifBadge');
     badge.style.display = notifs.length > 0 ? 'inline' : 'none';
     badge.textContent = notifs.length;
 
@@ -737,23 +733,53 @@ function startListeners() {
     if (guests.length === 0) {
       list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div>';
     } else {
-      list.innerHTML = guests.map(g => `
-        <div class="guest-card" style="${g.muted ? 'opacity:0.6;' : ''}">
-          <div class="guest-card-top">
-            <div class="guest-dot" style="background:${g.muted ? 'var(--muted)' : 'var(--green)'}"></div>
-            <div class="guest-label">${g.label}</div>
-            <div class="guest-booking-count">부킹 ${g.bookingCount || 0}회</div>
-          </div>
-          <div class="guest-card-btns">
-            <button class="guest-qr-btn" onclick="showQR('${g._key}','${g.label.replace(/'/g,"\\'")}')">📱 QR 보기</button>
-            <button class="guest-qr-btn" onclick="toggleMute('${g._key}')" style="background:${g.muted ? '#e8f8ee' : '#fbeaea'};color:${g.muted ? 'var(--green)' : 'var(--red)'};">${g.muted ? '🔔 호출 허용' : '🔕 호출 차단'}</button>
-            <button class="guest-checkout-btn ${(window._checkoutReqGuests&&window._checkoutReqGuests.has(g._key))?'checkout-blink':''}" onclick="checkoutGuest('${g._key}','${g.label.replace(/'/g,"\\'")}')">✓ 계산 완료</button>
-          </div>
-        </div>
-      `).join('');
-    }
-  });
+      list.innerHTML = '';
+      guests.forEach(g => {
+        const card = document.createElement('div');
+        card.className = 'guest-card';
+        if (g.muted) card.style.opacity = '0.6';
 
+        const top = document.createElement('div');
+        top.className = 'guest-card-top';
+        const dot = document.createElement('div');
+        dot.className = 'guest-dot';
+        dot.style.background = g.muted ? 'var(--muted)' : 'var(--green)';
+        const lbl = document.createElement('div');
+        lbl.className = 'guest-label';
+        lbl.textContent = g.label;
+        const cnt = document.createElement('div');
+        cnt.className = 'guest-booking-count';
+        cnt.textContent = '부킹 ' + (g.bookingCount || 0) + '회';
+        top.append(dot, lbl, cnt);
+
+        const btns = document.createElement('div');
+        btns.className = 'guest-card-btns';
+
+        const qrBtn = document.createElement('button');
+        qrBtn.className = 'guest-qr-btn';
+        qrBtn.textContent = '📱 QR 보기';
+        qrBtn.onclick = () => showQR(g._key, g.label);
+
+        const muteBtn = document.createElement('button');
+        muteBtn.className = 'guest-qr-btn';
+        muteBtn.style.background = g.muted ? '#e8f8ee' : '#fbeaea';
+        muteBtn.style.color = g.muted ? 'var(--green)' : 'var(--red)';
+        muteBtn.textContent = g.muted ? '🔔 호출 허용' : '🔕 호출 차단';
+        muteBtn.onclick = () => toggleMute(g._key);
+
+        const checkoutBtn = document.createElement('button');
+        checkoutBtn.className = 'guest-checkout-btn';
+        checkoutBtn.textContent = '✓ 계산 완료';
+        checkoutBtn.onclick = () => checkoutGuest(g._key, g.label);
+        if (window._checkoutReqGuests && window._checkoutReqGuests.has(g._key)) {
+          checkoutBtn.classList.add('checkout-blink');
+        }
+
+        btns.append(qrBtn, muteBtn, checkoutBtn);
+        card.append(top, btns);
+        list.appendChild(card);
+      });
+    });
   // 내역
   fbOnValue(fbRef(db, `history/${wid}`), snap => {
     var raw = snap.val() || {};
@@ -1056,7 +1082,7 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
       const histData = {type, tableLabel, guestId: finalGuestId, time, date:todayStr(), doneAt:nowStr(), sortKey:nowFull()};
       if (type === 'beer' && beerQty) histData.beerQty = beerQty;
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
-      fbPush(fbRef(db, `history/${wid}`), histData);
+      if (type !== 'checkout_req') fbPush(fbRef(db, `history/${wid}`), histData);
     });
   });
   toast('✓ 처리 완료');
@@ -1088,7 +1114,7 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       };
       if (type === 'beer' && notifData.beerQty) histData.beerQty = notifData.beerQty;
       if (type === 'message' && finalMsgText) histData.msgText = finalMsgText;
-      fbPush(fbRef(db, `history/${wid}`), histData);
+      if (type !== 'checkout_req') fbPush(fbRef(db, `history/${wid}`), histData);
     });
   });
 }
@@ -1153,7 +1179,7 @@ function clearAllNotifs() {
           };
           if (v.type === 'beer' && v.beerQty) histData.beerQty = v.beerQty;
           if (v.type === 'message' && v.msgText) histData.msgText = v.msgText;
-          fbPush(fbRef(db, `history/${W.id}`), histData);
+          if (v.type !== 'checkout_req') fbPush(fbRef(db, `history/${W.id}`), histData);
         }, i * 10);
       });
     });

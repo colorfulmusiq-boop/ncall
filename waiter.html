@@ -1065,6 +1065,7 @@ function startListeners() {
     });
   });
   }); // waitFb 끝
+  });
 }
 
 function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
@@ -1254,8 +1255,6 @@ function deleteHistItem(key) {
   waitFb(() => fbRemove(fbRef(db, `history/${W.id}/${key}`)));
   toast('✓ 삭제됨');
 }
-
-} // startListeners 닫힘
 
 // ── 알림/진동/소리 ──
 // 앱 모드 감지

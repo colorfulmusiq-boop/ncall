@@ -234,6 +234,8 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .vlog-title{font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:0.35rem;}
 .vlog-row{font-size:0.74rem;color:var(--navy);line-height:1.7;font-weight:500;}
 .vlog-row .vlog-ing{color:var(--green);font-weight:600;}
+.dangol-arrow{color:var(--muted);font-size:0.7rem;transition:transform 0.2s;flex-shrink:0;}
+.vlog-more{margin-top:0.4rem;background:none;border:none;color:var(--blue);font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;padding:0.25rem 0;}
 
 /* 공지사항 전체화면 */
 .full-sheet{background:var(--card);width:100%;height:100%;max-width:600px;display:flex;flex-direction:column;animation:slideUp 0.25s ease;}
@@ -882,62 +884,94 @@ function renderDangol(data) {
 
 function dangolCard(g, isDue) {
   const d = daysSince(g.lastVisit);
+  if (!window._expandedDangols) window._expandedDangols = new Set();
+  const expanded = window._expandedDangols.has(g._key);
+
   const card = document.createElement('div');
   card.className = 'dangol-card' + (isDue ? ' due' : '');
 
+  // 헤더 (클릭으로 접기/펼치기)
   const top = document.createElement('div');
   top.className = 'dangol-top';
+  top.style.cursor = 'pointer';
   const nm = document.createElement('div');
   nm.className = 'dangol-name';
   nm.textContent = g.label;
   const vc = document.createElement('div');
   vc.className = 'dangol-visits';
   vc.textContent = '방문 ' + (g.visitCount || 0) + '회';
-  top.append(nm, vc);
+  const arrow = document.createElement('span');
+  arrow.className = 'dangol-arrow';
+  arrow.textContent = '▼';
+  arrow.style.transform = expanded ? 'rotate(180deg)' : '';
+  top.append(nm, vc, arrow);
+
+  // 본문 (기본 접힘)
+  const body = document.createElement('div');
+  body.style.display = expanded ? 'block' : 'none';
+  body.style.marginTop = '0.7rem';
+
+  top.onclick = () => {
+    const show = body.style.display === 'none';
+    body.style.display = show ? 'block' : 'none';
+    arrow.style.transform = show ? 'rotate(180deg)' : '';
+    if (show) window._expandedDangols.add(g._key); else window._expandedDangols.delete(g._key);
+  };
 
   const since = document.createElement('div');
   since.className = 'dangol-since ' + (isDue ? 'due' : 'ok');
   since.textContent = d === null ? '방문 기록 없음'
     : d === 0 ? '오늘 방문'
     : d + '일째 안 옴';
+  body.appendChild(since);
 
   const meta = document.createElement('div');
   meta.className = 'dangol-meta';
   meta.textContent = (g.phone ? '📱 ' + g.phone : '📱 번호 없음') + (g.bookingCount ? '  ·  부킹 ' + g.bookingCount + '회' : '');
-
-  card.append(top, since, meta);
+  body.appendChild(meta);
 
   if (g.memo) {
     const memo = document.createElement('div');
     memo.className = 'dangol-memo';
     memo.textContent = '📝 ' + g.memo;
-    card.appendChild(memo);
+    body.appendChild(memo);
   }
 
   if (g.visitLog) {
     const logs = Object.values(g.visitLog)
-      .sort((a,b) => ((a.date||'')+(a.enter||'')) < ((b.date||'')+(b.enter||'')) ? 1 : -1)
-      .slice(0, 4);
+      .sort((a,b) => ((a.date||'')+(a.enter||'')) < ((b.date||'')+(b.enter||'')) ? 1 : -1);
     if (logs.length) {
       const box = document.createElement('div');
       box.className = 'dangol-visitlog';
       const t = document.createElement('div');
       t.className = 'vlog-title';
-      t.textContent = '최근 방문';
+      t.textContent = '최근 방문 (' + logs.length + '회)';
       box.appendChild(t);
-      logs.forEach(v => {
+      const mkRow = v => {
         const row = document.createElement('div');
         row.className = 'vlog-row';
         const p = (v.date || '').split('-');
         const md = p.length === 3 ? (+p[1]) + '월 ' + (+p[2]) + '일' : (v.dateLabel || '');
-        if (v.exit) {
-          row.textContent = '📅 ' + md + '  ' + v.enter + ' ~ ' + v.exit;
-        } else {
-          row.innerHTML = '📅 ' + md + '  ' + v.enter + ' ~ <span class="vlog-ing">체류중</span>';
-        }
-        box.appendChild(row);
-      });
-      card.appendChild(box);
+        if (v.exit) row.textContent = '📅 ' + md + '  ' + v.enter + ' ~ ' + v.exit;
+        else row.innerHTML = '📅 ' + md + '  ' + v.enter + ' ~ <span class="vlog-ing">체류중</span>';
+        return row;
+      };
+      logs.slice(0, 3).forEach(v => box.appendChild(mkRow(v)));
+      const hidden = logs.slice(3);
+      if (hidden.length) {
+        hidden.forEach(v => { const r = mkRow(v); r.style.display = 'none'; r.dataset.more = '1'; box.appendChild(r); });
+        const moreBtn = document.createElement('button');
+        moreBtn.className = 'vlog-more';
+        moreBtn.textContent = '＋ 더보기 (' + hidden.length + '개)';
+        moreBtn.onclick = () => {
+          const rows = box.querySelectorAll('[data-more]');
+          const show = rows.length && rows[0].style.display === 'none';
+          rows.forEach(r => r.style.display = show ? 'block' : 'none');
+          moreBtn.textContent = show ? '－ 접기' : '＋ 더보기 (' + hidden.length + '개)';
+        };
+        box.appendChild(moreBtn);
+      }
+      body.appendChild(box);
     }
   }
 
@@ -978,7 +1012,9 @@ function dangolCard(g, isDue) {
   delBtn.onclick = () => deleteDangol(g._key, g.label);
 
   btns.append(visitBtn, remindBtn, qrBtn, editBtn, delBtn);
-  card.appendChild(btns);
+  body.appendChild(btns);
+
+  card.append(top, body);
   return card;
 }
 

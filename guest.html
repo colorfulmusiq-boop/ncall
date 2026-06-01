@@ -503,9 +503,14 @@ function init() {
         });
       });
 
-      // 실시간으로 계산 완료 감지
-      fbOnValue(fbRef(db, `guests/${waiterData.id}/${guestId}/active`), snap => {
-        if (snap.val() === false) {
+      // 실시간 계산완료 감지 (일반손님: active=false / 단골: 계산완료로 visitOpen=false)
+      let _sawOpen = _alreadyIn;
+      fbOnValue(fbRef(db, `guests/${waiterData.id}/${guestId}`), snap => {
+        const gd = snap.val();
+        if (!gd) return;
+        if (gd.visitOpen === true) _sawOpen = true;
+        const done = gd.active === false || (gd.isDangol && gd.visitOpen === false && _sawOpen);
+        if (done) {
           isActive = false;
           localStorage.removeItem('ncall_guest'); localStorage.removeItem('entered_' + guestId); // 계산 완료 시 저장 데이터 삭제
           document.getElementById('mainScreen').style.display = 'none';

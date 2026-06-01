@@ -463,8 +463,10 @@ function init() {
       document.getElementById('infoWaiter').textContent = wname + ' 웨이터';
       document.getElementById('mainScreen').style.display = 'flex';
 
-      // 입장 기록 저장 — 새로고침/재접속 시 중복 저장 방지
-      const enterKey = 'entered_' + guestId;
+      // 입장 기록 저장 — 날짜별 1회 (중복 저장 방지)
+      const _n = new Date(); if (_n.getHours() < 6) _n.setDate(_n.getDate() - 1);
+      const _today = _n.getFullYear() + '-' + String(_n.getMonth()+1).padStart(2,'0') + '-' + String(_n.getDate()).padStart(2,'0');
+      const enterKey = 'entered_' + guestId + '_' + _today;
       if (!localStorage.getItem(enterKey)) {
         localStorage.setItem(enterKey, '1');
         const enterTime = nowStr();
@@ -474,6 +476,16 @@ function init() {
           guestId: guestId, waiterName: waiterData.name,
           time: enterTime, date: enterDate, sortKey: nowFull()
         });
+        // 단골이면 방문 횟수 자동 +1 + 방문 이력(입장 시각) 기록
+        if (guestData.isDangol) {
+          fbUpdate(fbRef(db, `guests/${waiterData.id}/${guestId}`), {
+            visitCount: (guestData.visitCount || 0) + 1,
+            lastVisit: _today
+          });
+          fbPush(fbRef(db, `guests/${waiterData.id}/${guestId}/visitLog`), {
+            date: _today, dateLabel: enterDate, enter: enterTime, exit: null
+          });
+        }
       }
 
       // 웨이터 답장 실시간 감지

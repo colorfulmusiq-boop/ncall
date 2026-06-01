@@ -931,7 +931,7 @@ function dangolCard(g, isDue) {
 
   const meta = document.createElement('div');
   meta.className = 'dangol-meta';
-  meta.textContent = (g.phone ? '📱 ' + g.phone : '📱 번호 없음') + (g.bookingCount ? '  ·  부킹 ' + g.bookingCount + '회' : '');
+  meta.textContent = (g.phone ? '📱 ' + g.phone : '📱 번호 없음');
   body.appendChild(meta);
 
   if (g.memo) {

@@ -236,6 +236,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .vlog-row .vlog-ing{color:var(--green);font-weight:600;}
 .dangol-arrow{color:var(--muted);font-size:0.7rem;transition:transform 0.2s;flex-shrink:0;}
 .vlog-more{margin-top:0.4rem;background:none;border:none;color:var(--blue);font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;padding:0.25rem 0;}
+.dangol-card.checkout-blink{color:var(--navy)!important;}
 
 /* 공지사항 전체화면 */
 .full-sheet{background:var(--card);width:100%;height:100%;max-width:600px;display:flex;flex-direction:column;animation:slideUp 0.25s ease;}
@@ -889,6 +890,9 @@ function dangolCard(g, isDue) {
 
   const card = document.createElement('div');
   card.className = 'dangol-card' + (isDue ? ' due' : '');
+  card.dataset.gid = g._key;
+  card.setAttribute('data-checkout-card', '');
+  if (window._checkoutReqGuests && window._checkoutReqGuests.has(g._key)) card.classList.add('checkout-blink');
 
   // 헤더 (클릭으로 접기/펼치기)
   const top = document.createElement('div');
@@ -1059,6 +1063,16 @@ function startListeners() {
     document.querySelectorAll('[data-checkout-btn]').forEach(btn => {
       btn.classList.toggle('checkout-blink', window._checkoutReqGuests.has(btn.dataset.gid));
     });
+    document.querySelectorAll('[data-checkout-card]').forEach(c => {
+      c.classList.toggle('checkout-blink', window._checkoutReqGuests.has(c.dataset.gid));
+    });
+    // 계산요청 온 단골은 카드를 자동으로 펼쳐서 깜빡이는 버튼이 보이게
+    if (!window._expandedDangols) window._expandedDangols = new Set();
+    let _reDangol = false;
+    window._checkoutReqGuests.forEach(gid => {
+      if (!window._expandedDangols.has(gid)) { window._expandedDangols.add(gid); _reDangol = true; }
+    });
+    if (_reDangol && window._lastGuests) renderDangol(window._lastGuests);
 
     const badge = document.getElementById('notifBadge');
     badge.style.display = notifs.length > 0 ? 'inline' : 'none';
@@ -1150,6 +1164,7 @@ function startListeners() {
   // 손님 목록
   fbOnValue(fbRef(db, `guests/${wid}`), snap => {
     const data = snap.val() || {};
+    window._lastGuests = data;
     renderDangol(data);
     const guests = Object.entries(data)
       .map(([k,v]) => ({...v, _key:k}))

@@ -684,6 +684,7 @@ function checkoutGuest(guestId, label) {
   if (!confirm(label + '\n계산 완료 처리할까요?')) return;
   waitFb(() => {
     fbUpdate(fbRef(db, `guests/${W.id}/${guestId}`), {active: false, visitOpen: false});
+    clearCheckoutReq(guestId);
     fbPush(fbRef(db, `history/${W.id}`), {
       type:'checkout', tableLabel: label, guestMsg: label, guestId: guestId,
       time: nowStr(), date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
@@ -757,6 +758,17 @@ function doSaveDangol() {
   });
 }
 
+function clearCheckoutReq(gid) {
+  fbGet(fbRef(db, `notifs/${W.id}`)).then(snap => {
+    const data = snap.val() || {};
+    Object.entries(data).forEach(([k, v]) => {
+      if (v.type === 'checkout_req' && v.guestId === gid && !v.done) {
+        fbUpdate(fbRef(db, `notifs/${W.id}/${k}`), { done: true });
+      }
+    });
+  });
+}
+
 function checkoutDangol(key, name) {
   if (!confirm(name + '\n계산 완료 처리할까요?')) return;
   waitFb(() => {
@@ -769,6 +781,7 @@ function checkoutDangol(key, name) {
       if (open) fbUpdate(fbRef(db, `guests/${W.id}/${key}/visitLog/${open[0]}`), { exit: nowStr() });
     });
     fbUpdate(fbRef(db, `guests/${W.id}/${key}`), { visitOpen: false });
+    clearCheckoutReq(key);
     fbPush(fbRef(db, `history/${W.id}`), {
       type: 'checkout', tableLabel: name, guestMsg: name, guestId: key,
       time: nowStr(), date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
@@ -935,6 +948,11 @@ function dangolCard(g, isDue) {
   visitBtn.className = 'dg-btn visit';
   visitBtn.textContent = '✓ 계산 완료';
   visitBtn.onclick = () => checkoutDangol(g._key, g.label);
+  visitBtn.dataset.gid = g._key;
+  visitBtn.setAttribute('data-checkout-btn', '');
+  if (window._checkoutReqGuests && window._checkoutReqGuests.has(g._key)) {
+    visitBtn.classList.add('checkout-blink');
+  }
 
   const remindBtn = document.createElement('button');
   remindBtn.className = 'dg-btn remind';
@@ -996,6 +1014,15 @@ function startListeners() {
       lastNotifKey = latestKey;
     }
     prevNotifCount = notifs.length;
+
+    // 계산 요청(checkout_req) 추적 — 미처리 요청의 손님 ID 수집
+    window._checkoutReqGuests = new Set(
+      notifs.filter(n => n.type === 'checkout_req' && n.guestId).map(n => n.guestId)
+    );
+    // 화면에 그려진 계산완료 버튼들에 불 반영 (손님·단골 공통)
+    document.querySelectorAll('[data-checkout-btn]').forEach(btn => {
+      btn.classList.toggle('checkout-blink', window._checkoutReqGuests.has(btn.dataset.gid));
+    });
 
     const badge = document.getElementById('notifBadge');
     badge.style.display = notifs.length > 0 ? 'inline' : 'none';
@@ -1133,6 +1160,8 @@ function startListeners() {
         checkoutBtn.className = 'guest-checkout-btn';
         checkoutBtn.textContent = '✓ 계산 완료';
         checkoutBtn.onclick = () => checkoutGuest(g._key, g.label);
+        checkoutBtn.dataset.gid = g._key;
+        checkoutBtn.setAttribute('data-checkout-btn', '');
         if (window._checkoutReqGuests && window._checkoutReqGuests.has(g._key)) {
           checkoutBtn.classList.add('checkout-blink');
         }

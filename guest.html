@@ -463,12 +463,11 @@ function init() {
       document.getElementById('infoWaiter').textContent = wname + ' 웨이터';
       document.getElementById('mainScreen').style.display = 'flex';
 
-      // 입장 기록 저장 — 날짜별 1회 (중복 저장 방지)
+      // 입장 기록 — 계산완료 전까지 1회만 (Firebase 기준, 기기/링크 무관)
       const _n = new Date(); if (_n.getHours() < 6) _n.setDate(_n.getDate() - 1);
       const _today = _n.getFullYear() + '-' + String(_n.getMonth()+1).padStart(2,'0') + '-' + String(_n.getDate()).padStart(2,'0');
-      const enterKey = 'entered_' + guestId + '_' + _today;
-      if (!localStorage.getItem(enterKey)) {
-        localStorage.setItem(enterKey, '1');
+      const _alreadyIn = guestData.visitOpen === true && guestData.lastVisit === _today;
+      if (!_alreadyIn) {
         const enterTime = nowStr();
         const enterDate = todayStr();
         fbPush(fbRef(db, 'history/' + waiterData.id), {
@@ -476,16 +475,14 @@ function init() {
           guestId: guestId, waiterName: waiterData.name,
           time: enterTime, date: enterDate, sortKey: nowFull()
         });
-        // 단골이면 방문 횟수 자동 +1 + 방문 이력(입장 시각) 기록
+        const _upd = { visitOpen: true, lastVisit: _today };
         if (guestData.isDangol) {
-          fbUpdate(fbRef(db, `guests/${waiterData.id}/${guestId}`), {
-            visitCount: (guestData.visitCount || 0) + 1,
-            lastVisit: _today
-          });
+          _upd.visitCount = (guestData.visitCount || 0) + 1;
           fbPush(fbRef(db, `guests/${waiterData.id}/${guestId}/visitLog`), {
             date: _today, dateLabel: enterDate, enter: enterTime, exit: null
           });
         }
+        fbUpdate(fbRef(db, `guests/${waiterData.id}/${guestId}`), _upd);
       }
 
       // 웨이터 답장 실시간 감지

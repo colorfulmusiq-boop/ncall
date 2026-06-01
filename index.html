@@ -676,7 +676,7 @@ function sendSMS() {
 function checkoutGuest(guestId, label) {
   if (!confirm(label + '\n계산 완료 처리할까요?')) return;
   waitFb(() => {
-    fbUpdate(fbRef(db, `guests/${W.id}/${guestId}`), {active: false});
+    fbUpdate(fbRef(db, `guests/${W.id}/${guestId}`), {active: false, visitOpen: false});
     fbPush(fbRef(db, `history/${W.id}`), {
       type:'checkout', tableLabel: label, guestMsg: label, guestId: guestId,
       time: nowStr(), date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
@@ -750,7 +750,8 @@ function doSaveDangol() {
   });
 }
 
-function endVisit(key, name) {
+function checkoutDangol(key, name) {
+  if (!confirm(name + '\n계산 완료 처리할까요?')) return;
   waitFb(() => {
     fbGet(fbRef(db, `guests/${W.id}/${key}/visitLog`)).then(snap => {
       const log = snap.val() || {};
@@ -758,11 +759,15 @@ function endVisit(key, name) {
       const open = Object.entries(log)
         .filter(([k,v]) => v.date === today && !v.exit)
         .sort((a,b) => a[0] < b[0] ? 1 : -1)[0];
-      if (!open) { toast('오늘 입장 기록이 없어요'); return; }
-      fbUpdate(fbRef(db, `guests/${W.id}/${key}/visitLog/${open[0]}`), { exit: nowStr() });
-      toast('✓ ' + name + ' 퇴장 기록됨');
+      if (open) fbUpdate(fbRef(db, `guests/${W.id}/${key}/visitLog/${open[0]}`), { exit: nowStr() });
+    });
+    fbUpdate(fbRef(db, `guests/${W.id}/${key}`), { visitOpen: false });
+    fbPush(fbRef(db, `history/${W.id}`), {
+      type: 'checkout', tableLabel: name, guestMsg: name, guestId: key,
+      time: nowStr(), date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
     });
   });
+  toast('✓ 계산 완료');
 }
 
 function showDangolQR(key, name, phone) {
@@ -784,12 +789,14 @@ function showDangolQR(key, name, phone) {
 
 function sendDangolLink() {
   const url = 'https://ncall.kr/guest.html?wg=' + encodeURIComponent(W.name + '|' + dangolQrKey);
-  const body = '안녕하세요 ' + dangolQrName + ', ' + W.name + '입니다. 늘 찾아주셔서 진심으로 감사드립니다. 아래 링크를 저장해두시면 언제든 편하게 부킹·주문·호출하실 수 있습니다. 정성껏 모시겠습니다.\n' + url;
+  const hn = dangolQrName.endsWith('님') ? dangolQrName : dangolQrName + '님';
+  const body = '안녕하세요 ' + hn + ', ' + W.name + '입니다. 늘 찾아주셔서 진심으로 감사드립니다. 아래 링크를 저장해두시면 언제든 편하게 부킹·주문·호출하실 수 있습니다. 정성껏 모시겠습니다.\n' + url;
   openSmsApp(dangolQrPhone, body);
 }
 
 function sendRemind(key, name, phone) {
-  const body = '안녕하세요 ' + name + ', ' + W.name + '입니다. 그동안 자주 찾아주셔서 늘 감사한 마음입니다. 한동안 뵙지 못해 안부 여쭙니다. 시간 되실 때 편하게 들러주시면 정성을 다해 모시겠습니다.';
+  const hn = name.endsWith('님') ? name : name + '님';
+  const body = '안녕하세요 ' + hn + ', ' + W.name + '입니다. 그동안 자주 찾아주셔서 늘 감사한 마음입니다. 한동안 뵙지 못해 안부 여쭙니다. 시간 되실 때 편하게 들러주시면 정성을 다해 모시겠습니다.';
   openSmsApp(phone, body);
 }
 
@@ -919,8 +926,8 @@ function dangolCard(g, isDue) {
 
   const visitBtn = document.createElement('button');
   visitBtn.className = 'dg-btn visit';
-  visitBtn.textContent = '🚪 퇴장 기록';
-  visitBtn.onclick = () => endVisit(g._key, g.label);
+  visitBtn.textContent = '✓ 계산 완료';
+  visitBtn.onclick = () => checkoutDangol(g._key, g.label);
 
   const remindBtn = document.createElement('button');
   remindBtn.className = 'dg-btn remind';

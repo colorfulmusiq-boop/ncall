@@ -343,7 +343,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     </div>
     <div class="full-body">
       <div style="background:#fff8e8;border:0.5px solid #f0d080;border-radius:10px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:#7a5a00;line-height:1.6;">
-        📢 업데이트 후 앱이 최신 버전으로 적용되지 않는 경우, 앱을 삭제 후 ncall.kr 에서 다시 설치해주세요.
+        업데이트 후 앱이 최신 버전으로 적용되지 않는 경우, 앱을 삭제 후 ncall.kr 에서 다시 설치해주세요.
       </div>
       <div id="updatesList"></div>
     </div>
@@ -534,7 +534,7 @@ const APP_UPDATES = [
   { date: "2026.06.01", type: "신규 기능", content: "단골 관리 기능 추가 — 단골 탭에서 이름·전화·메모 등록, 단골별 영구 호출 QR 발급" },
   { date: "2026.06.01", type: "신규 기능", content: "방문 자동 기록 — 단골이 QR로 호출(입장)하면 방문 횟수가 자동으로 올라가요" },
   { date: "2026.06.01", type: "신규 기능", content: "방문 이력 표시 — 단골 카드에 입장~퇴장 시각이 날짜별로 쌓여요 (퇴장 기록 버튼)" },
-  { date: "2026.06.01", type: "신규 기능", content: "리마인드 문자 — 7일 이상 안 온 단골이 위에 뜨고, 버튼 한 번으로 문자 발송" },
+  { date: "2026.06.01", type: "신규 기능", content: "리마인드 문자 — 한 달 이상 안 온 단골이 위에 뜨고, 버튼 한 번으로 문자 발송" },
   { date: "2026.05.21", type: "업데이트", content: "커플 메이드 입력 기능 추가 — 내역 탭 손님 폴더에서 메이드 완료 체크 가능" },
   { date: "2026.05.21", type: "업데이트", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
   { date: "2026.05.21", type: "업데이트", content: "같은 이름 손님 삭제 버그 수정" },
@@ -697,7 +697,7 @@ function checkoutGuest(guestId, label) {
 }
 
 // ── 단골 CRM ──
-const REMIND_DAYS = 7; // 며칠 이상 안 오면 "연락할 때 됐어요"에 뜸
+const REMIND_DAYS = 30; // 한 달 이상 안 오면 "연락할 때 됐어요"에 뜸
 let editingDangolKey = null;
 let dangolQrKey = null, dangolQrName = '', dangolQrPhone = '';
 

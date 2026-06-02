@@ -514,6 +514,7 @@ function doRegister() {
 }
 
 function doLogin() {
+  unlockMedia(); // 버튼 클릭 제스처 안에서 오디오/진동 잠금 해제
   const name = document.getElementById('loginName').value.trim();
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginErr');
@@ -556,6 +557,11 @@ function enterDash() {
   requestWakeLock();
   requestNotifPerm();
   startListeners();
+  // 자동로그인 등 제스처 없이 진입한 경우 — 화면 첫 터치 때 오디오/진동 깨우기
+  if (!_mediaUnlocked) {
+    const _unlockOnce = () => { unlockMedia(); document.removeEventListener('pointerdown', _unlockOnce); };
+    document.addEventListener('pointerdown', _unlockOnce);
+  }
 }
 
 const APP_UPDATES = [
@@ -1792,9 +1798,26 @@ function vibrate(type) {
   navigator.vibrate(type==='booking' ? [200,100,200,100,400] : [150,80,150]);
 }
 let audioCtx;
+let _mediaUnlocked = false;
+// 사용자 제스처(로그인 버튼 클릭/첫 터치) 안에서 호출 — 오디오/진동을 미리 깨워둠
+function unlockMedia() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    // 무음 한 번 재생해서 확실히 잠금 해제
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.02);
+  } catch(e) {}
+  try { if (navigator.vibrate) navigator.vibrate(1); } catch(e) {}
+  _mediaUnlocked = true;
+}
 function playBeep(type) {
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain); gain.connect(audioCtx.destination);

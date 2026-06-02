@@ -496,6 +496,7 @@ function doRegister() {
   const pass2 = document.getElementById('regPass2').value;
   const err = document.getElementById('regErr');
   if (!name) { err.textContent='이름을 입력해주세요'; err.classList.add('show'); return; }
+  if (/[.#$\[\]/]/.test(name)) { err.textContent='이름에 . # $ [ ] / 는 쓸 수 없어요'; err.classList.add('show'); return; }
   if (pass.length < 4) { err.textContent='비밀번호는 4자리 이상이에요'; err.classList.add('show'); return; }
   if (pass !== pass2) { err.textContent='비밀번호가 일치하지 않아요'; err.classList.add('show'); return; }
   waitFb(() => {
@@ -516,9 +517,10 @@ function doLogin() {
   const name = document.getElementById('loginName').value.trim();
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginErr');
+  if (/[.#$\[\]/]/.test(name)) { err.textContent='이름에 . # $ [ ] / 는 쓸 수 없어요'; err.classList.add('show'); return; }
   waitFb(() => {
     fbGet(fbRef(db, `waiters/${name}`)).then(snap => {
-      if (!snap.exists() || snap.val().pass !== pass) { err.classList.add('show'); return; }
+      if (!snap.exists() || snap.val().pass !== pass) { err.textContent='이름 또는 비밀번호가 틀렸어요'; err.classList.add('show'); return; }
       err.classList.remove('show');
       W = snap.val();
       localStorage.setItem('ncall_waiter', JSON.stringify(W));
@@ -527,10 +529,31 @@ function doLogin() {
   });
 }
 
+// ── 화면 꺼짐 방지 (대시보드 켜둔 동안) ──
+let _wakeLock = null;
+let _dashOpen = false;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator && _dashOpen && !_wakeLock) {
+      _wakeLock = await navigator.wakeLock.request('screen');
+      _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+    }
+  } catch (e) {}
+}
+function releaseWakeLock() {
+  try { if (_wakeLock) { _wakeLock.release(); _wakeLock = null; } } catch(e) {}
+}
+// 앱이 다시 앞으로 오면 잠금 재획득 (OS가 백그라운드 때 자동 해제하므로)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && _dashOpen) requestWakeLock();
+});
+
 function enterDash() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashScreen').style.display = 'flex';
   document.getElementById('dashName').textContent = W.name + ' 웨이터님';
+  _dashOpen = true;
+  requestWakeLock();
   requestNotifPerm();
   startListeners();
 }
@@ -598,6 +621,8 @@ function doLogout() {
   W = null; prevNotifCount = -1;
   listenersStarted = false;
   lastNotifKey = null;
+  _dashOpen = false;
+  releaseWakeLock();
   localStorage.removeItem('ncall_waiter');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('dashScreen').style.display = 'none';

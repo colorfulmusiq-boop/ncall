@@ -1396,9 +1396,20 @@ function startListeners() {
         tItems.forEach(function(n){ if(counts[n.type]!==undefined) counts[n.type]++; });
         var checkoutItem = tItems.find(function(n){ return n.type==='checkout'; });
         var checkoutTime = checkoutItem ? (checkoutItem.doneAt || checkoutItem.time) : null;
+        var isCheckedOut = !!checkoutItem;
+        // 오늘: 진행중=선명한 파란 테두리(살아있음) / 완료=회색+흐리게(죽임)
+        // 과거(어제 이전): 지난 기록이니 전부 선명하게(기본 테두리)
+        var _cardBorder, _cardOpacity = '';
+        if (isToday && isCheckedOut) {
+          _cardBorder = '2px solid #c0c8d2'; _cardOpacity = 'opacity:0.5;';
+        } else if (isToday && !isCheckedOut) {
+          _cardBorder = '2px solid #3a5a8a';
+        } else {
+          _cardBorder = '0.5px solid var(--border)';
+        }
 
         var tCard = document.createElement('div');
-        tCard.style.cssText = 'margin-bottom:0.6rem;background:var(--card);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;';
+        tCard.style.cssText = 'margin-bottom:0.6rem;background:var(--card);border-radius:12px;border:' + _cardBorder + ';' + _cardOpacity + 'overflow:hidden;';
 
         var tHdr = document.createElement('div');
         tHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;cursor:pointer;user-select:none;';

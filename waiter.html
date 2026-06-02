@@ -474,7 +474,12 @@ function waitFb(fn) {
   else document.addEventListener('fb-ready', () => { _assignFb(); fn(); }, {once:true});
 }
 function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
-function nowFull() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
+function nowFull() {
+  const n=new Date();
+  let h=n.getHours();
+  if (h < 6) h += 24; // 새벽(0~5시)은 영업일 기준 24~29시로 — 자정 넘어도 정렬 순서 유지
+  return String(h).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
+}
 function todayStr() { const n=new Date(); if (n.getHours() < 6) n.setDate(n.getDate() - 1); return n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일'; }
 
 // ── 인증 ──
@@ -1532,8 +1537,8 @@ function doneNotif(key, wid, type, tableLabel, time, beerQty, msgText) {
 }
 
 function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, msgText) {
-  // replies 저장을 먼저 바로 실행 (타이밍 문제 방지)
-  if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: guestId, time: nowStr()});
+  // 손님별 전용 경로에 바로 저장 (타이밍 문제 방지) — 해당 손님만 구독하므로 다른 손님에게 새지 않음
+  if (guestId) fbPush(fbRef(db, `guestReplies/${wid}/${guestId}`), {msg: replyMsg, guestId: guestId, time: nowStr()});
   toast('✓ ' + replyMsg + ' 전송!');
   waitFb(() => {
     fbGet(fbRef(db, `notifs/${wid}/${notifKey}`)).then(snap => {
@@ -1542,7 +1547,7 @@ function replyGuest(notifKey, guestId, wid, type, tableLabel, time, replyMsg, ms
       const finalGuestId = notifData.guestId || guestId || '';
       fbRemove(fbRef(db, `notifs/${wid}/${notifKey}`));
       if (!guestId && finalGuestId) {
-        if (notifKey) fbSet(fbRef(db, `replies/${notifKey}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
+        fbPush(fbRef(db, `guestReplies/${wid}/${finalGuestId}`), {msg: replyMsg, guestId: finalGuestId, time: nowStr()});
       }
       if (type === 'booking' && finalGuestId) {
         const countRef = fbRef(db, `guests/${wid}/${finalGuestId}/bookingCount`);
@@ -1791,17 +1796,22 @@ let notifyTimer = null;
 function notify(type, tableLabel, guestMsg, extra) {
   notifyQueue.push({type, tableLabel, guestMsg, extra});
   if (notifyTimer) return;
-  notifyTimer = setTimeout(() => {
-    const item = notifyQueue.shift();
-    if (item) {
+  notifyTimer = setTimeout(processNotifyQueue, 100);
+}
+function processNotifyQueue() {
+  notifyTimer = null;
+  if (notifyQueue.length === 0) return;
+  const items = notifyQueue.slice();
+  notifyQueue = [];
+  // 동시에 여러 건이 와도 전부 알림 — 소리/진동이 겹쳐 뭉개지지 않게 살짝 간격을 둠
+  items.forEach((item, i) => {
+    setTimeout(() => {
       vibrate(item.type);
       playBeep(item.type);
       showPush(item.type, item.guestMsg, item.tableLabel);
       if (item.type !== 'checkout_req') showInAppBanner(item.type, item.tableLabel, item.guestMsg, item.extra);
-    }
-    notifyQueue = [];
-    notifyTimer = null;
-  }, 100);
+    }, i * 450);
+  });
 }
 
 let inAppBannerTimer;

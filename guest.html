@@ -330,7 +330,12 @@ if (document.readyState === 'loading') {
   _assignFb(); init();
 }
 function nowStr() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
-function nowFull() { const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
+function nowFull() {
+  const n=new Date();
+  let h=n.getHours();
+  if (h < 6) h += 24; // 새벽(0~5시)은 영업일 기준 24~29시로 — 자정 넘어도 정렬 순서 유지
+  return String(h).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
+}
 function todayStr() {
   const n = new Date();
   if (n.getHours() < 6) n.setDate(n.getDate() - 1);
@@ -485,17 +490,8 @@ function init() {
         fbUpdate(fbRef(db, `guests/${waiterData.id}/${guestId}`), _upd);
       }
 
-      // 웨이터 답장 실시간 감지
-      // 1) 기존 replies 경로도 감지
-      // 2) 손님별 전용 guestReplies 경로도 감지
-      // 같은 문구라도 새 요청의 새 notifKey면 새 메시지처럼 다시 표시하고 15초 타이머를 리셋함
-      fbOnValue(fbRef(db, `replies`), snap => {
-        const data = snap.val() || {};
-        Object.entries(data).forEach(([key, reply]) => {
-          handleGuestReply(key, reply, `replies/${key}`);
-        });
-      });
-
+      // 웨이터 답장 실시간 감지 — 손님별 전용 경로만 구독 (다른 손님 데이터 안 받음)
+      // 같은 문구라도 새 요청의 새 key면 새 메시지처럼 다시 표시하고 15초 타이머를 리셋함
       fbOnValue(fbRef(db, `guestReplies/${waiterData.id}/${guestId}`), snap => {
         const data = snap.val() || {};
         Object.entries(data).forEach(([key, reply]) => {

@@ -111,6 +111,11 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .tab{flex:1;padding:0.6rem;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;transition:all 0.15s;}
 .tab.active{background:var(--navy);border-color:var(--navy);color:#fff;}
 .badge{display:inline-block;background:var(--red);color:#fff;font-size:0.58rem;font-weight:700;border-radius:8px;padding:0.05rem 0.35rem;margin-left:0.2rem;vertical-align:middle;}
+/* 공지 안 읽음 말풍선 (펄스) — 숫자는 안 읽은 '날짜 수' */
+.notice-wrap{position:relative;overflow:visible;}
+.notice-badge{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;background:#ff2d55;color:#fff;border-radius:9px;font-size:0.6rem;font-weight:800;display:none;align-items:center;justify-content:center;line-height:1;border:1.5px solid #fff;box-shadow:0 1px 5px rgba(255,45,85,0.55);z-index:3;}
+.notice-badge::before{content:'';position:absolute;inset:-1px;border-radius:50%;background:#ff2d55;z-index:-1;animation:noticePulse 1.6s infinite;}
+@keyframes noticePulse{0%{transform:scale(1);opacity:0.6;}70%{transform:scale(2.4);opacity:0;}100%{opacity:0;}}
 
 /* 알림 카드 */
 .notif-card{background:var(--card);border-radius:12px;padding:0.95rem 1.1rem;display:flex;align-items:flex-start;gap:0.85rem;margin-bottom:0.6rem;border:0.5px solid var(--border);animation:slideIn 0.2s ease both;}
@@ -296,7 +301,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     </div>
     <div class="hdr-right">
       <div class="live-dot"></div>
-      <button class="logout-btn" onclick="showUpdates()">공지사항</button>
+      <button class="logout-btn notice-wrap" onclick="showUpdates()">공지사항<span id="noticeBadge" class="notice-badge">0</span></button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -310,7 +315,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 
   <!-- 알림 -->
   <div id="panel-notif" class="scroll"><div class="pad">
-    <button class="btn btn-danger" style="margin-bottom:1rem;" id="clearNotifsBtn" onclick="clearAllNotifs()" style="display:none;">✓ 알림 전체 확인</button>
+    <button class="btn btn-danger" style="margin-bottom:1rem;display:none;" id="clearNotifsBtn" onclick="clearAllNotifs()">✓ 알림 전체 확인</button>
     <div id="notifFeed"><div class="empty"><div class="empty-icon">🔕</div>호출 없음</div></div>
   </div></div>
 
@@ -557,6 +562,7 @@ function enterDash() {
   requestWakeLock();
   requestNotifPerm();
   startListeners();
+  updateNoticeBadge();
   // 자동로그인 등 제스처 없이 진입한 경우 — 화면 첫 터치 때 오디오/진동 깨우기
   if (!_mediaUnlocked) {
     const _unlockOnce = () => { unlockMedia(); document.removeEventListener('pointerdown', _unlockOnce); };
@@ -565,6 +571,7 @@ function enterDash() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.06.04", type: "신규 기능", content: "말풍선 테스트 — 이 줄 보이고 공지 버튼에 빨간 1 떠있으면 정상! 확인 후 이 한 줄만 지우면 됨" },
   { date: "2026.06.03", type: "업데이트", content: "호출 알림 개선 — 벨소리 모드에서도 호출이 오면 소리와 진동이 함께 울려요" },
   { date: "2026.06.03", type: "신규 기능", content: "내역 폴더 색 구분 — 오늘 진행 중인 팀은 파란 테두리, 계산 완료된 팀은 회색으로 흐리게 표시돼서 남은 팀이 한눈에 보여요 (지난 날짜 내역은 모두 선명하게)" },
   { date: "2026.06.01", type: "신규 기능", content: "단골 관리 기능 추가 — 단골 탭에서 이름·전화·메모 등록, 단골별 영구 호출 QR 발급" },
@@ -575,6 +582,24 @@ const APP_UPDATES = [
   { date: "2026.05.21", type: "업데이트", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
   { date: "2026.05.21", type: "업데이트", content: "같은 이름 손님 삭제 버그 수정" },
 ];
+// 공지 중복 제거된 날짜 목록 (최신순)
+function _noticeDates() {
+  return [...new Set(APP_UPDATES.map(function(u){ return u.date; }))].sort().reverse();
+}
+// 읽음 기록은 '계정별'로 저장 (같은 폰에서 아이디 바꾸면 각자 따로 카운트)
+function _noticeSeenKey() {
+  return 'ncall_notice_seen_' + (W && W.name ? W.name : '_guest');
+}
+// 안 읽은 '날짜 수'로 말풍선 갱신 (같은 날 공지 여러 개여도 1, 수정만 한 건 0)
+function updateNoticeBadge() {
+  const badge = document.getElementById('noticeBadge');
+  if (!badge) return;
+  const dates = _noticeDates();
+  const seen = localStorage.getItem(_noticeSeenKey()) || '';
+  const unseen = dates.filter(function(d){ return d > seen; }).length;
+  if (unseen > 0) { badge.textContent = unseen; badge.style.display = 'inline-flex'; }
+  else { badge.style.display = 'none'; }
+}
 function showUpdates() {
   const list = document.getElementById('updatesList');
   list.innerHTML = '';
@@ -589,7 +614,7 @@ function showUpdates() {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
     const hdr = document.createElement('div');
-    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'var(--navy)':'var(--bg2)') + ';cursor:pointer;';
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'linear-gradient(135deg,#3a5a8a,#5b7fb5)':'var(--bg2)') + ';cursor:pointer;';
     hdr.onclick = function() {
       const body = document.getElementById(folderId);
       const arrow = document.getElementById('arrow-' + folderId);
@@ -616,13 +641,30 @@ function showUpdates() {
     body.style.display = idx === 0 ? 'block' : 'none';
     groups[date].forEach(function(item) {
       const row = document.createElement('div');
-      row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;color:var(--navy);line-height:1.5;';
-      row.textContent = item.content;
+      row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;line-height:1.5;';
+      const _sep = ' \u2014 '; // 공백+em대시+공백
+      const _di = item.content.indexOf(_sep);
+      const titleSpan = document.createElement('span');
+      titleSpan.style.cssText = 'font-weight:800;color:var(--blue);';
+      if (_di > -1) {
+        titleSpan.textContent = item.content.slice(0, _di);
+        const descSpan = document.createElement('span');
+        descSpan.style.cssText = 'color:var(--muted);font-weight:400;';
+        descSpan.textContent = item.content.slice(_di);
+        row.append(titleSpan, descSpan);
+      } else {
+        titleSpan.textContent = item.content;
+        row.appendChild(titleSpan);
+      }
       body.appendChild(row);
     });
     wrap.appendChild(body);
     list.appendChild(wrap);
   });
+  // 열어봤으니 최신 날짜까지 읽음 처리 → 말풍선 끄기
+  const _nd = _noticeDates();
+  if (_nd.length) localStorage.setItem(_noticeSeenKey(), _nd[0]);
+  updateNoticeBadge();
   document.getElementById('updatesModal').classList.add('open');
 }
 function doLogout() {

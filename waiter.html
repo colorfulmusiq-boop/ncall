@@ -585,12 +585,16 @@ const APP_UPDATES = [
 function _noticeDates() {
   return [...new Set(APP_UPDATES.map(function(u){ return u.date; }))].sort().reverse();
 }
+// 읽음 기록은 '계정별'로 저장 (같은 폰에서 아이디 바꾸면 각자 따로 카운트)
+function _noticeSeenKey() {
+  return 'ncall_notice_seen_' + (W && W.name ? W.name : '_guest');
+}
 // 안 읽은 '날짜 수'로 말풍선 갱신 (같은 날 공지 여러 개여도 1, 수정만 한 건 0)
 function updateNoticeBadge() {
   const badge = document.getElementById('noticeBadge');
   if (!badge) return;
   const dates = _noticeDates();
-  const seen = localStorage.getItem('ncall_notice_seen') || '';
+  const seen = localStorage.getItem(_noticeSeenKey()) || '';
   const unseen = dates.filter(function(d){ return d > seen; }).length;
   if (unseen > 0) { badge.textContent = unseen; badge.style.display = 'inline-flex'; }
   else { badge.style.display = 'none'; }
@@ -645,7 +649,7 @@ function showUpdates() {
   });
   // 열어봤으니 최신 날짜까지 읽음 처리 → 말풍선 끄기
   const _nd = _noticeDates();
-  if (_nd.length) localStorage.setItem('ncall_notice_seen', _nd[0]);
+  if (_nd.length) localStorage.setItem(_noticeSeenKey(), _nd[0]);
   updateNoticeBadge();
   document.getElementById('updatesModal').classList.add('open');
 }

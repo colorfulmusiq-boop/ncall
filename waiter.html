@@ -111,6 +111,11 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .tab{flex:1;padding:0.6rem;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;transition:all 0.15s;}
 .tab.active{background:var(--navy);border-color:var(--navy);color:#fff;}
 .badge{display:inline-block;background:var(--red);color:#fff;font-size:0.58rem;font-weight:700;border-radius:8px;padding:0.05rem 0.35rem;margin-left:0.2rem;vertical-align:middle;}
+/* 공지 안 읽음 말풍선 (펄스) — 숫자는 안 읽은 '날짜 수' */
+.notice-wrap{position:relative;overflow:visible;}
+.notice-badge{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;background:#ff2d55;color:#fff;border-radius:9px;font-size:0.6rem;font-weight:800;display:none;align-items:center;justify-content:center;line-height:1;border:1.5px solid #fff;box-shadow:0 1px 5px rgba(255,45,85,0.55);z-index:3;}
+.notice-badge::before{content:'';position:absolute;inset:-1px;border-radius:50%;background:#ff2d55;z-index:-1;animation:noticePulse 1.6s infinite;}
+@keyframes noticePulse{0%{transform:scale(1);opacity:0.6;}70%{transform:scale(2.4);opacity:0;}100%{opacity:0;}}
 
 /* 알림 카드 */
 .notif-card{background:var(--card);border-radius:12px;padding:0.95rem 1.1rem;display:flex;align-items:flex-start;gap:0.85rem;margin-bottom:0.6rem;border:0.5px solid var(--border);animation:slideIn 0.2s ease both;}
@@ -296,7 +301,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     </div>
     <div class="hdr-right">
       <div class="live-dot"></div>
-      <button class="logout-btn" onclick="showUpdates()">공지사항</button>
+      <button class="logout-btn notice-wrap" onclick="showUpdates()">공지사항<span id="noticeBadge" class="notice-badge">0</span></button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -310,7 +315,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 
   <!-- 알림 -->
   <div id="panel-notif" class="scroll"><div class="pad">
-    <button class="btn btn-danger" style="margin-bottom:1rem;" id="clearNotifsBtn" onclick="clearAllNotifs()" style="display:none;">✓ 알림 전체 확인</button>
+    <button class="btn btn-danger" style="margin-bottom:1rem;display:none;" id="clearNotifsBtn" onclick="clearAllNotifs()">✓ 알림 전체 확인</button>
     <div id="notifFeed"><div class="empty"><div class="empty-icon">🔕</div>호출 없음</div></div>
   </div></div>
 
@@ -557,6 +562,7 @@ function enterDash() {
   requestWakeLock();
   requestNotifPerm();
   startListeners();
+  updateNoticeBadge();
   // 자동로그인 등 제스처 없이 진입한 경우 — 화면 첫 터치 때 오디오/진동 깨우기
   if (!_mediaUnlocked) {
     const _unlockOnce = () => { unlockMedia(); document.removeEventListener('pointerdown', _unlockOnce); };
@@ -575,6 +581,20 @@ const APP_UPDATES = [
   { date: "2026.05.21", type: "업데이트", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
   { date: "2026.05.21", type: "업데이트", content: "같은 이름 손님 삭제 버그 수정" },
 ];
+// 공지 중복 제거된 날짜 목록 (최신순)
+function _noticeDates() {
+  return [...new Set(APP_UPDATES.map(function(u){ return u.date; }))].sort().reverse();
+}
+// 안 읽은 '날짜 수'로 말풍선 갱신 (같은 날 공지 여러 개여도 1, 수정만 한 건 0)
+function updateNoticeBadge() {
+  const badge = document.getElementById('noticeBadge');
+  if (!badge) return;
+  const dates = _noticeDates();
+  const seen = localStorage.getItem('ncall_notice_seen') || '';
+  const unseen = dates.filter(function(d){ return d > seen; }).length;
+  if (unseen > 0) { badge.textContent = unseen; badge.style.display = 'inline-flex'; }
+  else { badge.style.display = 'none'; }
+}
 function showUpdates() {
   const list = document.getElementById('updatesList');
   list.innerHTML = '';
@@ -623,6 +643,10 @@ function showUpdates() {
     wrap.appendChild(body);
     list.appendChild(wrap);
   });
+  // 열어봤으니 최신 날짜까지 읽음 처리 → 말풍선 끄기
+  const _nd = _noticeDates();
+  if (_nd.length) localStorage.setItem('ncall_notice_seen', _nd[0]);
+  updateNoticeBadge();
   document.getElementById('updatesModal').classList.add('open');
 }
 function doLogout() {

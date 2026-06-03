@@ -613,7 +613,7 @@ function showUpdates() {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
     const hdr = document.createElement('div');
-    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'var(--navy)':'var(--bg2)') + ';cursor:pointer;';
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'linear-gradient(135deg,#3a5a8a,#5b7fb5)':'var(--bg2)') + ';cursor:pointer;';
     hdr.onclick = function() {
       const body = document.getElementById(folderId);
       const arrow = document.getElementById('arrow-' + folderId);
@@ -640,8 +640,21 @@ function showUpdates() {
     body.style.display = idx === 0 ? 'block' : 'none';
     groups[date].forEach(function(item) {
       const row = document.createElement('div');
-      row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;color:var(--navy);line-height:1.5;';
-      row.textContent = item.content;
+      row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;line-height:1.5;';
+      const _sep = ' \u2014 '; // 공백+em대시+공백
+      const _di = item.content.indexOf(_sep);
+      const titleSpan = document.createElement('span');
+      titleSpan.style.cssText = 'font-weight:800;color:var(--blue);';
+      if (_di > -1) {
+        titleSpan.textContent = item.content.slice(0, _di);
+        const descSpan = document.createElement('span');
+        descSpan.style.cssText = 'color:var(--muted);font-weight:400;';
+        descSpan.textContent = item.content.slice(_di);
+        row.append(titleSpan, descSpan);
+      } else {
+        titleSpan.textContent = item.content;
+        row.appendChild(titleSpan);
+      }
       body.appendChild(row);
     });
     wrap.appendChild(body);

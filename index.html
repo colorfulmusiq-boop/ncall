@@ -1407,11 +1407,27 @@ function startListeners() {
       dateLeft.appendChild(dateTxt);
 
       var tableGroups = {};
+      // 같은 손님(특히 단골)이라도 입장(enter)할 때마다 새 방문으로 분리
+      var _byKey = {};
       items.forEach(function(n) {
         var tbl = n.tableLabel || n.guestMsg || '손님';
-        var grpKey = tbl + '___' + (n.guestId || '');
-        if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
-        tableGroups[grpKey].push(n);
+        var baseKey = tbl + '___' + (n.guestId || '');
+        if (!_byKey[baseKey]) _byKey[baseKey] = [];
+        _byKey[baseKey].push(n);
+      });
+      Object.keys(_byKey).forEach(function(baseKey) {
+        var arr = _byKey[baseKey].slice().sort(function(a,b){
+          var ak = a.sortKey || a._key || ''; var bk = b.sortKey || b._key || '';
+          return ak < bk ? -1 : ak > bk ? 1 : 0;
+        });
+        var session = 0, started = false;
+        arr.forEach(function(n) {
+          if (n.type === 'enter') { session++; started = true; }
+          else if (!started) { session = 1; started = true; }
+          var grpKey = baseKey + '___s' + session;
+          if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
+          tableGroups[grpKey].push(n);
+        });
       });
       var tableEntries = Object.entries(tableGroups).sort(function(a,b){
         var aKey = a[1].map(function(n){ return n._key||''; }).sort().pop()||'';
@@ -1473,7 +1489,7 @@ function startListeners() {
         var tItems = entry[1];
         var tableNum = String(total - revIdx).padStart(2,'0');
         var grpGuestId = (tItems[0] && tItems[0].guestId) ? tItems[0].guestId.replace(/[^a-zA-Z0-9]/g,'') : '';
-        var folderId = 'tf-' + date.replace(/\s/g,'-') + '-' + tbl.replace(/[\s']/g,'') + '-' + grpGuestId;
+        var folderId = 'tf-' + date.replace(/\s/g,'-') + '-' + entry[0].replace(/[^a-zA-Z0-9]/g,'');
 
         var counts = { booking:0, call:0, checkout:0, beer:0, message:0, enter:0 };
         tItems.forEach(function(n){ if(counts[n.type]!==undefined) counts[n.type]++; });

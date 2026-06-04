@@ -23,6 +23,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 (function() {
   var cfg = {
@@ -36,7 +37,9 @@
   };
   firebase.initializeApp(cfg);
   var db = firebase.database();
+  var auth = firebase.auth();
   window._db = db;
+  window._auth = auth;
   window._ref = function(db, path) { return db.ref(path); };
   window._push = function(ref, data) { return ref.push(data); };
   window._set = function(ref, data) { return ref.set(data); };
@@ -111,11 +114,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .tab{flex:1;padding:0.6rem;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;transition:all 0.15s;}
 .tab.active{background:var(--navy);border-color:var(--navy);color:#fff;}
 .badge{display:inline-block;background:var(--red);color:#fff;font-size:0.58rem;font-weight:700;border-radius:8px;padding:0.05rem 0.35rem;margin-left:0.2rem;vertical-align:middle;}
-/* 공지 안 읽음 말풍선 (펄스) — 숫자는 안 읽은 '날짜 수' */
-.notice-wrap{position:relative;overflow:visible;}
-.notice-badge{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;background:#ff2d55;color:#fff;border-radius:9px;font-size:0.6rem;font-weight:800;display:none;align-items:center;justify-content:center;line-height:1;border:1.5px solid #fff;box-shadow:0 1px 5px rgba(255,45,85,0.55);z-index:3;}
-.notice-badge::before{content:'';position:absolute;inset:-1px;border-radius:50%;background:#ff2d55;z-index:-1;animation:noticePulse 1.6s infinite;}
-@keyframes noticePulse{0%{transform:scale(1);opacity:0.6;}70%{transform:scale(2.4);opacity:0;}100%{opacity:0;}}
 
 /* 알림 카드 */
 .notif-card{background:var(--card);border-radius:12px;padding:0.95rem 1.1rem;display:flex;align-items:flex-start;gap:0.85rem;margin-bottom:0.6rem;border:0.5px solid var(--border);animation:slideIn 0.2s ease both;}
@@ -283,7 +281,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
       <input class="inp" id="regName" type="text" placeholder="예: 국빈관홍길동">
       <div style="font-size:0.72rem;color:var(--muted);margin-top:-0.3rem;margin-bottom:0.6rem;">업장명과 본인 이름을 붙여서 입력해주세요</div>
       <label class="inp-label">비밀번호 설정</label>
-      <input class="inp" id="regPass" type="password" placeholder="4자리 이상">
+      <input class="inp" id="regPass" type="password" placeholder="6자리 이상">
       <label class="inp-label">비밀번호 확인</label>
       <input class="inp" id="regPass2" type="password" placeholder="다시 입력">
       <div class="err" id="regErr">오류</div>
@@ -301,7 +299,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     </div>
     <div class="hdr-right">
       <div class="live-dot"></div>
-      <button class="logout-btn notice-wrap" onclick="showUpdates()">공지사항<span id="noticeBadge" class="notice-badge">0</span></button>
+      <button class="logout-btn" onclick="showUpdates()">공지사항</button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -315,7 +313,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 
   <!-- 알림 -->
   <div id="panel-notif" class="scroll"><div class="pad">
-    <button class="btn btn-danger" style="margin-bottom:1rem;display:none;" id="clearNotifsBtn" onclick="clearAllNotifs()">✓ 알림 전체 확인</button>
+    <button class="btn btn-danger" style="margin-bottom:1rem;" id="clearNotifsBtn" onclick="clearAllNotifs()" style="display:none;">✓ 알림 전체 확인</button>
     <div id="notifFeed"><div class="empty"><div class="empty-icon">🔕</div>호출 없음</div></div>
   </div></div>
 
@@ -379,12 +377,27 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <label class="inp-label">현재 비밀번호</label>
     <input class="inp" id="curPw" type="password" placeholder="현재 비밀번호">
     <label class="inp-label">새 비밀번호</label>
-    <input class="inp" id="newPw" type="password" placeholder="새 비밀번호 (4자리 이상)">
+    <input class="inp" id="newPw" type="password" placeholder="새 비밀번호 (6자리 이상)">
     <label class="inp-label">새 비밀번호 확인</label>
     <input class="inp" id="newPw2" type="password" placeholder="다시 입력">
     <div class="err" id="pwErr">오류</div>
     <button class="btn btn-primary" onclick="doChangePw()">변경하기</button>
     <button class="btn btn-ghost" onclick="closeModal('changePwModal')">취소</button>
+  </div>
+</div>
+
+<!-- 비밀번호 재설정 모달 (기존 짧은 비번 웨이터용) -->
+<div class="modal-bg" id="pwResetModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">비밀번호 재설정</div>
+    <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;margin-bottom:0.8rem;">보안이 강화되어 비밀번호는 이제 6자리 이상이어야 해요. 새 비밀번호를 정해주세요. 다음부터는 새 비밀번호로 로그인하시면 됩니다.</div>
+    <label class="inp-label">새 비밀번호</label>
+    <input class="inp" id="resetPw" type="password" placeholder="6자리 이상">
+    <label class="inp-label">새 비밀번호 확인</label>
+    <input class="inp" id="resetPw2" type="password" placeholder="다시 입력">
+    <div class="err" id="resetErr">오류</div>
+    <button class="btn btn-primary" onclick="submitPwReset()">설정하고 로그인</button>
   </div>
 </div>
 
@@ -502,17 +515,25 @@ function doRegister() {
   const err = document.getElementById('regErr');
   if (!name) { err.textContent='이름을 입력해주세요'; err.classList.add('show'); return; }
   if (/[.#$\[\]/]/.test(name)) { err.textContent='이름에 . # $ [ ] / 는 쓸 수 없어요'; err.classList.add('show'); return; }
-  if (pass.length < 4) { err.textContent='비밀번호는 4자리 이상이에요'; err.classList.add('show'); return; }
+  if (pass.length < 6) { err.textContent='비밀번호는 6자리 이상이에요'; err.classList.add('show'); return; }
   if (pass !== pass2) { err.textContent='비밀번호가 일치하지 않아요'; err.classList.add('show'); return; }
   waitFb(() => {
     fbGet(fbRef(db, `waiters/${name}`)).then(snap => {
       if (snap.exists()) { err.textContent='이미 사용 중인 이름이에요'; err.classList.add('show'); return; }
       const wid = 'w_' + Date.now();
-      fbSet(fbRef(db, `waiters/${name}`), {id:wid, name, pass}).then(() => {
+      const email = wid + '@ncall.kr';
+      firebase.auth().createUserWithEmailAndPassword(email, pass).then(() => {
+        return fbSet(fbRef(db, `waiters/${name}`), {id:wid, name});
+      }).then(() => {
+        return firebase.auth().signOut();
+      }).then(() => {
         err.classList.remove('show');
         toast('✓ 등록 완료!');
         switchAuthTab('login');
         document.getElementById('loginName').value = name;
+      }).catch(e => {
+        err.textContent = '등록 실패: ' + (e && e.message ? e.message : '다시 시도해주세요');
+        err.classList.add('show');
       });
     });
   });
@@ -526,13 +547,39 @@ function doLogin() {
   if (/[.#$\[\]/]/.test(name)) { err.textContent='이름에 . # $ [ ] / 는 쓸 수 없어요'; err.classList.add('show'); return; }
   waitFb(() => {
     fbGet(fbRef(db, `waiters/${name}`)).then(snap => {
-      if (!snap.exists() || snap.val().pass !== pass) { err.textContent='이름 또는 비밀번호가 틀렸어요'; err.classList.add('show'); return; }
-      err.classList.remove('show');
-      W = snap.val();
-      localStorage.setItem('ncall_waiter', JSON.stringify(W));
-      enterDash();
+      if (!snap.exists()) { err.textContent='이름 또는 비밀번호가 틀렸어요'; err.classList.add('show'); return; }
+      const wd = snap.val();
+      const email = wd.id + '@ncall.kr';
+      firebase.auth().signInWithEmailAndPassword(email, pass).then(() => {
+        loginSuccess(wd);
+      }).catch(() => {
+        // Auth 로그인 실패 — 기존 평문 비번 계정이면 첫 로그인 시 자동 전환(마이그레이션)
+        if (wd.pass !== undefined && wd.pass === pass) {
+          if (pass.length < 6) {
+            // 기존 비번이 6자 미만 — 구글 인증은 6자 이상만 가능하므로 재설정 화면으로
+            openPwReset(name, wd);
+          } else {
+            firebase.auth().createUserWithEmailAndPassword(email, pass).then(() => {
+              return fbRemove(fbRef(db, `waiters/${name}/pass`));
+            }).then(() => {
+              loginSuccess(wd);
+            }).catch(() => {
+              err.textContent='로그인 처리 중 오류가 났어요. 다시 시도해주세요'; err.classList.add('show');
+            });
+          }
+        } else {
+          err.textContent='이름 또는 비밀번호가 틀렸어요'; err.classList.add('show');
+        }
+      });
     });
   });
+}
+function loginSuccess(wd) {
+  const err = document.getElementById('loginErr');
+  err.classList.remove('show');
+  W = { id: wd.id, name: wd.name };
+  localStorage.setItem('ncall_waiter', JSON.stringify(W));
+  enterDash();
 }
 
 // ── 화면 꺼짐 방지 (대시보드 켜둔 동안) ──
@@ -562,7 +609,6 @@ function enterDash() {
   requestWakeLock();
   requestNotifPerm();
   startListeners();
-  updateNoticeBadge();
   // 자동로그인 등 제스처 없이 진입한 경우 — 화면 첫 터치 때 오디오/진동 깨우기
   if (!_mediaUnlocked) {
     const _unlockOnce = () => { unlockMedia(); document.removeEventListener('pointerdown', _unlockOnce); };
@@ -581,24 +627,6 @@ const APP_UPDATES = [
   { date: "2026.05.21", type: "업데이트", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
   { date: "2026.05.21", type: "업데이트", content: "같은 이름 손님 삭제 버그 수정" },
 ];
-// 공지 중복 제거된 날짜 목록 (최신순)
-function _noticeDates() {
-  return [...new Set(APP_UPDATES.map(function(u){ return u.date; }))].sort().reverse();
-}
-// 읽음 기록은 '계정별'로 저장 (같은 폰에서 아이디 바꾸면 각자 따로 카운트)
-function _noticeSeenKey() {
-  return 'ncall_notice_seen_' + (W && W.name ? W.name : '_guest');
-}
-// 안 읽은 '날짜 수'로 말풍선 갱신 (같은 날 공지 여러 개여도 1, 수정만 한 건 0)
-function updateNoticeBadge() {
-  const badge = document.getElementById('noticeBadge');
-  if (!badge) return;
-  const dates = _noticeDates();
-  const seen = localStorage.getItem(_noticeSeenKey()) || '';
-  const unseen = dates.filter(function(d){ return d > seen; }).length;
-  if (unseen > 0) { badge.textContent = unseen; badge.style.display = 'inline-flex'; }
-  else { badge.style.display = 'none'; }
-}
 function showUpdates() {
   const list = document.getElementById('updatesList');
   list.innerHTML = '';
@@ -613,7 +641,7 @@ function showUpdates() {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
     const hdr = document.createElement('div');
-    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'linear-gradient(135deg,#3a5a8a,#5b7fb5)':'var(--bg2)') + ';cursor:pointer;';
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'var(--navy)':'var(--bg2)') + ';cursor:pointer;';
     hdr.onclick = function() {
       const body = document.getElementById(folderId);
       const arrow = document.getElementById('arrow-' + folderId);
@@ -640,33 +668,17 @@ function showUpdates() {
     body.style.display = idx === 0 ? 'block' : 'none';
     groups[date].forEach(function(item) {
       const row = document.createElement('div');
-      row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;line-height:1.5;';
-      const _sep = ' \u2014 '; // 공백+em대시+공백
-      const _di = item.content.indexOf(_sep);
-      const titleSpan = document.createElement('span');
-      titleSpan.style.cssText = 'font-weight:800;color:var(--blue);';
-      if (_di > -1) {
-        titleSpan.textContent = item.content.slice(0, _di);
-        const descSpan = document.createElement('span');
-        descSpan.style.cssText = 'color:var(--muted);font-weight:400;';
-        descSpan.textContent = item.content.slice(_di);
-        row.append(titleSpan, descSpan);
-      } else {
-        titleSpan.textContent = item.content;
-        row.appendChild(titleSpan);
-      }
+      row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;color:var(--navy);line-height:1.5;';
+      row.textContent = item.content;
       body.appendChild(row);
     });
     wrap.appendChild(body);
     list.appendChild(wrap);
   });
-  // 열어봤으니 최신 날짜까지 읽음 처리 → 말풍선 끄기
-  const _nd = _noticeDates();
-  if (_nd.length) localStorage.setItem(_noticeSeenKey(), _nd[0]);
-  updateNoticeBadge();
   document.getElementById('updatesModal').classList.add('open');
 }
 function doLogout() {
+  try { firebase.auth().signOut(); } catch(e) {}
   W = null; prevNotifCount = -1;
   listenersStarted = false;
   lastNotifKey = null;
@@ -682,20 +694,22 @@ function doLogout() {
 function autoLogin() {
   const saved = localStorage.getItem('ncall_waiter');
   if (!saved) return;
-  try {
-    const data = JSON.parse(saved);
-    if (!data || !data.id || !data.name) return;
-    waitFb(() => {
-      fbGet(fbRef(db, `waiters/${data.name}`)).then(snap => {
-        if (!snap.exists() || snap.val().pass !== data.pass) {
-          localStorage.removeItem('ncall_waiter');
-          return;
-        }
-        W = snap.val();
+  let data;
+  try { data = JSON.parse(saved); } catch(e) { localStorage.removeItem('ncall_waiter'); return; }
+  if (!data || !data.id || !data.name) { localStorage.removeItem('ncall_waiter'); return; }
+  waitFb(() => {
+    let done = false;
+    firebase.auth().onAuthStateChanged(user => {
+      if (done) return;
+      done = true;
+      if (user) {
+        W = { id: data.id, name: data.name };
         enterDash();
-      });
+      } else {
+        localStorage.removeItem('ncall_waiter');
+      }
     });
-  } catch(e) { localStorage.removeItem('ncall_waiter'); }
+  });
 }
 
 // ── 탭 ──
@@ -1660,6 +1674,35 @@ function toggleMute(guestId) {
   });
 }
 
+let _pwResetCtx = null;
+function openPwReset(name, wd) {
+  _pwResetCtx = { name: name, wd: wd };
+  document.getElementById('resetPw').value = '';
+  document.getElementById('resetPw2').value = '';
+  document.getElementById('resetErr').classList.remove('show');
+  document.getElementById('pwResetModal').classList.add('open');
+}
+function submitPwReset() {
+  if (!_pwResetCtx) return;
+  const np = document.getElementById('resetPw').value;
+  const np2 = document.getElementById('resetPw2').value;
+  const err = document.getElementById('resetErr');
+  if (np.length < 6) { err.textContent='6자리 이상 입력해주세요'; err.classList.add('show'); return; }
+  if (np !== np2) { err.textContent='비밀번호가 일치하지 않아요'; err.classList.add('show'); return; }
+  const name = _pwResetCtx.name, wd = _pwResetCtx.wd;
+  const email = wd.id + '@ncall.kr';
+  firebase.auth().createUserWithEmailAndPassword(email, np).then(() => {
+    return fbRemove(fbRef(db, `waiters/${name}/pass`));
+  }).then(() => {
+    closeModal('pwResetModal');
+    _pwResetCtx = null;
+    toast('✓ 비밀번호가 새로 설정됐어요');
+    loginSuccess(wd);
+  }).catch(() => {
+    err.textContent='처리 중 오류가 났어요. 다시 시도해주세요'; err.classList.add('show');
+  });
+}
+
 function openChangePw() {
   document.getElementById('curPw').value = '';
   document.getElementById('newPw').value = '';
@@ -1673,14 +1716,19 @@ function doChangePw() {
   const nw = document.getElementById('newPw').value;
   const nw2 = document.getElementById('newPw2').value;
   const err = document.getElementById('pwErr');
-  if (cur !== W.pass) { err.textContent='현재 비밀번호가 틀렸어요'; err.classList.add('show'); return; }
-  if (nw.length < 4) { err.textContent='4자리 이상 입력해주세요'; err.classList.add('show'); return; }
+  if (nw.length < 6) { err.textContent='6자리 이상 입력해주세요'; err.classList.add('show'); return; }
   if (nw !== nw2) { err.textContent='비밀번호가 일치하지 않아요'; err.classList.add('show'); return; }
   waitFb(() => {
-    fbSet(fbRef(db, `waiters/${W.name}/pass`), nw).then(() => {
-      W.pass = nw;
+    const user = firebase.auth().currentUser;
+    if (!user) { err.textContent='다시 로그인 후 시도해주세요'; err.classList.add('show'); return; }
+    const cred = firebase.auth.EmailAuthProvider.credential(W.id + '@ncall.kr', cur);
+    user.reauthenticateWithCredential(cred).then(() => {
+      return user.updatePassword(nw);
+    }).then(() => {
       closeModal('changePwModal');
       toast('✓ 비밀번호 변경 완료');
+    }).catch(() => {
+      err.textContent='현재 비밀번호가 틀렸어요'; err.classList.add('show');
     });
   });
 }

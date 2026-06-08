@@ -69,6 +69,9 @@ nav{
 /* ── 히어로 ── */
 .hero{padding:4.5rem 0 3rem;display:grid;grid-template-columns:1.15fr 0.85fr;gap:3rem;align-items:center;}
 @media(max-width:860px){.hero{grid-template-columns:1fr;gap:2.5rem;padding:3rem 0 2rem;text-align:center;}}
+.speed-badge{display:inline-flex;align-items:center;gap:0.45rem;margin-top:1.3rem;padding:0.55rem 1rem;background:rgba(140,108,35,0.1);border:0.5px solid var(--gold);border-radius:100px;font-size:0.82rem;color:var(--gold);font-weight:600;}
+.speed-badge b{font-weight:700;}
+@media(max-width:860px){.speed-badge{margin-left:auto;margin-right:auto;}}
 .eyebrow{
   display:inline-flex;align-items:center;gap:0.5rem;
   font-size:0.7rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);
@@ -270,7 +273,8 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
   <div>
     <div class="eyebrow"><span class="dot"></span>나이트 · 룸 · 라운지 전용</div>
     <h1>손님이 부르면,<br><span class="gd"><span class="star-host">놓<span class="star">★</span></span>치지</span> 않습니다.</h1>
-    <p class="lead">손님에게 문자 링크나 QR을 보내면, 손님이 접속해 호출·부킹·주류를 신청합니다.<br>요청은 웨이터 폰으로 즉시 도착해요.<br>소리 지를 필요도, 뛰어다닐 필요도 없습니다.</p>
+    <p class="lead">일반 식당 호출 앱이 아닙니다. <b style="color:var(--text);font-weight:600;">나이트·룸·라운지 전용</b>으로 만들었어요.<br>손님에게 문자 링크나 QR을 보내면, 손님이 접속해 호출·부킹·주류를 신청합니다.<br>요청은 웨이터 폰으로 즉시 도착해요.</p>
+    <div class="speed-badge">⚡ 요청 후 <b>평균 2초</b> — 고함·뜀박질보다 빠릅니다</div>
     <div class="hero-btns">
       <a href="/waiter.html" class="btn-gold">무료로 시작하기</a>
       <a href="#how" class="btn-ghost">사용법 보기</a>
@@ -364,6 +368,7 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
     <div class="feat reveal"><div class="fi">📱</div><h3>링크·QR 발급</h3><p>손님에게 보낼 링크와 QR을 앱에서 바로 생성. 문자로 전송.</p></div>
     <div class="feat reveal"><div class="fi">⚡</div><h3>실시간 알림</h3><p>요청 후 2~3초 내 도착. 소리·진동·화면 배지로 삼중 알림.</p></div>
     <div class="feat reveal"><div class="fi">📊</div><h3>이력 기록</h3><p>호출·부킹 이력을 날짜별로 정리. 바쁜 날도 빠짐없이.</p></div>
+    <div class="feat reveal"><div class="fi">👑</div><h3>단골 관리</h3><p>단골 손님을 자동으로 기록. 재방문·선호를 한눈에 보고 관계로 이어갑니다. <b style="color:var(--gold);font-weight:600;">다른 호출 앱엔 없는 기능.</b></p></div>
   </div>
 </section>
 
@@ -375,9 +380,9 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
       <p>일반 식당용 호출 앱과는 다릅니다.<br>나이트·룸·라운지 현장의 흐름에 맞췄습니다.</p>
     </div>
     <div class="why-grid">
-      <div class="why-item reveal"><div class="big">2~3초</div><h3>즉시 도착</h3><p>호출이 웨이터 폰에 닿는 데 걸리는 시간.</p></div>
-      <div class="why-item reveal"><div class="big">0원</div><h3>설치 부담 없음</h3><p>손님은 링크·QR로 접속만. 웨이터도 웹으로 바로.</p></div>
-      <div class="why-item reveal"><div class="big">한국어</div><h3>현장 용어 그대로</h3><p>부킹·룸·홀 등 실제 현장 언어로 설계.</p></div>
+      <div class="why-item reveal"><div class="big">2초</div><h3>압도적으로 빠른 도착</h3><p>요청이 웨이터 폰에 닿는 평균 시간. 고함치고 뛰어다니던 그 시간을 2초로.</p></div>
+      <div class="why-item reveal"><div class="big">0원</div><h3>설치 부담 없음</h3><p>손님은 링크·QR로 접속만. 웨이터도 웹으로 바로. 따로 살 장비도 없습니다.</p></div>
+      <div class="why-item reveal"><div class="big" style="font-size:1.7rem;">나이트 전용</div><h3>현장 용어 그대로</h3><p>부킹·룸·홀·주류까지, 일반 식당 앱엔 없는 나이트 현장의 언어로 설계.</p></div>
     </div>
   </div>
 </section>

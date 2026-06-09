@@ -6,24 +6,24 @@
 <title>CALL — 나이트 웨이터를 위한 호출 시스템</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#ddd5c4;
-  --bg2:#e8e2d5;
-  --surface:#f2ede3;
-  --surface2:#d2c8b6;
-  --navy:#1a2535;
-  --gold:#8c6c23;
-  --gold-bright:#a8842f;
-  --gold-dim:rgba(140,108,35,0.13);
-  --text:#1c2533;
-  --muted:#5f6776;
-  --muted2:#8b909c;
-  --border:rgba(26,37,53,0.15);
-  --border2:rgba(26,37,53,0.09);
-  --red:#b8493a;
-  --green:#2c9560;
+  --bg:#08090f;
+  --bg2:#0d0f17;
+  --surface:#14161f;
+  --surface2:#1b1e2a;
+  --neon:#ff2d78;
+  --neon-soft:rgba(255,45,120,0.13);
+  --purple:#7b5cff;
+  --text:#f1f2f7;
+  --muted:#8c90a0;
+  --muted2:#585c6a;
+  --border:rgba(255,255,255,0.13);
+  --border2:rgba(255,255,255,0.06);
+  --red:#ff5a5a;
+  --green:#2ee6a0;
+  --display:'Space Grotesk','Pretendard',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html{scroll-behavior:smooth;}
@@ -33,97 +33,100 @@ body{
   line-height:1.6;overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
 }
-/* 배경 분위기 */
 body::before{
   content:"";position:fixed;inset:0;z-index:-2;
   background:
-    radial-gradient(900px 500px at 78% -8%, rgba(156,122,42,0.07), transparent 60%),
-    radial-gradient(700px 600px at 10% 12%, rgba(26,37,53,0.04), transparent 55%),
+    radial-gradient(820px 520px at 80% -10%, rgba(255,45,120,0.16), transparent 60%),
+    radial-gradient(720px 620px at 4% 8%, rgba(123,92,255,0.13), transparent 55%),
     var(--bg);
 }
 body::after{
   content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
 }
 .wrap{max-width:1100px;margin:0 auto;padding:0 1.4rem;}
 
 /* ── 네비 ── */
 nav{
   position:sticky;top:0;z-index:50;
-  background:rgba(221,213,196,0.85);backdrop-filter:blur(14px);
+  background:rgba(8,9,15,0.72);backdrop-filter:blur(16px);
   border-bottom:0.5px solid var(--border2);
 }
 .nav-inner{max-width:1100px;margin:0 auto;padding:0.85rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-family:'DM Serif Display',serif;font-size:1.55rem;letter-spacing:0.02em;color:var(--text);display:flex;align-items:baseline;gap:0.12em;}
-.logo b{color:var(--gold);font-weight:400;}
+.logo{font-family:var(--display);font-weight:700;font-size:1.4rem;letter-spacing:-0.02em;color:var(--text);display:flex;align-items:baseline;gap:0.04em;}
+.logo b{color:var(--neon);font-weight:700;text-shadow:0 0 12px rgba(255,45,120,0.7);}
 .nav-links{display:flex;gap:1.8rem;align-items:center;}
 .nav-links a{color:var(--muted);text-decoration:none;font-size:0.85rem;font-weight:500;transition:color 0.2s;}
-.nav-links a:hover{color:var(--gold-bright);}
-.nav-cta{
-  background:var(--gold);color:#10151f;padding:0.5rem 1.1rem;border-radius:8px;
+.nav-links a:hover{color:var(--text);}
+.nav-links a.nav-cta{
+  background:var(--neon);color:#16040c;padding:0.5rem 1.1rem;border-radius:8px;font-weight:800;
   font-size:0.82rem;font-weight:700;text-decoration:none;transition:all 0.2s;
+  box-shadow:0 0 20px -4px rgba(255,45,120,0.6);
 }
-.nav-cta:hover{background:var(--gold-bright);transform:translateY(-1px);}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 0 26px -2px rgba(255,45,120,0.8);}
 @media(max-width:720px){.nav-links a:not(.nav-cta){display:none;}}
 
 /* ── 히어로 ── */
 .hero{padding:4.5rem 0 3rem;display:grid;grid-template-columns:1.15fr 0.85fr;gap:3rem;align-items:center;}
 @media(max-width:860px){.hero{grid-template-columns:1fr;gap:2.5rem;padding:3rem 0 2rem;text-align:center;}}
-.speed-badge{display:inline-flex;align-items:center;gap:0.45rem;margin-top:1.3rem;padding:0.55rem 1rem;background:rgba(140,108,35,0.1);border:0.5px solid var(--gold);border-radius:100px;font-size:0.82rem;color:var(--gold);font-weight:600;}
-.speed-badge b{font-weight:700;}
-@media(max-width:860px){.speed-badge{margin-left:auto;margin-right:auto;}}
 .eyebrow{
   display:inline-flex;align-items:center;gap:0.5rem;
-  font-size:0.7rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);
+  font-size:0.7rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--neon);
   border:0.5px solid var(--border);border-radius:100px;padding:0.4rem 0.9rem;margin-bottom:1.5rem;
-  background:var(--gold-dim);
+  background:var(--neon-soft);
 }
-.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
 .hero h1{
-  font-family:'DM Serif Display',serif;font-weight:700;
-  font-size:3.3rem;line-height:1.1;letter-spacing:-0.01em;margin-bottom:1.2rem;
+  font-family:var(--display);font-weight:700;
+  font-size:3.3rem;line-height:1.12;letter-spacing:-0.02em;margin-bottom:1.2rem;
 }
-.hero h1 .gd{color:var(--gold);font-style:italic;}
-.star-host{position:relative;display:inline-block;}
-.star{position:absolute;top:-0.34em;left:-0.42em;color:var(--red);font-size:0.45em;line-height:1;font-style:normal;}
+.hero h1 .gd{
+  color:var(--neon);
+  text-shadow:0 0 16px rgba(255,45,120,0.55), 0 0 42px rgba(255,45,120,0.32);
+}
 @media(max-width:860px){.hero h1{font-size:2.5rem;}}
-.hero p.lead{font-size:1.05rem;color:var(--muted);max-width:30rem;margin-bottom:2rem;}
+.hero p.lead{font-size:1.05rem;color:var(--muted);max-width:31rem;margin-bottom:1.6rem;}
 @media(max-width:860px){.hero p.lead{margin-inline:auto;}}
+.hero p.lead b{color:var(--text);font-weight:600;}
+.speed-badge{display:inline-flex;align-items:center;gap:0.55rem;margin-bottom:2rem;padding:0.55rem 1rem;background:var(--surface);border:0.5px solid var(--border2);border-radius:100px;font-size:0.84rem;color:var(--muted);}
+.speed-badge b{color:var(--text);font-weight:600;}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 9px var(--neon);flex-shrink:0;}
+@media(max-width:860px){.speed-badge{margin-left:auto;margin-right:auto;}}
 .hero-btns{display:flex;gap:0.9rem;}
 @media(max-width:860px){.hero-btns{justify-content:center;}}
 .btn-gold{
-  background:var(--gold);color:#10151f;padding:0.85rem 1.6rem;border-radius:10px;
-  font-size:0.92rem;font-weight:700;text-decoration:none;transition:all 0.2s;
-  box-shadow:0 8px 30px -8px rgba(201,163,90,0.5);
+  background:var(--neon);color:#16040c;padding:0.85rem 1.6rem;border-radius:10px;
+  font-size:0.92rem;font-weight:800;text-decoration:none;transition:all 0.2s;
+  box-shadow:0 0 30px -6px rgba(255,45,120,0.6);
 }
-.btn-gold:hover{background:var(--gold-bright);transform:translateY(-2px);box-shadow:0 12px 36px -8px rgba(201,163,90,0.6);}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 0 38px -4px rgba(255,45,120,0.85);}
 .btn-ghost{
   background:transparent;color:var(--text);padding:0.85rem 1.5rem;border-radius:10px;
   font-size:0.92rem;font-weight:600;text-decoration:none;border:0.5px solid var(--border);
   transition:all 0.2s;
 }
-.btn-ghost:hover{border-color:var(--gold);color:var(--gold-bright);}
+.btn-ghost:hover{border-color:var(--neon);color:var(--neon);}
 
 /* 폰 목업 */
 .phone-wrap{display:flex;justify-content:center;}
 .phone{
-  width:268px;background:linear-gradient(165deg,#1d2735,#10151f);
+  width:268px;background:linear-gradient(165deg,#1a1c26,#0c0d14);
   border-radius:32px;padding:0.65rem;
   border:1px solid var(--border);
-  box-shadow:0 40px 80px -30px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03) inset;
+  box-shadow:0 40px 90px -30px rgba(255,45,120,0.25), 0 0 0 1px rgba(255,255,255,0.04) inset;
   position:relative;
 }
 .phone-notch{width:38%;height:5px;background:#000;border-radius:100px;margin:0.35rem auto 0.8rem;}
 .phone-scr{background:var(--bg2);border-radius:22px;padding:1rem 0.85rem 1.2rem;overflow:hidden;}
 .scr-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
-.scr-logo{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--text);}
-.scr-logo b{color:var(--gold);font-weight:400;}
+.scr-logo{font-family:var(--display);font-weight:700;font-size:1.1rem;color:var(--text);}
+.scr-logo b{color:var(--neon);}
 .scr-live{display:flex;align-items:center;gap:0.35rem;font-size:0.6rem;color:var(--muted);}
-.scr-live .d{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.scr-live .d{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite;}
 .scard{
   background:var(--surface);border-radius:12px;padding:0.75rem 0.85rem;margin-bottom:0.55rem;
-  border:0.5px solid var(--border2);border-left:2.5px solid var(--gold);
+  border:0.5px solid var(--border2);border-left:2.5px solid var(--neon);
   display:flex;gap:0.6rem;align-items:flex-start;
   animation:rise 0.5s ease both;
 }
@@ -132,8 +135,8 @@ nav{
 .scard:nth-child(3){animation-delay:0.3s;}
 .scard:nth-child(4){animation-delay:0.45s;}
 @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
-.scard .ico{font-size:1.1rem;}
-.scard .tag{font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:0.15rem;}
+.scard .ico{font-size:1.1rem;line-height:1;}
+.scard .tag{font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--neon);font-weight:600;margin-bottom:0.15rem;}
 .scard.bk .tag{color:var(--red);}
 .scard .msg{font-size:0.78rem;font-weight:600;color:var(--text);line-height:1.25;}
 .scard .tbl{font-size:0.62rem;color:var(--muted);margin-top:0.15rem;}
@@ -141,8 +144,8 @@ nav{
 /* ── 섹션 공통 ── */
 section{padding:4.5rem 0;}
 .sec-head{text-align:center;max-width:38rem;margin:0 auto 3rem;}
-.sec-tag{font-size:0.7rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:0.8rem;line-height:1.7;}
-.sec-head h2{font-family:'DM Serif Display',serif;font-weight:700;font-size:2.3rem;line-height:1.15;letter-spacing:-0.01em;margin-bottom:0.8rem;}
+.sec-tag{font-size:0.7rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--neon);font-weight:600;margin-bottom:0.8rem;line-height:1.7;}
+.sec-head h2{font-family:var(--display);font-weight:700;font-size:2.3rem;line-height:1.15;letter-spacing:-0.02em;margin-bottom:0.8rem;}
 .sec-head p{color:var(--muted);font-size:1rem;}
 @media(max-width:860px){.sec-head h2{font-size:1.9rem;}}
 
@@ -155,7 +158,7 @@ section{padding:4.5rem 0;}
 @media(max-width:480px){.steps{grid-template-columns:1fr;}}
 .step{background:var(--surface);border:0.5px solid var(--border2);border-radius:16px;padding:1.6rem 1.3rem;transition:all 0.3s;}
 .step:hover{border-color:var(--border);transform:translateY(-4px);}
-.step-num{font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--gold);margin-bottom:0.9rem;display:block;}
+.step-num{font-family:var(--display);font-weight:700;font-size:1.5rem;color:var(--neon);margin-bottom:0.9rem;display:block;}
 .step h3{font-size:1.02rem;font-weight:700;margin-bottom:0.5rem;}
 .step p{font-size:0.84rem;color:var(--muted);line-height:1.55;}
 
@@ -163,77 +166,43 @@ section{padding:4.5rem 0;}
 .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
 @media(max-width:860px){.feats{grid-template-columns:1fr 1fr;}}
 @media(max-width:480px){.feats{grid-template-columns:1fr;}}
-.feat{background:linear-gradient(160deg,var(--surface),var(--bg2));border:0.5px solid var(--border2);border-radius:14px;padding:1.4rem;transition:all 0.3s;}
-.feat:hover{border-color:var(--border);background:linear-gradient(160deg,var(--surface2),var(--surface));}
-.feat .fi{font-size:1.5rem;margin-bottom:0.7rem;}
+.feat{background:var(--surface);border:0.5px solid var(--border2);border-radius:14px;padding:1.5rem 1.4rem;transition:all 0.3s;}
+.feat:hover{border-color:var(--neon);box-shadow:0 0 0 1px var(--neon-soft), 0 14px 40px -20px rgba(255,45,120,0.4);transform:translateY(-3px);}
+.feat .fi{font-size:1.5rem;margin-bottom:0.7rem;line-height:1;}
 .feat h3{font-size:0.95rem;font-weight:700;margin-bottom:0.4rem;}
 .feat p{font-size:0.82rem;color:var(--muted);line-height:1.5;}
+.feat p b{color:var(--neon);font-weight:600;}
 
 /* 왜 ncall */
-.why{background:linear-gradient(165deg,var(--bg2),var(--bg));border-top:0.5px solid var(--border2);border-bottom:0.5px solid var(--border2);}
+.why{background:linear-gradient(180deg,var(--bg2),var(--bg));border-top:0.5px solid var(--border2);border-bottom:0.5px solid var(--border2);}
 .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;text-align:center;}
 @media(max-width:720px){.why-grid{grid-template-columns:1fr;gap:2.5rem;}}
-.why-item .big{font-family:'DM Serif Display',serif;font-size:2.6rem;color:var(--gold);line-height:1;margin-bottom:0.5rem;}
+.why-item .big{font-family:var(--display);font-weight:700;font-size:2.7rem;color:var(--neon);line-height:1;margin-bottom:0.5rem;text-shadow:0 0 22px rgba(255,45,120,0.4);}
 .why-item h3{font-size:1rem;font-weight:700;margin-bottom:0.4rem;}
 .why-item p{font-size:0.86rem;color:var(--muted);max-width:18rem;margin-inline:auto;}
 
-/* CTA */
-.cta-band{text-align:center;padding:5rem 1.4rem;}
-.cta-band h2{font-family:'DM Serif Display',serif;font-weight:700;font-size:2.6rem;line-height:1.15;margin-bottom:1rem;}
-.cta-band h2 .gd{color:var(--gold);font-style:italic;}
-.cta-band p{color:var(--muted);font-size:1.02rem;margin-bottom:2rem;}
-@media(max-width:860px){.cta-band h2{font-size:2rem;}}
-
-/* 푸터 */
-footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
-.foot-inner{max-width:1100px;margin:0 auto;padding:0 1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
-.foot-inner p{font-size:0.78rem;color:var(--muted2);}
-.foot-links{display:flex;gap:1.5rem;}
-.foot-links a{color:var(--muted);font-size:0.8rem;text-decoration:none;transition:color 0.2s;}
-.foot-links a:hover{color:var(--gold);}
-
 /* 누구에게 */
-.who{background:linear-gradient(165deg,var(--bg2),var(--bg));border-top:0.5px solid var(--border2);border-bottom:0.5px solid var(--border2);}
+.who{background:linear-gradient(180deg,var(--bg),var(--bg2));border-top:0.5px solid var(--border2);border-bottom:0.5px solid var(--border2);}
 .who-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;}
 @media(max-width:860px){.who-grid{grid-template-columns:1fr;}}
 .who-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:16px;padding:1.8rem 1.5rem;transition:all 0.3s;}
 .who-card:hover{border-color:var(--border);transform:translateY(-4px);}
-.who-tag{font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:0.8rem;}
+.who-tag{font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--neon);font-weight:600;margin-bottom:0.8rem;}
 .who-card h3{font-size:1.15rem;font-weight:700;margin-bottom:0.7rem;line-height:1.3;}
 .who-card p{font-size:0.86rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.55;}
 .who-list{list-style:none;display:flex;flex-direction:column;gap:0.5rem;}
 .who-list li{font-size:0.83rem;color:var(--text);display:flex;align-items:center;gap:0.5rem;}
-.who-list li::before{content:"✓";color:var(--gold);font-weight:700;font-size:0.8rem;}
+.who-list li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--neon);box-shadow:0 0 6px var(--neon);flex-shrink:0;}
 
 /* 도입 */
 .integ-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;}
 @media(max-width:860px){.integ-grid{grid-template-columns:1fr 1fr;}}
 @media(max-width:480px){.integ-grid{grid-template-columns:1fr;}}
 .integ-step{padding-top:0.5rem;}
-.integ-num{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--gold);display:block;margin-bottom:0.5rem;}
+.integ-num{font-family:var(--display);font-weight:700;font-size:1.35rem;color:var(--neon);display:block;margin-bottom:0.5rem;}
 .integ-step h3{font-size:1rem;font-weight:700;margin-bottom:0.3rem;}
-.integ-time{font-size:0.72rem;color:var(--gold);font-weight:600;margin-bottom:0.5rem;}
+.integ-time{font-size:0.72rem;color:var(--neon);font-weight:600;margin-bottom:0.5rem;}
 .integ-step p{font-size:0.82rem;color:var(--muted);line-height:1.65;}
-
-/* 요금 */
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;max-width:60rem;margin:0 auto;}
-@media(max-width:860px){.pricing-grid{grid-template-columns:1fr;max-width:24rem;}}
-.price-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:18px;padding:2rem 1.6rem;display:flex;flex-direction:column;}
-.price-card.featured{border-color:var(--gold);background:linear-gradient(165deg,var(--surface2),var(--surface));position:relative;}
-.price-pop{position:absolute;top:-0.7rem;left:50%;transform:translateX(-50%);background:var(--gold);color:#10151f;font-size:0.65rem;font-weight:700;padding:0.25rem 0.8rem;border-radius:100px;letter-spacing:0.05em;white-space:nowrap;}
-.price-name{font-size:1rem;font-weight:700;margin-bottom:0.4rem;}
-.price-desc{font-size:0.78rem;color:var(--muted);margin-bottom:1.2rem;min-height:2.4em;}
-.price-amt{font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--text);line-height:1;margin-bottom:0.3rem;}
-.price-amt span{font-size:0.9rem;color:var(--muted);font-family:'Pretendard',sans-serif;}
-.price-sub{font-size:0.74rem;color:var(--muted2);margin-bottom:1.5rem;}
-.price-list{list-style:none;display:flex;flex-direction:column;gap:0.55rem;margin-bottom:1.8rem;flex:1;}
-.price-list li{font-size:0.82rem;color:var(--text);display:flex;align-items:center;gap:0.5rem;}
-.price-list li::before{content:"✓";color:var(--gold);font-weight:700;}
-.price-btn{display:block;text-align:center;padding:0.75rem;border-radius:10px;font-size:0.86rem;font-weight:700;text-decoration:none;transition:all 0.2s;}
-.price-btn.solid{background:var(--gold);color:#10151f;}
-.price-btn.solid:hover{background:var(--gold-bright);}
-.price-btn.outline{background:transparent;color:var(--text);border:0.5px solid var(--border);}
-.price-btn.outline:hover{border-color:var(--gold);color:var(--gold-bright);}
 
 /* FAQ */
 #faq{padding-top:7.5rem;}
@@ -243,16 +212,30 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
 .faq-left{position:sticky;top:5rem;}
 @media(max-width:860px){.faq-left{position:static;}}
 .faq-left .sec-tag{margin-bottom:0.8rem;}
-.faq-left h2{font-family:'DM Serif Display',serif;font-weight:700;font-size:2.3rem;line-height:1.15;letter-spacing:-0.01em;margin-bottom:1rem;}
+.faq-left h2{font-family:var(--display);font-weight:700;font-size:2.3rem;line-height:1.15;letter-spacing:-0.02em;margin-bottom:1rem;}
 .faq-left p{color:var(--muted);font-size:0.9rem;}
 @media(max-width:860px){.faq-left h2{font-size:1.9rem;}}
-.faq-wrap{max-width:42rem;margin:0 auto;}
 .faq-item{border-bottom:0.5px solid var(--border2);}
 .faq-item summary{padding:1.2rem 0;font-size:0.95rem;font-weight:600;color:var(--text);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:1rem;}
 .faq-item summary::-webkit-details-marker{display:none;}
-.faq-item summary::after{content:"+";color:var(--gold);font-size:1.3rem;font-weight:300;transition:transform 0.2s;}
+.faq-item summary::after{content:"+";color:var(--neon);font-size:1.3rem;font-weight:300;transition:transform 0.2s;}
 .faq-item[open] summary::after{transform:rotate(45deg);}
 .faq-item p{padding:0 0 1.2rem;font-size:0.86rem;color:var(--muted);line-height:1.6;}
+
+/* CTA */
+.cta-band{text-align:center;padding:5.5rem 1.4rem;}
+.cta-band h2{font-family:var(--display);font-weight:700;font-size:2.6rem;line-height:1.15;letter-spacing:-0.02em;margin-bottom:1rem;}
+.cta-band h2 .gd{color:var(--neon);text-shadow:0 0 16px rgba(255,45,120,0.55),0 0 42px rgba(255,45,120,0.3);}
+.cta-band p{color:var(--muted);font-size:1.02rem;margin-bottom:2rem;}
+@media(max-width:860px){.cta-band h2{font-size:2rem;}}
+
+/* 푸터 */
+footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
+.foot-inner{max-width:1100px;margin:0 auto;padding:0 1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+.foot-inner p{font-size:0.78rem;color:var(--muted2);}
+.foot-links{display:flex;gap:1.5rem;}
+.foot-links a{color:var(--muted);font-size:0.8rem;text-decoration:none;transition:color 0.2s;}
+.foot-links a:hover{color:var(--neon);}
 </style>
 </head>
 <body>
@@ -272,9 +255,9 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
 <header class="wrap hero">
   <div>
     <div class="eyebrow"><span class="dot"></span>나이트 · 룸 · 라운지 전용</div>
-    <h1>손님이 부르면,<br><span class="gd"><span class="star-host">놓<span class="star">★</span></span>치지</span> 않습니다.</h1>
-    <p class="lead">일반 식당 호출 앱이 아닙니다. <b style="color:var(--text);font-weight:600;">나이트·룸·라운지 전용</b>으로 만들었어요.<br>손님에게 문자 링크나 QR을 보내면, 손님이 접속해 호출·부킹·주류를 신청합니다.<br>요청은 웨이터 폰으로 즉시 도착해요.</p>
-    <div class="speed-badge">⚡ 요청 후 <b>평균 2초</b> — 고함·뜀박질보다 빠릅니다</div>
+    <h1>손님이 부르면,<br><span class="gd">놓치지</span> 않습니다.</h1>
+    <p class="lead">일반 식당 호출 앱이 아닙니다. <b>나이트·룸·라운지 전용</b>으로 만들었습니다.<br>손님에게 문자 링크나 QR을 보내면, 손님이 접속해 호출·부킹·주류를 신청합니다. 요청은 웨이터 폰으로 바로 도착합니다.</p>
+    <div class="speed-badge"><span class="sb-dot"></span>요청 후 <b>평균 2초</b>면 웨이터 폰에 도착합니다</div>
     <div class="hero-btns">
       <a href="/waiter.html" class="btn-gold">무료로 시작하기</a>
       <a href="#how" class="btn-ghost">사용법 보기</a>
@@ -312,11 +295,11 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
 <section id="how" class="wrap">
   <div class="sec-head reveal">
     <div class="sec-tag">사용법</div>
-    <h2>스캔에서 호출까지, 네 단계.</h2>
-    <p>테이블에 뭘 붙일 필요도, 앱 다운로드도 없습니다.<br>링크 하나면 오늘 저녁부터 바로.</p>
+    <h2>전달에서 호출까지, 네 단계.</h2>
+    <p>테이블에 뭘 붙일 필요도, 앱 다운로드도 없습니다. 링크 하나면 오늘 저녁부터 바로.</p>
   </div>
   <div class="steps">
-    <div class="step reveal"><span class="step-num">01</span><h3>링크 전달</h3><p>웨이터가 손님에게 접속할 수 있는 링크를 문자로 보내거나, QR로 연결합니다.</p></div>
+    <div class="step reveal"><span class="step-num">01</span><h3>링크 전달</h3><p>웨이터가 손님에게 접속 링크를 문자로 보내거나, QR로 연결합니다.</p></div>
     <div class="step reveal"><span class="step-num">02</span><h3>손님이 접속</h3><p>손님이 링크나 QR로 들어오면 호출·부킹·주류 버튼 화면이 열립니다.</p></div>
     <div class="step reveal"><span class="step-num">03</span><h3>요청 신청</h3><p>버튼 한 번이면 손님이 무엇을 원하는지 즉시 전달됩니다.</p></div>
     <div class="step reveal"><span class="step-num">04</span><h3>웨이터 알림</h3><p>웨이터 폰에 소리·진동과 함께 알림. 누가 무엇을 요청했는지 한눈에.</p></div>
@@ -334,7 +317,7 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
       <div class="who-card reveal">
         <div class="who-tag">사장님</div>
         <h3>회전은 빠르게,<br>공백은 줄이고.</h3>
-        <p>웨이터가 더 빨리 움직이고 손님은 덜 기다립니다.<br>회전이 빨라지고 객단가가 올라갑니다.</p>
+        <p>웨이터가 더 빨리 움직이고 손님은 덜 기다립니다. 회전이 빨라지고 객단가가 올라갑니다.</p>
         <ul class="who-list"><li>응대 속도 파악</li><li>놓치는 콜 없음</li><li>빠른 테이블 회전</li></ul>
       </div>
       <div class="who-card reveal">
@@ -346,7 +329,7 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
       <div class="who-card reveal">
         <div class="who-tag">웨이터</div>
         <h3>필요한 콜만,<br>정확하게.</h3>
-        <p>누가 어디서 무엇을 원하는지 한눈에.<br>헛걸음이 줄고 손님 응대가 정확해집니다.</p>
+        <p>누가 어디서 무엇을 원하는지 한눈에. 헛걸음이 줄고 손님 응대가 정확해집니다.</p>
         <ul class="who-list"><li>명확한 지목</li><li>헛걸음 감소</li><li>업무량 한눈에</li></ul>
       </div>
     </div>
@@ -361,14 +344,14 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
   </div>
   <div class="feats">
     <div class="feat reveal"><div class="fi">🙋</div><h3>웨이터 호출</h3><p>손님이 자리에서 바로 호출. 시끄러운 현장에서도 놓치지 않습니다.</p></div>
-    <div class="feat reveal"><div class="fi">🔔</div><h3>부킹 요청</h3><p>VIP·룸 부킹 요청을 우선 알림으로. 강한 진동·사운드로 구분.</p></div>
+    <div class="feat reveal"><div class="fi">🔔</div><h3>부킹 요청</h3><p>VIP·룸 부킹 요청을 우선 알림으로. 강한 진동·사운드로 구분합니다.</p></div>
     <div class="feat reveal"><div class="fi">🍾</div><h3>주류 추가</h3><p>맥주·양주 추가 주문을 버튼 한 번으로. 왕복 동선이 줄어듭니다.</p></div>
-    <div class="feat reveal"><div class="fi">💬</div><h3>메시지</h3><p>"얼음 더", "안주 추천" 같은 요청을 텍스트로 정확하게.</p></div>
-    <div class="feat reveal"><div class="fi">🧾</div><h3>계산 요청</h3><p>마감·계산 요청도 자리에서. 카운터까지 부르러 갈 필요 없음.</p></div>
-    <div class="feat reveal"><div class="fi">📱</div><h3>링크·QR 발급</h3><p>손님에게 보낼 링크와 QR을 앱에서 바로 생성. 문자로 전송.</p></div>
+    <div class="feat reveal"><div class="fi">💬</div><h3>메시지</h3><p>"얼음 더", "안주 추천" 같은 요청을 텍스트로 정확하게 전달합니다.</p></div>
+    <div class="feat reveal"><div class="fi">🧾</div><h3>계산 요청</h3><p>마감·계산 요청도 자리에서. 카운터까지 부르러 갈 필요 없습니다.</p></div>
+    <div class="feat reveal"><div class="fi">📱</div><h3>링크·QR 발급</h3><p>손님에게 보낼 링크와 QR을 앱에서 바로 생성. 문자로 전송합니다.</p></div>
     <div class="feat reveal"><div class="fi">⚡</div><h3>실시간 알림</h3><p>요청 후 2~3초 내 도착. 소리·진동·화면 배지로 삼중 알림.</p></div>
     <div class="feat reveal"><div class="fi">📊</div><h3>이력 기록</h3><p>호출·부킹 이력을 날짜별로 정리. 바쁜 날도 빠짐없이.</p></div>
-    <div class="feat reveal"><div class="fi">👑</div><h3>단골 관리</h3><p>단골 손님을 자동으로 기록. 재방문·선호를 한눈에 보고 관계로 이어갑니다. <b style="color:var(--gold);font-weight:600;">다른 호출 앱엔 없는 기능.</b></p></div>
+    <div class="feat reveal"><div class="fi">👑</div><h3>단골 관리</h3><p>단골 손님을 자동으로 기록. 재방문·선호를 한눈에 보고 관계로 이어갑니다. <b>ncall에만 있는 기능입니다.</b></p></div>
   </div>
 </section>
 
@@ -377,12 +360,12 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
     <div class="sec-head reveal">
       <div class="sec-tag">왜 ncall인가</div>
       <h2>나이트를 아는 사람이 만들었습니다.</h2>
-      <p>일반 식당용 호출 앱과는 다릅니다.<br>나이트·룸·라운지 현장의 흐름에 맞췄습니다.</p>
+      <p>일반 식당용 호출 앱과는 다릅니다. 나이트·룸·라운지 현장의 흐름에 맞췄습니다.</p>
     </div>
     <div class="why-grid">
-      <div class="why-item reveal"><div class="big">2초</div><h3>압도적으로 빠른 도착</h3><p>요청이 웨이터 폰에 닿는 평균 시간. 고함치고 뛰어다니던 그 시간을 2초로.</p></div>
-      <div class="why-item reveal"><div class="big">0원</div><h3>설치 부담 없음</h3><p>손님은 링크·QR로 접속만. 웨이터도 웹으로 바로. 따로 살 장비도 없습니다.</p></div>
-      <div class="why-item reveal"><div class="big" style="font-size:1.7rem;">나이트 전용</div><h3>현장 용어 그대로</h3><p>부킹·룸·홀·주류까지, 일반 식당 앱엔 없는 나이트 현장의 언어로 설계.</p></div>
+      <div class="why-item reveal"><div class="big">2초</div><h3>요청에서 도착까지</h3><p>손님 요청이 웨이터 폰에 닿기까지 걸리는 평균 시간입니다.</p></div>
+      <div class="why-item reveal"><div class="big">0원</div><h3>설치 부담 없음</h3><p>손님은 링크·QR로 접속만, 웨이터도 웹으로 바로. 따로 살 장비가 없습니다.</p></div>
+      <div class="why-item reveal"><div class="big" style="font-size:1.8rem;">나이트 전용</div><h3>현장 용어 그대로</h3><p>부킹·룸·홀·주류까지, 일반 식당 앱엔 없는 나이트 현장의 언어로 설계했습니다.</p></div>
     </div>
   </div>
 </section>
@@ -391,7 +374,7 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
   <div class="sec-head reveal">
     <div class="sec-tag">도입</div>
     <h2>몇 분이면 시작합니다.</h2>
-    <p>별도 설치도, IT 담당자도 필요 없습니다.<br>가입 당일 저녁부터 바로.</p>
+    <p>별도 설치도, IT 담당자도 필요 없습니다. 가입 당일 저녁부터 바로.</p>
   </div>
   <div class="integ-grid">
     <div class="integ-step reveal"><span class="integ-num">01</span><h3>가입</h3><div class="integ-time">1분</div><p>업장명·이름·비밀번호만 입력하면 끝. 이메일도, 개인정보도, 상담 전화도 필요 없습니다.</p></div>
@@ -412,8 +395,8 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
     <details class="faq-item"><summary>QR을 테이블에 꼭 붙여야 하나요?</summary><p>아니요. 붙여도 되지만, 웨이터가 손님에게 문자로 링크를 보내거나 QR로 연결해 주는 방식으로도 됩니다.</p></details>
     <details class="faq-item"><summary>인터넷 연결이 필요한가요?</summary><p>네. 매장 와이파이나 휴대폰 데이터 연결만 있으면 됩니다. 별도 장비나 설치는 필요 없어요.</p></details>
     <details class="faq-item"><summary>POS나 다른 장비 없이도 쓸 수 있나요?</summary><p>네. ncall은 독립적으로 작동합니다. 기존 POS와 무관하게 폰과 인터넷만 있으면 바로 쓸 수 있어요.</p></details>
-    <details class="faq-item"><summary>단골 손님 관리도 되나요?</summary><p>네. 단골 CRM 기능으로 방문 횟수와 이력을 자동으로 기록하고, 재방문을 챙길 수 있습니다.</p></details>
-    <details class="faq-item"><summary>도입에 얼마나 걸리나요?</summary><p>가입 2분, 링크 발급 5분이면 됩니다. 별도 설치나 IT 담당자 없이 가입 당일 저녁부터 바로 쓸 수 있어요.</p></details>
+    <details class="faq-item"><summary>단골 손님 관리도 되나요?</summary><p>네. 단골 관리 기능으로 방문 횟수와 이력을 자동으로 기록하고, 재방문을 챙길 수 있습니다.</p></details>
+    <details class="faq-item"><summary>도입에 얼마나 걸리나요?</summary><p>가입 1분, 링크 발급 5분이면 됩니다. 별도 설치나 IT 담당자 없이 가입 당일 저녁부터 바로 쓸 수 있어요.</p></details>
     <details class="faq-item"><summary>여러 매장도 관리되나요?</summary><p>네. 여러 지점을 한 계정에서 통합 관리할 수 있습니다.</p></details>
   </div>
 </section>
@@ -421,7 +404,7 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
 <section id="login" class="cta-band">
   <div class="wrap">
     <h2 class="reveal">오늘 저녁부터,<br><span class="gd">놓치는 콜 없이.</span></h2>
-    <p class="reveal">손님에게 링크 보내면 끝.<br>지금 바로 시작하세요.</p>
+    <p class="reveal">손님에게 링크 보내면 끝. 지금 바로 시작하세요.</p>
     <div class="hero-btns reveal" style="justify-content:center;">
       <a href="/waiter.html" class="btn-gold">로그인 / 시작하기</a>
     </div>
@@ -430,7 +413,7 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
 
 <footer>
   <div class="foot-inner">
-    <div class="logo" style="font-size:1.3rem;">CALL<b>.</b></div>
+    <div class="logo" style="font-size:1.2rem;">CALL<b>.</b></div>
     <div class="foot-links">
       <a href="#how">사용법</a>
       <a href="#features">기능</a>
@@ -446,10 +429,7 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
 const io = new IntersectionObserver((entries)=>{
   entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
 },{threshold:0.12});
-document.querySelectorAll('.reveal').forEach((el,i)=>{
-  el.style.transitionDelay = (i % 4 * 0.08) + 's';
-  io.observe(el);
-});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 </script>
 </body>
 </html>

@@ -236,6 +236,60 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
 .foot-links{display:flex;gap:1.5rem;}
 .foot-links a{color:var(--muted);font-size:0.8rem;text-decoration:none;transition:color 0.2s;}
 .foot-links a:hover{color:var(--neon);}
+/* ── 체험 섹션 ── */
+.demo-sec{background:linear-gradient(180deg,var(--bg2),var(--bg));border-top:0.5px solid var(--border2);border-bottom:0.5px solid var(--border2);}
+.demo-stage{display:flex;align-items:center;justify-content:center;gap:2.5rem;margin-top:2.5rem;}
+@media(max-width:720px){.demo-stage{gap:0.55rem;}}
+.dcol{display:flex;flex-direction:column;align-items:center;gap:0.7rem;}
+.dcol-label{font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);}
+.dcol-label.cust{color:var(--neon);}
+.dphone{width:248px;background:linear-gradient(165deg,#1a1c26,#0c0d14);border-radius:32px;padding:0.55rem;border:1px solid var(--border);box-shadow:0 30px 70px -28px rgba(255,45,120,0.3);}
+@media(max-width:720px){.dphone{width:43vw;max-width:200px;border-radius:24px;padding:0.4rem;}}
+.dnotch{width:36%;height:5px;background:#000;border-radius:100px;margin:0.3rem auto 0.6rem;}
+.dscr{background:var(--bg2);border-radius:24px;overflow:hidden;height:410px;display:flex;flex-direction:column;position:relative;}
+@media(max-width:720px){.dscr{height:350px;border-radius:18px;}}
+.dscr-top{padding:0.8rem 0.85rem;background:var(--surface);border-bottom:0.5px solid var(--border2);display:flex;justify-content:space-between;align-items:center;}
+.dscr-logo{font-family:var(--display);font-weight:700;font-size:0.92rem;}
+.dscr-logo b{color:var(--neon);}
+.dscr-store{font-size:0.68rem;color:var(--muted);}
+.dlive{display:flex;align-items:center;gap:0.3rem;font-size:0.56rem;color:var(--muted);font-weight:600;}
+.dlive .d{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite;}
+.dbadge{background:var(--neon);color:#16040c;font-size:0.6rem;font-weight:800;min-width:16px;height:16px;border-radius:100px;display:inline-flex;align-items:center;justify-content:center;padding:0 0.3rem;}
+.dcust-body{flex:1;padding:0.85rem;display:flex;flex-direction:column;gap:0.5rem;}
+.dcust-hi{font-size:0.76rem;color:var(--muted);line-height:1.4;margin-bottom:0.15rem;}
+.dcust-hi b{color:var(--text);font-weight:700;}
+.dcbtn{border:0.5px solid var(--border);background:var(--surface);border-radius:12px;padding:0.65rem 0.75rem;display:flex;align-items:center;gap:0.55rem;cursor:pointer;transition:all 0.15s;font-family:inherit;width:100%;text-align:left;}
+.dcbtn:hover{border-color:var(--neon);transform:translateY(-1px);}
+.dcbtn:active{transform:scale(0.97);}
+.dcbtn:disabled{opacity:0.5;cursor:default;}
+.dcbtn .e{font-size:1.1rem;line-height:1;}
+.dcbtn .t{font-size:0.82rem;font-weight:600;color:var(--text);}
+.dcbtn.primary{background:var(--neon);border-color:var(--neon);}
+.dcbtn.primary .t{color:#16040c;font-weight:800;}
+.dwait-body{flex:1;padding:0.65rem;overflow-y:auto;display:flex;flex-direction:column;gap:0.45rem;}
+.dempty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--muted2);gap:0.4rem;padding:1rem;}
+.dempty .ie{font-size:1.5rem;opacity:0.5;}
+.dempty p{font-size:0.72rem;line-height:1.4;}
+.dncard{background:var(--surface);border:0.5px solid var(--border2);border-left:3px solid var(--neon);border-radius:10px;padding:0.6rem 0.65rem;display:flex;gap:0.5rem;align-items:flex-start;animation:slidein 0.45s cubic-bezier(0.2,0.8,0.2,1) both;}
+.dncard.bk{border-left-color:var(--red);background:rgba(255,90,90,0.08);}
+@keyframes slidein{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:none;}}
+.dncard .e{font-size:1rem;line-height:1;margin-top:0.1rem;}
+.dncard .tag{font-size:0.52rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--neon);font-weight:700;}
+.dncard.bk .tag{color:var(--red);}
+.dncard .m{font-size:0.78rem;font-weight:700;color:var(--text);line-height:1.25;margin-top:0.08rem;}
+.dncard .loc{font-size:0.6rem;color:var(--muted);margin-top:0.1rem;}
+.dtrack{position:relative;width:60px;height:4px;align-self:center;}
+@media(max-width:720px){.dtrack{width:18px;}}
+.dtrack::before{content:"";position:absolute;inset:0;border-top:2px dashed var(--muted2);opacity:0.4;top:1px;}
+.dpulse{position:absolute;top:50%;left:0;width:11px;height:11px;border-radius:50%;background:var(--neon);box-shadow:0 0 14px var(--neon);transform:translate(-50%,-50%) scale(0);opacity:0;}
+.dpulse.go{animation:fly 0.9s ease-in-out forwards;}
+@keyframes fly{0%{left:0;opacity:0;transform:translate(-50%,-50%) scale(0.6);}15%{opacity:1;transform:translate(-50%,-50%) scale(1);}85%{opacity:1;}100%{left:100%;opacity:0;transform:translate(-50%,-50%) scale(0.6);}}
+.dsending{position:absolute;bottom:0.85rem;left:50%;transform:translateX(-50%);background:#000;color:#fff;font-size:0.68rem;font-weight:600;padding:0.38rem 0.8rem;border-radius:100px;opacity:0;transition:opacity 0.2s;white-space:nowrap;border:0.5px solid var(--border);}
+.dsending.show{opacity:1;}
+.darrived{position:absolute;top:0.65rem;left:50%;transform:translateX(-50%) translateY(-8px);background:var(--green);color:#06231a;font-size:0.64rem;font-weight:800;padding:0.32rem 0.65rem;border-radius:100px;opacity:0;transition:all 0.25s;white-space:nowrap;z-index:5;}
+.darrived.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.demo-reset{display:block;margin:2rem auto 0;background:none;border:0.5px solid var(--border);color:var(--muted);font-family:inherit;font-size:0.78rem;font-weight:600;padding:0.5rem 1.1rem;border-radius:100px;cursor:pointer;transition:all 0.15s;}
+.demo-reset:hover{border-color:var(--neon);color:var(--neon);}
 </style>
 </head>
 <body>
@@ -291,6 +345,61 @@ footer{border-top:0.5px solid var(--border2);padding:2.5rem 0;}
     </div>
   </div>
 </header>
+
+<section id="demo" class="demo-sec">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">직접 체험</div>
+      <h2>버튼 한 번, 바로 도착.</h2>
+      <p>왼쪽 손님 화면에서 눌러보세요. 오른쪽 웨이터 폰으로 즉시 전달됩니다.</p>
+    </div>
+    <div class="demo-stage reveal">
+      <div class="dcol">
+        <div class="dcol-label cust">손님 화면</div>
+        <div class="dphone">
+          <div class="dnotch"></div>
+          <div class="dscr">
+            <div class="dscr-top">
+              <div class="dscr-logo">CALL<b>.</b></div>
+              <div class="dscr-store">서울나이트 · 7번</div>
+            </div>
+            <div class="dcust-body">
+              <div class="dcust-hi">필요한 걸 눌러주세요.<br><b>웨이터가 바로 옵니다.</b></div>
+              <button class="dcbtn primary" onclick="dSend('call',this)"><span class="e">🙋</span><span class="t">웨이터 호출</span></button>
+              <button class="dcbtn" onclick="dSend('booking',this)"><span class="e">🔔</span><span class="t">부킹 요청</span></button>
+              <button class="dcbtn" onclick="dSend('drink',this)"><span class="e">🍾</span><span class="t">주류 추가</span></button>
+              <button class="dcbtn" onclick="dSend('bill',this)"><span class="e">🧾</span><span class="t">계산 요청</span></button>
+            </div>
+            <div class="dsending" id="dSending">전송 중…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dtrack"><div class="dpulse" id="dPulse"></div></div>
+
+      <div class="dcol">
+        <div class="dcol-label">웨이터 폰</div>
+        <div class="dphone">
+          <div class="dnotch"></div>
+          <div class="dscr">
+            <div class="dscr-top">
+              <div class="dscr-logo">CALL<b>.</b></div>
+              <div class="dlive"><span class="d"></span>실시간 <span class="dbadge" id="dBadge" style="display:none;">0</span></div>
+            </div>
+            <div class="darrived" id="dArrived">도착했습니다 ⚡</div>
+            <div class="dwait-body" id="dWaitBody">
+              <div class="dempty" id="dEmpty">
+                <div class="ie">🔔</div>
+                <p>들어온 요청이<br>여기에 표시됩니다</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="demo-reset" onclick="dReset()">처음부터 다시</button>
+  </div>
+</section>
 
 <section id="how" class="wrap">
   <div class="sec-head reveal">
@@ -430,6 +539,74 @@ const io = new IntersectionObserver((entries)=>{
   entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
 },{threshold:0.12});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ── 체험 섹션 ── */
+const DREQ = {
+  call:   {e:'🙋', tag:'웨이터 호출', m:'7번 테이블 호출',  loc:'1층 홀'},
+  booking:{e:'🔔', tag:'부킹 요청',   m:'VIP 룸 부킹 요청',  loc:'2층', bk:true},
+  drink:  {e:'🍾', tag:'주류 추가',   m:'발렌타인 1병 추가', loc:'VIP 1번 룸'},
+  bill:   {e:'🧾', tag:'계산 요청',   m:'계산 도와주세요',   loc:'5번 테이블'}
+};
+let dCount = 0, dBusy = false, dActx = null;
+
+function dBeep(type){
+  try{
+    dActx = dActx || new (window.AudioContext || window.webkitAudioContext)();
+    if(dActx.state === 'suspended') dActx.resume();
+    const now = dActx.currentTime;
+    const tone = (freq, start, dur) => {
+      const o = dActx.createOscillator(), g = dActx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      o.connect(g); g.connect(dActx.destination);
+      g.gain.setValueAtTime(0.0001, now+start);
+      g.gain.exponentialRampToValueAtTime(0.22, now+start+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+start+dur);
+      o.start(now+start); o.stop(now+start+dur+0.02);
+    };
+    if(type === 'booking'){ tone(880,0,0.14); tone(1175,0.16,0.2); tone(1175,0.4,0.22); }
+    else { tone(760,0,0.12); tone(1015,0.13,0.16); }
+  }catch(e){}
+}
+function dBuzz(type){
+  if(navigator.vibrate) navigator.vibrate(type==='booking' ? [200,100,200,100,400] : [150,80,150]);
+}
+function dSend(type, btn){
+  if(dBusy) return;
+  dBusy = true;
+  document.querySelectorAll('.dcbtn').forEach(b => b.disabled = true);
+  const sending = document.getElementById('dSending');
+  sending.classList.add('show');
+  const pulse = document.getElementById('dPulse');
+  pulse.classList.remove('go'); void pulse.offsetWidth; pulse.classList.add('go');
+  setTimeout(() => {
+    sending.classList.remove('show');
+    const d = DREQ[type];
+    const body = document.getElementById('dWaitBody');
+    const empty = document.getElementById('dEmpty');
+    if(empty) empty.remove();
+    const card = document.createElement('div');
+    card.className = 'dncard' + (d.bk ? ' bk' : '');
+    card.innerHTML = '<span class="e">'+d.e+'</span><div><div class="tag">'+d.tag+'</div><div class="m">'+d.m+'</div><div class="loc">'+d.loc+' · 방금 전</div></div>';
+    body.insertBefore(card, body.firstChild);
+    dCount++;
+    const badge = document.getElementById('dBadge');
+    badge.textContent = dCount; badge.style.display = 'inline-flex';
+    dBeep(type); dBuzz(type);
+    const arrived = document.getElementById('dArrived');
+    arrived.classList.add('show');
+    setTimeout(() => arrived.classList.remove('show'), 1400);
+    document.querySelectorAll('.dcbtn').forEach(b => b.disabled = false);
+    dBusy = false;
+  }, 950);
+}
+function dReset(){
+  dCount = 0; dBusy = false;
+  const badge = document.getElementById('dBadge');
+  badge.style.display = 'none'; badge.textContent = '0';
+  const body = document.getElementById('dWaitBody');
+  body.innerHTML = '<div class="dempty" id="dEmpty"><div class="ie">🔔</div><p>들어온 요청이<br>여기에 표시됩니다</p></div>';
+  document.querySelectorAll('.dcbtn').forEach(b => b.disabled = false);
+}
 </script>
 </body>
 </html>

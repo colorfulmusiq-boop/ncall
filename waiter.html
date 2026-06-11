@@ -691,7 +691,10 @@ function showUpdates() {
   });
   Object.keys(groups).forEach(function(date, idx) {
     const folderId = 'update-' + date.replace(/\./g, '-');
-    const types = [...new Set(groups[date].map(function(i){ return i.type; }))].join(' · ');
+    const _typeOrder = { '신규 기능': 0, '업데이트': 1 };
+    const types = [...new Set(groups[date].map(function(i){ return i.type; }))]
+      .sort(function(a, b){ return (_typeOrder[a] ?? 99) - (_typeOrder[b] ?? 99); })
+      .join(' · ');
     const wrap = document.createElement('div');
     wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
     const hdr = document.createElement('div');

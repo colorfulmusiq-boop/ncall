@@ -720,9 +720,13 @@ function showUpdates() {
     const body = document.createElement('div');
     body.id = folderId;
     body.style.display = idx === 0 ? 'block' : 'none';
-    groups[date].forEach(function(item) {
+    groups[date].forEach(function(item, itemIdx) {
       const row = document.createElement('div');
       row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;line-height:1.5;';
+      var numSpan = document.createElement('span');
+      numSpan.style.cssText = 'font-weight:800;color:var(--blue);';
+      numSpan.textContent = String(itemIdx + 1).padStart(2, '0') + '. ';
+      row.appendChild(numSpan);
       var parts = item.content.split(' — ');
       var titleSpan = document.createElement('span');
       titleSpan.style.cssText = 'font-weight:800;color:var(--blue);';

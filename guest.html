@@ -74,6 +74,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .main-area{flex:1;display:flex;flex-direction:column;gap:0.6rem;padding:1rem 1.5rem;justify-content:center;}
 
 .action-btn{display:flex;flex-direction:row;align-items:center;gap:1rem;padding:1rem 1.25rem;border-radius:14px;border:none;cursor:pointer;text-align:left;transition:all 0.15s;position:relative;overflow:hidden;}
+.action-btn.cooldown{opacity:0.45;pointer-events:none;filter:grayscale(0.3);}
 .action-btn:active{transform:scale(0.98);}
 .btn-call{background:var(--card);border:0.5px solid var(--border);}
 .btn-booking{background:var(--card);border:0.5px solid var(--border);}
@@ -545,12 +546,15 @@ function sendMsg() {
       type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
       msgText: text, waiterName: waiterData.name, guestId,
       time: sentTime, date: sentDate, done: false
+    }).then(() => {
+      const bar = document.getElementById('sentBar');
+      document.getElementById('sentMsg').textContent = '메시지가 전송됐어요';
+      bar.classList.add('show');
+      setTimeout(() => bar.classList.remove('show'), 4000);
+      toast('💬 메시지 전송!');
+    }).catch(() => {
+      toast('전송에 실패했어요. 신호를 확인하고 다시 보내주세요');
     });
-    const bar = document.getElementById('sentBar');
-    document.getElementById('sentMsg').textContent = '메시지가 전송됐어요';
-    bar.classList.add('show');
-    setTimeout(() => bar.classList.remove('show'), 4000);
-    toast('💬 메시지 전송!');
   });
 }
 
@@ -578,16 +582,75 @@ function sendBeer() {
       type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
       beerQty, waiterName: waiterData.name, guestId,
       time: sentTime, date: sentDate, done: false
+    }).then(() => {
+      const bar = document.getElementById('sentBar');
+      document.getElementById('sentMsg').textContent = '맥주 ' + beerQty + '병 주문됐어요';
+      bar.classList.add('show');
+      setTimeout(() => bar.classList.remove('show'), 4000);
+      toast('🍾 맥주 ' + beerQty + '병 전송!');
+    }).catch(() => {
+      toast('전송에 실패했어요. 신호를 확인하고 다시 주문해주세요');
     });
-    const bar = document.getElementById('sentBar');
-    document.getElementById('sentMsg').textContent = '맥주 ' + beerQty + '병 주문됐어요';
-    bar.classList.add('show');
-    setTimeout(() => bar.classList.remove('show'), 4000);
-    toast('🍾 맥주 ' + beerQty + '병 전송!');
   });
 }
 
+/* ── 호출/부킹 연타 방지 (1분 쿨다운) ── */
+const COOLDOWN_MS = 60000;
+let _cdTimers = {};
+
+function cdKey(type) { return 'ncall_cd_' + type + '_' + (guestId || 'g'); }
+
+function cdRemain(type) {
+  try {
+    const until = parseInt(localStorage.getItem(cdKey(type)) || '0', 10);
+    return Math.max(0, until - Date.now());
+  } catch(e) { return 0; }
+}
+
+function cdStart(type) {
+  try { localStorage.setItem(cdKey(type), String(Date.now() + COOLDOWN_MS)); } catch(e) {}
+  cdLockBtn(type);
+}
+
+function cdBtnEl(type) {
+  return document.querySelector(type === 'call' ? '.btn-call' : '.btn-booking');
+}
+
+function cdLockBtn(type) {
+  const btn = cdBtnEl(type);
+  if (!btn) return;
+  const desc = btn.querySelector('.btn-desc');
+  if (desc && !desc.dataset.orig) desc.dataset.orig = desc.textContent;
+  btn.classList.add('cooldown');
+  if (_cdTimers[type]) clearInterval(_cdTimers[type]);
+  const tick = () => {
+    const remain = cdRemain(type);
+    if (remain <= 0) {
+      clearInterval(_cdTimers[type]);
+      btn.classList.remove('cooldown');
+      if (desc && desc.dataset.orig) desc.textContent = desc.dataset.orig;
+      return;
+    }
+    if (desc) desc.textContent = Math.ceil(remain / 1000) + '초 후 다시 가능해요';
+  };
+  tick();
+  _cdTimers[type] = setInterval(tick, 1000);
+}
+
+function cdRestoreOnLoad() {
+  ['call', 'booking'].forEach(t => { if (cdRemain(t) > 0) cdLockBtn(t); });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', cdRestoreOnLoad);
+} else {
+  cdRestoreOnLoad();
+}
+
 function sendAction(type) {
+  if (cdRemain(type) > 0) {
+    toast('방금 ' + (type === 'call' ? '호출했어요' : '요청했어요') + '! 잠시 후 다시 가능해요');
+    return;
+  }
   pendingType = type;
   document.getElementById('modalIcon').textContent = type==='call' ? '🙋' : '🔔';
   document.getElementById('modalTitle').textContent = type==='call' ? '웨이터 호출' : '부킹 요청';
@@ -633,13 +696,16 @@ function sendNotif(type) {
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,
     time: sentTime, date: sentDate, done: false
+  }).then(() => {
+    cdStart(type);
+    const bar = document.getElementById('sentBar');
+    document.getElementById('sentMsg').textContent = type==='call' ? '호출이 전송됐어요' : '부킹 요청이 전송됐어요';
+    bar.classList.add('show');
+    setTimeout(() => bar.classList.remove('show'), 4000);
+    toast(type==='call' ? '✓ 호출 전송!' : '✓ 부킹 요청 전송!');
+  }).catch(() => {
+    toast('전송에 실패했어요. 신호를 확인하고 다시 눌러주세요');
   });
-
-  const bar = document.getElementById('sentBar');
-  document.getElementById('sentMsg').textContent = type==='call' ? '호출이 전송됐어요' : '부킹 요청이 전송됐어요';
-  bar.classList.add('show');
-  setTimeout(() => bar.classList.remove('show'), 4000);
-  toast(type==='call' ? '✓ 호출 전송!' : '✓ 부킹 요청 전송!');
 }
 
 function openCheckoutReqModal() {
@@ -656,12 +722,15 @@ function sendCheckoutReq() {
       type: 'checkout_req', tableLabel: guestData.label, guestMsg: guestData.label,
       waiterName: waiterData.name, guestId,
       time: nowStr(), date: todayStr(), done: false
+    }).then(() => {
+      const bar = document.getElementById('sentBar');
+      document.getElementById('sentMsg').textContent = '계산 요청이 전송됐어요';
+      bar.classList.add('show');
+      setTimeout(() => bar.classList.remove('show'), 4000);
+      toast('🧾 계산 요청 전송!');
+    }).catch(() => {
+      toast('전송에 실패했어요. 신호를 확인하고 다시 눌러주세요');
     });
-    const bar = document.getElementById('sentBar');
-    document.getElementById('sentMsg').textContent = '계산 요청이 전송됐어요';
-    bar.classList.add('show');
-    setTimeout(() => bar.classList.remove('show'), 4000);
-    toast('🧾 계산 요청 전송!');
   });
 }
 

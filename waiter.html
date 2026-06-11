@@ -612,11 +612,48 @@ function enterDash() {
   requestNotifPerm();
   startListeners();
   updateNoticeBadge();
+  cleanOldHistory();
   // 자동로그인 등 제스처 없이 진입한 경우 — 화면 첫 터치 때 오디오/진동 깨우기
   if (!_mediaUnlocked) {
     const _unlockOnce = () => { unlockMedia(); document.removeEventListener('pointerdown', _unlockOnce); };
     document.addEventListener('pointerdown', _unlockOnce);
   }
+}
+
+// ── 오래된 처리 내역 자동 정리 (30일 경과분, 하루 1회) ──
+function parseKoDate(s) {
+  if (!s) return null;
+  const m = String(s).match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+  if (!m) return null;
+  return new Date(+m[1], +m[2] - 1, +m[3]);
+}
+
+function cleanOldHistory() {
+  try {
+    const todayKey = 'ncall_hist_clean_' + new Date().toDateString();
+    if (localStorage.getItem(todayKey)) return;
+    localStorage.setItem(todayKey, '1');
+    Object.keys(localStorage).forEach(k => {
+      if (k.indexOf('ncall_hist_clean_') === 0 && k !== todayKey) localStorage.removeItem(k);
+    });
+  } catch(e) {}
+  waitFb(() => {
+    fbGet(fbRef(db, `history/${W.id}`)).then(snap => {
+      const all = snap.val();
+      if (!all) return;
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      const removals = {};
+      let cnt = 0;
+      Object.keys(all).forEach(key => {
+        const d = parseKoDate(all[key] && all[key].date);
+        if (d && d < cutoff) { removals[key] = null; cnt++; }
+      });
+      if (cnt > 0) {
+        fbUpdate(fbRef(db, `history/${W.id}`), removals).catch(() => {});
+      }
+    }).catch(() => {});
+  });
 }
 
 const APP_UPDATES = [
@@ -1077,7 +1114,13 @@ function dangolCard(g, isDue) {
         const p = (v.date || '').split('-');
         const md = p.length === 3 ? (+p[1]) + '월 ' + (+p[2]) + '일' : (v.dateLabel || '');
         if (v.exit) row.textContent = '📅 ' + md + '  ' + v.enter + ' ~ ' + v.exit;
-        else row.innerHTML = '📅 ' + md + '  ' + v.enter + ' ~ <span class="vlog-ing">체류중</span>';
+        else {
+          row.textContent = '📅 ' + md + '  ' + v.enter + ' ~ ';
+          const ing = document.createElement('span');
+          ing.className = 'vlog-ing';
+          ing.textContent = '체류중';
+          row.appendChild(ing);
+        }
         return row;
       };
       logs.slice(0, 3).forEach(v => box.appendChild(mkRow(v)));

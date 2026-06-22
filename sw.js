@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ncall-v78';
+const CACHE_NAME = 'ncall-v80';
 const CORE_FILES = [
   '/waiter.html',
   '/guest.html',
@@ -52,7 +52,8 @@ self.addEventListener('fetch', e => {
 });
 
 self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : {};
+  let data = {};
+  try { if (e.data) data = e.data.json(); } catch (_) {}
   const title = data.title || 'CALL';
   const options = {
     body: data.body || '새 알림이 왔어요',

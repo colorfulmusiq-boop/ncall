@@ -221,7 +221,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .fade-up{animation:fadeUp 0.35s ease both;}
 
-/* 단골 CRM */
+/* VIP CRM */
 .dangol-hint{background:#fff8e8;border:0.5px solid #f0d080;border-radius:10px;padding:0.75rem 0.9rem;margin-bottom:1rem;font-size:0.76rem;color:#7a5a00;line-height:1.5;}
 .remind-section{margin-bottom:1.25rem;}
 .remind-head{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;}
@@ -309,7 +309,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   <div class="tabs">
     <button class="tab active" id="tab-notif" onclick="switchTab('notif')">알림 <span id="notifBadge" style="display:none;" class="badge">0</span></button>
     <button class="tab" id="tab-guests" onclick="switchTab('guests')">내 손님</button>
-    <button class="tab" id="tab-dangol" onclick="switchTab('dangol')">단골 <span id="dangolBadge" style="display:none;" class="badge">0</span></button>
+    <button class="tab" id="tab-dangol" onclick="switchTab('dangol')">VIP <span id="dangolBadge" style="display:none;" class="badge">0</span></button>
     <button class="tab" id="tab-hist" onclick="switchTab('hist')">내역</button>
   </div>
 
@@ -325,11 +325,11 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div id="guestList"><div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div></div>
   </div></div>
 
-  <!-- 단골 -->
+  <!-- VIP -->
   <div id="panel-dangol" class="scroll" style="display:none;"><div class="pad">
-    <div class="dangol-hint">⭐ 단골을 등록하면 영구 호출 QR이 생겨요. 단골에게 한 번 문자로 보내두면, 언제 와도 그 링크로 형님을 호출해요. 오래 안 온 단골은 자동으로 위에 떠요.</div>
-    <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="openAddDangol()">+ 단골 등록</button>
-    <div id="dangolList"><div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 단골 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 단골을 등록하세요</span></div></div>
+    <div class="dangol-hint">⭐ VIP를 등록하면 영구 호출 QR이 생겨요. VIP에게 한 번 문자로 보내두면, 언제 와도 그 링크로 형님을 호출해요. 오래 안 온 VIP는 자동으로 위에 떠요.</div>
+    <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="openAddDangol()">+ VIP 등록</button>
+    <div id="dangolList"><div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 VIP 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 VIP를 등록하세요</span></div></div>
   </div></div>
 
   <!-- 내역 -->
@@ -415,12 +415,12 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   </div>
 </div>
 
-<!-- 단골 등록/수정 모달 -->
+<!-- VIP 등록/수정 모달 -->
 <div class="modal-bg" id="dangolModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="dangolModalTitle">단골 등록</div>
-    <label class="inp-label">단골 이름 / 호칭</label>
+    <div class="modal-title" id="dangolModalTitle">VIP 등록</div>
+    <label class="inp-label">VIP 이름 / 호칭</label>
     <input class="inp" id="dangolName" type="text" placeholder="예: 김사장님, 3번방 형님">
     <label class="inp-label">전화번호 (리마인드 문자용)</label>
     <input class="inp" id="dangolPhone" type="tel" placeholder="010-1234-5678" inputmode="numeric">
@@ -432,14 +432,14 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   </div>
 </div>
 
-<!-- 단골 QR 팝업 -->
+<!-- VIP QR 팝업 -->
 <div class="qr-popup" id="dangolQrPopup">
   <div class="qr-sheet">
-    <div class="qr-sheet-title" id="dangolQrTitle">단골 영구 QR</div>
-    <div class="qr-sheet-sub">이 링크를 단골에게 문자로 보내두세요. 언제 와도 이걸로 형님을 호출해요.</div>
+    <div class="qr-sheet-title" id="dangolQrTitle">VIP 영구 QR</div>
+    <div class="qr-sheet-sub">이 링크를 VIP에게 문자로 보내두세요. 언제 와도 이걸로 형님을 호출해요.</div>
     <div class="qr-img-box" id="dangolQrBox"></div>
     <div class="qr-url-text" id="dangolQrUrl"></div>
-    <button class="btn btn-primary" onclick="sendDangolLink()" style="margin-bottom:0.5rem;width:100%;">✉️ 단골에게 링크 문자 보내기</button>
+    <button class="btn btn-primary" onclick="sendDangolLink()" style="margin-bottom:0.5rem;width:100%;">✉️ VIP에게 링크 문자 보내기</button>
     <button class="qr-close" onclick="closeModal('dangolQrPopup')">닫기</button>
   </div>
 </div>
@@ -659,14 +659,14 @@ function cleanOldHistory() {
 const APP_UPDATES = [
   { date: "2026.06.11", type: "신규 기능", content: "호출·부킹 연타 방지 — 손님이 웨이터 호출이나 부킹 요청을 보내면 1분간 다시 누를 수 없습니다. 실수로 여러 번 눌러서 같은 알림이 쏟아지는 일이 사라집니다. (맥주 추가·메시지·계산 요청은 제한 없음)" },
   { date: "2026.06.11", type: "업데이트", content: "전송 안내 정확도 개선 — 손님 화면에서 호출이 실제로 전송됐을 때만 \"전송됐습니다\"가 표시됩니다. 신호가 약해 전송이 안 되면 \"다시 눌러주세요\"라고 안내해, 손님은 보냈는데 웨이터는 못 받는 상황을 막아줍니다." },
-  { date: "2026.06.11", type: "업데이트", content: "앱 안정성 개선 — 인터넷이 잠깐 끊겨도 앱이 열리도록 보강했고, 오래된 처리 내역은 자동으로 정리되어 앱이 가볍고 빠르게 유지됩니다. (단골 정보와 방문 기록은 그대로 보관됩니다)" },
+  { date: "2026.06.11", type: "업데이트", content: "앱 안정성 개선 — 인터넷이 잠깐 끊겨도 앱이 열리도록 보강했고, 오래된 처리 내역은 자동으로 정리되어 앱이 가볍고 빠르게 유지됩니다. (VIP 정보와 방문 기록은 그대로 보관됩니다)" },
   { date: "2026.06.04", type: "업데이트", content: "비밀번호 보안 강화 — 회원님의 계정을 안전하게 보호하기 위해 비밀번호 기준이 6자 이상으로 변경되었습니다. 기존 비밀번호가 6자 미만이셨던 분은 로그인 시 새 비밀번호를 한 번 설정해 주시면 감사하겠습니다." },
   { date: "2026.06.03", type: "업데이트", content: "호출 알림 개선 — 벨소리 모드에서도 호출이 오면 소리와 진동이 함께 울려요" },
   { date: "2026.06.03", type: "신규 기능", content: "내역 폴더 색 구분 — 오늘 진행 중인 팀은 파란 테두리, 계산 완료된 팀은 회색으로 흐리게 표시돼서 남은 팀이 한눈에 보여요 (지난 날짜 내역은 모두 선명하게)" },
-  { date: "2026.06.01", type: "신규 기능", content: "단골 관리 기능 추가 — 단골 탭에서 이름·전화·메모 등록, 단골별 영구 호출 QR 발급" },
-  { date: "2026.06.01", type: "신규 기능", content: "방문 자동 기록 — 단골이 QR로 호출(입장)하면 방문 횟수가 자동으로 올라가요" },
-  { date: "2026.06.01", type: "신규 기능", content: "방문 이력 표시 — 단골 카드에 입장~퇴장 시각이 날짜별로 쌓여요 (퇴장 기록 버튼)" },
-  { date: "2026.06.01", type: "신규 기능", content: "리마인드 문자 — 한 달 이상 안 온 단골이 위에 뜨고, 버튼 한 번으로 문자 발송" },
+  { date: "2026.06.01", type: "신규 기능", content: "VIP 관리 기능 추가 — VIP 탭에서 이름·전화·메모 등록, VIP별 영구 호출 QR 발급" },
+  { date: "2026.06.01", type: "신규 기능", content: "방문 자동 기록 — VIP가 QR로 호출(입장)하면 방문 횟수가 자동으로 올라가요" },
+  { date: "2026.06.01", type: "신규 기능", content: "방문 이력 표시 — VIP 카드에 입장~퇴장 시각이 날짜별로 쌓여요 (퇴장 기록 버튼)" },
+  { date: "2026.06.01", type: "신규 기능", content: "리마인드 문자 — 한 달 이상 안 온 VIP가 위에 뜨고, 버튼 한 번으로 문자 발송" },
   { date: "2026.05.21", type: "업데이트", content: "커플 메이드 입력 기능 추가 — 내역 탭 손님 폴더에서 메이드 완료 체크 가능" },
   { date: "2026.05.21", type: "업데이트", content: "날짜 폴더 건수 표시 개선 — 손님 수 기준으로 변경" },
   { date: "2026.05.21", type: "업데이트", content: "같은 이름 손님 삭제 버그 수정" },
@@ -863,7 +863,7 @@ function checkoutGuest(guestId, label) {
   toast('✓ 계산 완료');
 }
 
-// ── 단골 CRM ──
+// ── VIP CRM ──
 const REMIND_DAYS = 30; // 한 달 이상 안 오면 "연락할 때 됐어요"에 뜸
 let editingDangolKey = null;
 let dangolQrKey = null, dangolQrName = '', dangolQrPhone = '';
@@ -885,7 +885,7 @@ function cleanPhone(p) { return (p||'').replace(/[^0-9]/g, ''); }
 
 function openAddDangol() {
   editingDangolKey = null;
-  document.getElementById('dangolModalTitle').textContent = '단골 등록';
+  document.getElementById('dangolModalTitle').textContent = 'VIP 등록';
   document.getElementById('dangolName').value = '';
   document.getElementById('dangolPhone').value = '';
   document.getElementById('dangolMemo').value = '';
@@ -896,7 +896,7 @@ function openAddDangol() {
 
 function editDangol(key, name, phone, memo) {
   editingDangolKey = key;
-  document.getElementById('dangolModalTitle').textContent = '단골 정보 수정';
+  document.getElementById('dangolModalTitle').textContent = 'VIP 정보 수정';
   document.getElementById('dangolName').value = name || '';
   document.getElementById('dangolPhone').value = phone || '';
   document.getElementById('dangolMemo').value = memo || '';
@@ -909,7 +909,7 @@ function doSaveDangol() {
   const phone = document.getElementById('dangolPhone').value.trim();
   const memo = document.getElementById('dangolMemo').value.trim();
   const err = document.getElementById('dangolErr');
-  if (!name) { err.textContent='단골 이름을 입력해주세요'; err.classList.add('show'); return; }
+  if (!name) { err.textContent='VIP 이름을 입력해주세요'; err.classList.add('show'); return; }
   waitFb(() => {
     if (editingDangolKey) {
       fbUpdate(fbRef(db, `guests/${W.id}/${editingDangolKey}`), { label:name, phone, memo });
@@ -922,7 +922,7 @@ function doSaveDangol() {
       });
       const key = ref.key;
       closeModal('dangolModal');
-      toast('✓ 단골 등록됨');
+      toast('✓ VIP 등록됨');
       setTimeout(() => showDangolQR(key, name, phone), 400);
     }
   });
@@ -1001,7 +1001,7 @@ function openSmsApp(phone, body) {
 }
 
 function deleteDangol(key, name) {
-  if (!confirm(name + '\n단골 목록에서 삭제할까요?')) return;
+  if (!confirm(name + '\nVIP 목록에서 삭제할까요?')) return;
   waitFb(() => fbRemove(fbRef(db, `guests/${W.id}/${key}`)));
   toast('✓ 삭제됨');
 }
@@ -1014,7 +1014,7 @@ function renderDangol(data) {
   const badge = document.getElementById('dangolBadge');
 
   if (dangols.length === 0) {
-    list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 단골 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 단골을 등록하세요</span></div>';
+    list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 VIP 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 VIP를 등록하세요</span></div>';
     badge.style.display = 'none';
     return;
   }
@@ -1043,7 +1043,7 @@ function renderDangol(data) {
     if (due.length > 0) {
       const head = document.createElement('div');
       head.style.cssText = 'font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:0.6rem;';
-      head.textContent = '단골 전체';
+      head.textContent = 'VIP 전체';
       list.appendChild(head);
     }
     rest.forEach(g => list.appendChild(dangolCard(g, false)));
@@ -1232,14 +1232,14 @@ function startListeners() {
     window._checkoutReqGuests = new Set(
       notifs.filter(n => n.type === 'checkout_req' && n.guestId).map(n => n.guestId)
     );
-    // 화면에 그려진 계산완료 버튼들에 불 반영 (손님·단골 공통)
+    // 화면에 그려진 계산완료 버튼들에 불 반영 (손님·VIP 공통)
     document.querySelectorAll('[data-checkout-btn]').forEach(btn => {
       btn.classList.toggle('checkout-blink', window._checkoutReqGuests.has(btn.dataset.gid));
     });
     document.querySelectorAll('[data-checkout-card]').forEach(c => {
       c.classList.toggle('checkout-blink', window._checkoutReqGuests.has(c.dataset.gid));
     });
-    // 계산요청 온 단골은 카드를 자동으로 펼쳐서 깜빡이는 버튼이 보이게
+    // 계산요청 온 VIP는 카드를 자동으로 펼쳐서 깜빡이는 버튼이 보이게
     if (!window._expandedDangols) window._expandedDangols = new Set();
     let _reDangol = false;
     window._checkoutReqGuests.forEach(gid => {
@@ -1461,7 +1461,7 @@ function startListeners() {
       dateLeft.appendChild(dateTxt);
 
       var tableGroups = {};
-      // 같은 손님(특히 단골)이라도 입장(enter)할 때마다 새 방문으로 분리
+      // 같은 손님(특히 VIP)이라도 입장(enter)할 때마다 새 방문으로 분리
       var _byKey = {};
       items.forEach(function(n) {
         var tbl = n.tableLabel || n.guestMsg || '손님';

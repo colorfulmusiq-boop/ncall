@@ -63,7 +63,7 @@
 }
 body[data-theme="dark"]{
   --bg:#100f0b;--bg2:#1a1813;--card:#1a1813;
-  --navy:#f3ead3;--blue:#d8c9a5;--muted:#9a917d;
+  --navy:#f3ead3;--blue:#d8c9a5;--muted:#b3a890;
   --border:rgba(212,168,67,0.16);--text:#f3ead3;
   --red:#d98a72;--green:#7ab38a;--orange:#cf9b4e;
   --pink:#d4a843;--pink-soft:rgba(212,168,67,0.18);--pink-border:rgba(212,168,67,0.3);
@@ -91,8 +91,8 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 /* 로그인 — 다크 + 골드 글로우 */
 #loginScreen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;
   background:radial-gradient(700px 500px at 50% 2%, rgba(212,168,67,0.22), transparent 52%), #100f0b;}
-.logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:1.4rem;line-height:1;letter-spacing:-0.02em;font-variant-emoji:text;background:linear-gradient(95deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.login-logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:3.6rem;letter-spacing:-0.02em;margin-bottom:0.6rem;line-height:1;position:relative;font-variant-emoji:text;background:linear-gradient(95deg,#f3da95,#d4a843);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:1.4rem;line-height:1;letter-spacing:-0.02em;font-variant-emoji:text;color:var(--gold2);background:linear-gradient(95deg,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.login-logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:3.6rem;letter-spacing:-0.02em;margin-bottom:0.6rem;line-height:1;position:relative;font-variant-emoji:text;color:#d4a843;}
 .login-logo b{color:var(--gold);}
 .login-sub{font-size:0.74rem;letter-spacing:0.3em;color:#b8a474;text-transform:uppercase;margin-bottom:2.5rem;font-weight:600;}
 .login-box{width:100%;max-width:340px;background:transparent;border-radius:16px;padding:0;border:none;}
@@ -125,7 +125,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 /* 헤더 */
 #dashScreen{display:none;flex-direction:column;height:100vh;overflow:hidden;}
 .hdr{padding:1rem 1.25rem 0.9rem;display:flex;align-items:center;justify-content:space-between;background:var(--card);border-bottom:0.5px solid var(--border);flex-shrink:0;}
-.logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:1.4rem;line-height:1;letter-spacing:-0.02em;background:linear-gradient(95deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:1.4rem;line-height:1;letter-spacing:-0.02em;color:var(--gold2);background:linear-gradient(95deg,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
 .logo b{color:var(--pink);}
 .hdr-name{font-size:0.68rem;color:var(--muted);margin-top:0.15rem;}
 .hdr-right{display:flex;align-items:center;gap:0.6rem;}
@@ -136,7 +136,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 /* 탭 */
 .tabs{display:flex;gap:0.4rem;padding:0.75rem 1.25rem 0;flex-shrink:0;}
 .tab{flex:1;padding:0.6rem;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;transition:all 0.15s;}
-.tab.active{background:var(--pink);border-color:var(--pink);color:#fff;}
+.tab.active{background:var(--pink);border-color:var(--pink);color:#1a1206;-webkit-text-fill-color:#1a1206;font-weight:800;}
 .badge{display:inline-block;background:var(--red);color:#fff;font-size:0.58rem;font-weight:700;border-radius:8px;padding:0.05rem 0.35rem;margin-left:0.2rem;vertical-align:middle;}
 .notice-pulse-badge{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;padding:0 5px;background:#ff2d55;color:#fff;border-radius:9px;font-size:0.62rem;font-weight:800;place-items:center;border:2px solid #fff;z-index:2;animation:noticePulse 1.6s infinite;}
 @keyframes noticePulse{0%{box-shadow:0 0 0 0 rgba(255,45,85,0.55);}70%{box-shadow:0 0 0 9px rgba(255,45,85,0);}100%{box-shadow:0 0 0 0 rgba(255,45,85,0);}}
@@ -253,7 +253,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .dangol-card.due{border:0.5px solid var(--red);background:#fffafa;}
 .dangol-top{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;}
 .dangol-name{flex:1;font-size:0.98rem;font-weight:600;color:var(--navy);}
-.dangol-visits{background:var(--bg2);border-radius:6px;padding:0.2rem 0.55rem;font-size:0.7rem;font-weight:700;color:var(--blue);}
+.dangol-visits{background:linear-gradient(95deg,#e8c87a,#d4a843);border-radius:6px;padding:0.25rem 0.6rem;font-size:0.7rem;font-weight:800;color:#1a1206;-webkit-text-fill-color:#1a1206;}
 .dangol-meta{font-size:0.73rem;color:var(--muted);margin-bottom:0.2rem;line-height:1.5;}
 .dangol-since{font-size:0.73rem;font-weight:600;margin-bottom:0.7rem;}
 .dangol-since.due{color:var(--red);}
@@ -287,7 +287,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 
 <!-- 로그인 -->
 <div id="loginScreen">
-  <div class="login-logo fade-up" style="text-align:center;"><span style="position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(212,168,67,0.4),transparent 65%);filter:blur(22px);z-index:0;pointer-events:none;"></span><span style="position:relative;z-index:1;">CALL</span></div>
+  <div class="login-logo fade-up" style="text-align:center;"><span style="position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(212,168,67,0.4),transparent 65%);filter:blur(22px);z-index:0;pointer-events:none;"></span><span style="position:relative;z-index:1;background:linear-gradient(95deg,#f3da95,#d4a843);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#d4a843;">CALL</span></div>
   <div class="login-sub fade-up" style="animation-delay:0.05s;">웨이터 전용</div>
   <div class="login-box fade-up" style="animation-delay:0.1s;">
     <div class="auth-tabs">
@@ -744,7 +744,7 @@ function showUpdates() {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
     const hdr = document.createElement('div');
-    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'linear-gradient(135deg,#3a5a8a,#5b7fb5)':'var(--bg2)') + ';cursor:pointer;';
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'linear-gradient(135deg,#d4a843,#e8c87a)':'var(--bg2)') + ';cursor:pointer;';
     hdr.onclick = function() {
       const body = document.getElementById(folderId);
       const arrow = document.getElementById('arrow-' + folderId);
@@ -754,15 +754,15 @@ function showUpdates() {
     };
     const left = document.createElement('div');
     const typeSpan = document.createElement('div');
-    typeSpan.style.cssText = 'font-size:0.6rem;font-weight:700;color:' + (idx===0?'rgba(255,255,255,0.6)':'var(--muted)') + ';margin-bottom:0.15rem;';
+    typeSpan.style.cssText = 'font-size:0.6rem;font-weight:700;color:' + (idx===0?'rgba(26,18,6,0.7)':'var(--muted)') + ';margin-bottom:0.15rem;';
     typeSpan.textContent = types;
     const dateSpan = document.createElement('div');
-    dateSpan.style.cssText = 'font-size:0.82rem;font-weight:700;color:' + (idx===0?'#fff':'var(--muted)') + ';';
+    dateSpan.style.cssText = 'font-size:0.82rem;font-weight:800;color:' + (idx===0?'#1a1206':'var(--navy)') + ';';
     dateSpan.textContent = date;
     left.append(typeSpan, dateSpan);
     const arrow = document.createElement('span');
     arrow.id = 'arrow-' + folderId;
-    arrow.style.cssText = 'color:' + (idx===0?'#fff':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (idx===0?'transform:rotate(180deg);':'');
+    arrow.style.cssText = 'color:' + (idx===0?'#1a1206':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (idx===0?'transform:rotate(180deg);':'');
     arrow.textContent = '▼';
     hdr.append(left, arrow);
     wrap.appendChild(hdr);
@@ -1603,7 +1603,7 @@ function startListeners() {
         if (isToday && isCheckedOut) {
           _cardBorder = '2px solid #c0c8d2'; _cardOpacity = 'opacity:0.5;';
         } else if (isToday && !isCheckedOut) {
-          _cardBorder = '2px solid #3a5a8a';
+          _cardBorder = '2px solid #d4a843';
         } else {
           _cardBorder = '0.5px solid var(--border)';
         }
@@ -1632,7 +1632,7 @@ function startListeners() {
         tTitleRow.appendChild(tName);
 
         var tCnt = document.createElement('span');
-        tCnt.style.cssText = 'background:var(--navy);color:#fff;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
+        tCnt.style.cssText = 'background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;-webkit-text-fill-color:#1a1206;font-size:0.62rem;font-weight:800;border-radius:10px;padding:0.1rem 0.45rem;';
         tCnt.textContent = tItems.length + '건';
         tTitleRow.appendChild(tCnt);
         tLeft.appendChild(tTitleRow);

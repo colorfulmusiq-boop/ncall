@@ -1643,7 +1643,7 @@ function startListeners() {
           var t = ce[0]; var c = ce[1];
           if (!c) return;
           var badge = document.createElement('span');
-          badge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:' + (COLOR[t]||'var(--navy)') + ';';
+          badge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.35);border-radius:6px;padding:0.18rem 0.55rem;font-size:0.7rem;font-weight:600;color:' + (COLOR[t]||'var(--navy)') + ';';
           badge.textContent = t==='checkout' ? ('✓ 계산 완료' + (checkoutTime?' '+checkoutTime:'')) : t==='enter' ? '🚪 입장' : ((ICON[t]||'') + ' ' + (LABEL[t]||t) + ' ' + c + '회');
           tSummary.appendChild(badge);
         });

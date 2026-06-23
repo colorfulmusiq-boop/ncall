@@ -1605,7 +1605,7 @@ function startListeners() {
         } else if (isToday && !isCheckedOut) {
           _cardBorder = '2px solid #d4a843';
         } else {
-          _cardBorder = '0.5px solid var(--border)';
+          _cardBorder = '0.5px solid rgba(184,146,63,0.35)';
         }
 
         var tCard = document.createElement('div');
@@ -1653,7 +1653,7 @@ function startListeners() {
         maidHeartBadge.style.cssText = 'display:none;align-items:center;gap:0.2rem;background:#fde8e8;border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:#c0392b;cursor:pointer;';
         maidHeartBadge.textContent = '❤️ 메이드';
         var maidAddBadge = document.createElement('span');
-        maidAddBadge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--muted);cursor:pointer;border:0.5px dashed var(--border);';
+        maidAddBadge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--muted);cursor:pointer;border:0.5px dashed rgba(184,146,63,0.45);';
         maidAddBadge.textContent = '+ 메이드';
         (function(addB, heartB, ref, cntBadge) {
           fbGet(ref).then(function(snap) {

@@ -998,7 +998,7 @@ function checkoutDangol(key, name) {
         .sort((a,b) => a[0] < b[0] ? 1 : -1)[0];
       if (open) fbUpdate(fbRef(db, `guests/${W.id}/${key}/visitLog/${open[0]}`), { exit: nowStr() });
     });
-    fbUpdate(fbRef(db, `guests/${W.id}/${key}`), { visitOpen: false });
+    fbUpdate(fbRef(db, `guests/${W.id}/${key}`), { visitOpen: false, checkoutDate: todayISO() });
     clearCheckoutReq(key);
     fbPush(fbRef(db, `history/${W.id}`), {
       type: 'checkout', tableLabel: name, guestMsg: name, guestId: key,

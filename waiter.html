@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#1a2535">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@600;700&family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-SV35PPV643"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -58,7 +58,14 @@
   --navy:#1a2535;--blue:#3a5a8a;--muted:#7a8fa8;
   --border:rgba(26,37,53,0.1);--text:#1a2535;
   --red:#c0392b;--green:#27ae60;--orange:#e67e22;
-  --pink:#ff2d78;--pink-soft:#ffe6ef;--pink-border:#ffc9dd;
+  --pink:#ff5b94;--pink-soft:#ffe9f0;--pink-border:#ffc9dd;
+}
+body[data-theme="dark"]{
+  --bg:#0e1016;--bg2:#1c1f29;--card:#1c1f29;
+  --navy:#f1f2f7;--blue:#7da0d8;--muted:#9aa0b0;
+  --border:rgba(255,255,255,0.1);--text:#f1f2f7;
+  --red:#ff6b6b;--green:#2ee6a0;--orange:#f0913a;
+  --pink:#ff5b94;--pink-soft:rgba(255,91,148,0.18);--pink-border:rgba(255,91,148,0.3);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
@@ -82,8 +89,8 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 /* 로그인 — 다크 + 핑크 글로우 (방향 B) */
 #loginScreen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;
   background:radial-gradient(700px 500px at 50% 2%, rgba(255,45,120,0.22), transparent 52%), #0c0709;}
-.logo{font-family:'Space Grotesk','Pretendard',sans-serif;font-weight:700;font-size:1.5rem;color:var(--navy);line-height:1;font-variant-emoji:text;}
-.login-logo{font-family:'Space Grotesk','Pretendard',sans-serif;font-weight:700;font-size:3.6rem;color:#fff;letter-spacing:-0.03em;margin-bottom:0.6rem;line-height:1;position:relative;font-variant-emoji:text;}
+.logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:1.4rem;color:var(--navy);line-height:1;letter-spacing:-0.02em;font-variant-emoji:text;}
+.login-logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:3.6rem;color:#fff;letter-spacing:-0.02em;margin-bottom:0.6rem;line-height:1;position:relative;font-variant-emoji:text;}
 .login-logo b{color:var(--pink);}
 .login-sub{font-size:0.74rem;letter-spacing:0.3em;color:#c98a9f;text-transform:uppercase;margin-bottom:2.5rem;font-weight:600;}
 .login-box{width:100%;max-width:340px;background:transparent;border-radius:16px;padding:0;border:none;}
@@ -116,12 +123,13 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 /* 헤더 */
 #dashScreen{display:none;flex-direction:column;height:100vh;overflow:hidden;}
 .hdr{padding:1rem 1.25rem 0.9rem;display:flex;align-items:center;justify-content:space-between;background:var(--card);border-bottom:0.5px solid var(--border);flex-shrink:0;}
-.logo{font-family:'Space Grotesk','Pretendard',sans-serif;font-weight:700;font-size:1.5rem;color:var(--navy);line-height:1;}
+.logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:1.4rem;color:var(--navy);line-height:1;letter-spacing:-0.02em;}
 .logo b{color:var(--pink);}
 .hdr-name{font-size:0.68rem;color:var(--muted);margin-top:0.15rem;}
 .hdr-right{display:flex;align-items:center;gap:0.6rem;}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite;}
 .logout-btn{background:var(--bg2);border:none;border-radius:6px;padding:0.4rem 0.75rem;font-size:0.7rem;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:500;}
+.mode-btn{background:var(--bg2);border:none;border-radius:6px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:grid;place-items:center;padding:0;line-height:1;}
 
 /* 탭 */
 .tabs{display:flex;gap:0.4rem;padding:0.75rem 1.25rem 0;flex-shrink:0;}
@@ -277,7 +285,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 
 <!-- 로그인 -->
 <div id="loginScreen">
-  <div class="login-logo fade-up" style="text-align:center;"><span style="position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(255,45,120,0.4),transparent 65%);filter:blur(22px);z-index:0;pointer-events:none;"></span><span style="position:relative;z-index:1;">CALL<b>.</b></span></div>
+  <div class="login-logo fade-up" style="text-align:center;"><span style="position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(255,91,148,0.38),transparent 65%);filter:blur(22px);z-index:0;pointer-events:none;"></span><span style="position:relative;z-index:1;">CALL</span></div>
   <div class="login-sub fade-up" style="animation-delay:0.05s;">웨이터 전용</div>
   <div class="login-box fade-up" style="animation-delay:0.1s;">
     <div class="auth-tabs">
@@ -310,11 +318,12 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 <div id="dashScreen">
   <div class="hdr">
     <div>
-      <div class="logo">CALL<b>.</b></div>
+      <div class="logo">CALL</div>
       <div class="hdr-name" id="dashName">웨이터</div>
     </div>
     <div class="hdr-right">
       <div class="live-dot"></div>
+      <button class="mode-btn" id="modeBtn" onclick="toggleTheme()" title="화면 밝기">🌙</button>
       <button class="logout-btn" onclick="showUpdates()" style="position:relative;">공지사항<span id="noticeBadge" class="notice-pulse-badge" style="display:none;">0</span></button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
@@ -619,6 +628,24 @@ function releaseWakeLock() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && _dashOpen) requestWakeLock();
 });
+
+// 테마(밝게/어둡게) — 저장된 설정 적용, 토글
+function applyTheme(t) {
+  document.body.setAttribute('data-theme', t);
+  var btn = document.getElementById('modeBtn');
+  if (btn) btn.textContent = (t === 'dark') ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  var cur = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  var next = cur === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('ncall_theme', next); } catch(e) {}
+  applyTheme(next);
+}
+(function initTheme(){
+  var saved = 'light';
+  try { saved = localStorage.getItem('ncall_theme') || 'light'; } catch(e) {}
+  applyTheme(saved);
+})();
 
 function enterDash() {
   document.getElementById('loginScreen').style.display = 'none';

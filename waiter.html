@@ -164,7 +164,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .guest-card-top{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;}
 .guest-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
 .guest-label{flex:1;font-size:0.95rem;font-weight:600;color:var(--navy);}
-.guest-booking-count{background:#e4eaf2;border-radius:6px;padding:0.25rem 0.6rem;font-size:0.75rem;font-weight:700;color:var(--navy);}
+.guest-booking-count{background:linear-gradient(95deg,#e8c87a,#d4a843);border-radius:6px;padding:0.28rem 0.65rem;font-size:0.75rem;font-weight:800;color:#1a1206;-webkit-text-fill-color:#1a1206;}
 .guest-card-btns{display:flex;gap:0.5rem;}
 .guest-qr-btn{flex:1;padding:0.55rem;border-radius:8px;border:0.5px solid var(--border);background:var(--bg);font-family:inherit;font-size:0.75rem;font-weight:600;color:var(--navy);cursor:pointer;transition:all 0.15s;text-align:center;}
 .guest-qr-btn:active{transform:scale(0.97);}
@@ -1490,14 +1490,14 @@ function startListeners() {
       dateWrap.style.marginBottom = '1rem';
 
       var dateHdr = document.createElement('div');
-      dateHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:' + (isToday?'var(--navy)':'var(--bg2)') + ';border-radius:12px;padding:0.85rem 1rem;cursor:pointer;user-select:none;margin-bottom:0.5rem;';
+      dateHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:' + (isToday?'linear-gradient(135deg,#d4a843,#e8c87a)':'var(--bg2)') + ';border-radius:12px;padding:0.85rem 1rem;cursor:pointer;user-select:none;margin-bottom:0.5rem;';
       (function(id){ dateHdr.onclick = function(){ toggleFolder(id); }; })(dateFolderId);
 
       var dateLeft = document.createElement('div');
       dateLeft.style.cssText = 'display:flex;align-items:center;gap:0.5rem;flex:1 1 auto;min-width:0;';
 
       var dateTxt = document.createElement('span');
-      dateTxt.style.cssText = 'font-size:0.85rem;font-weight:700;color:' + (isToday?'#fff':'var(--muted)') + ';';
+      dateTxt.style.cssText = 'font-size:0.85rem;font-weight:800;color:' + (isToday?'#1a1206':'var(--navy)') + ';';
       var DAY_KR = ['일','월','화','수','목','금','토'];
       var dateObj = (function(s) {
         var m = s.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
@@ -1538,7 +1538,7 @@ function startListeners() {
       var total = tableEntries.length;
 
       var dateCnt = document.createElement('span');
-      dateCnt.style.cssText = 'background:' + (isToday?'rgba(255,255,255,0.2)':'var(--border)') + ';color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
+      dateCnt.style.cssText = 'background:' + (isToday?'rgba(26,18,6,0.2)':'var(--border)') + ';color:' + (isToday?'#1a1206':'var(--navy)') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
       dateCnt.textContent = total + '건';
       dateLeft.appendChild(dateCnt);
 
@@ -1560,18 +1560,18 @@ function startListeners() {
 
       if (isToday) {
         var todayBadge = document.createElement('span');
-        todayBadge.style.cssText = 'font-size:0.65rem;color:rgba(255,255,255,0.7);';
+        todayBadge.style.cssText = 'font-size:0.65rem;color:rgba(26,18,6,0.75);font-weight:700;';
         todayBadge.textContent = '오늘';
         dateLeft.appendChild(todayBadge);
       }
 
       var dateArrow = document.createElement('span');
       dateArrow.id = 'arrow-' + dateFolderId;
-      dateArrow.style.cssText = 'color:' + (isToday?'#fff':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (isToday?'transform:rotate(180deg);':'');
+      dateArrow.style.cssText = 'color:' + (isToday?'#1a1206':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (isToday?'transform:rotate(180deg);':'');
       dateArrow.textContent = '▼';
 
       var dateDel = document.createElement('button');
-      dateDel.style.cssText = 'background:' + (isToday?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.06)') + ';border:0.5px solid ' + (isToday?'rgba(255,255,255,0.25)':'var(--border)') + ';color:' + (isToday?'rgba(255,255,255,0.8)':'var(--muted)') + ';font-size:0.62rem;font-weight:600;cursor:pointer;padding:0.18rem 0.55rem;border-radius:20px;margin-right:0.4rem;flex-shrink:0;letter-spacing:0.02em;';
+      dateDel.style.cssText = 'background:' + (isToday?'rgba(26,18,6,0.12)':'rgba(0,0,0,0.06)') + ';border:0.5px solid ' + (isToday?'rgba(26,18,6,0.25)':'var(--border)') + ';color:' + (isToday?'rgba(26,18,6,0.8)':'var(--muted)') + ';font-size:0.62rem;font-weight:600;cursor:pointer;padding:0.18rem 0.55rem;border-radius:20px;margin-right:0.4rem;flex-shrink:0;letter-spacing:0.02em;';
       dateDel.textContent = '🗑 삭제';
       (function(d){ dateDel.onclick = function(e){ e.stopPropagation(); deleteDateGroup(wid, d); }; })(date);
 

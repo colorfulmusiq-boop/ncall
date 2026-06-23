@@ -472,9 +472,8 @@ function init() {
       // 입장 기록 — 계산완료 전까지 1회만 (Firebase 기준, 기기/링크 무관)
       const _n = new Date(); if (_n.getHours() < 6) _n.setDate(_n.getDate() - 1);
       const _today = _n.getFullYear() + '-' + String(_n.getMonth()+1).padStart(2,'0') + '-' + String(_n.getDate()).padStart(2,'0');
-      // 오늘 이미 계산 완료한 손님은 당일 재입장 차단 (다음 영업일부터 다시 가능)
-      const _checkedOutToday = guestData.isDangol && guestData.visitOpen !== true && guestData.checkoutDate === _today;
-      if (_checkedOutToday) {
+      // 계산 완료로 링크가 닫힌 손님은 접속 차단 (웨이터가 링크 다시 보내면 해제됨)
+      if (guestData.linkClosed === true) {
         document.getElementById('mainScreen').style.display = 'none';
         document.getElementById('checkoutScreen').style.display = 'flex';
         return;
@@ -488,7 +487,7 @@ function init() {
           guestId: guestId, waiterName: waiterData.name,
           time: enterTime, date: enterDate, sortKey: nowFull()
         });
-        const _upd = { visitOpen: true, lastVisit: _today, checkoutDate: null };
+        const _upd = { visitOpen: true, lastVisit: _today };
         if (guestData.isDangol) {
           _upd.visitCount = (guestData.visitCount || 0) + 1;
           fbPush(fbRef(db, `guests/${waiterData.id}/${guestId}/visitLog`), {

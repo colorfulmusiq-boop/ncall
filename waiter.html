@@ -1528,6 +1528,14 @@ function startListeners() {
     document.querySelectorAll('.hist-maid-heart[data-gid]').forEach(function(b){
       b.style.display = isOn(b) ? 'inline-flex' : 'none';
     });
+    document.querySelectorAll('.hist-maid-cnt[data-dk]').forEach(function(badge){
+      var dk = badge.dataset.dk;
+      var gids = (badge.dataset.gids || '').split(',').filter(Boolean);
+      var cnt = 0;
+      gids.forEach(function(gid){ if (m[gid] && m[gid][dk] === true) cnt++; });
+      if (cnt > 0) { badge.textContent = '❤️ ' + cnt; badge.style.display = 'inline'; }
+      else { badge.style.display = 'none'; badge.textContent = ''; }
+    });
   }
   fbOnValue(fbRef(db, `maid/${wid}`), function(snap){
     window._maidMap = snap.val() || {};
@@ -1633,10 +1641,14 @@ function startListeners() {
       dateLeft.appendChild(dateCnt);
 
       var maidCntBadge = document.createElement('span');
+      maidCntBadge.className = 'hist-maid-cnt';
+      var _cntDk = String(parseDateNum(date));
+      var _cntGids = tableEntries.map(function(e){ return ((e[1][0]&&e[1][0].guestId)||'').replace(/[^a-zA-Z0-9]/g,'_'); }).filter(Boolean);
+      maidCntBadge.dataset.dk = _cntDk;
+      maidCntBadge.dataset.gids = _cntGids.join(',');
       maidCntBadge.style.cssText = 'background:#fde8e8;color:#c0392b;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;display:none;';
       dateLeft.appendChild(maidCntBadge);
-      (function(badge, entries, dkey) {
-        var gids = entries.map(function(e){ return ((e[1][0]&&e[1][0].guestId)||'').replace(/[^a-zA-Z0-9]/g,'_'); }).filter(Boolean);
+      (function(badge, gids, dkey) {
         if (!gids.length) return;
         var count = 0; var done = 0;
         gids.forEach(function(gid) {
@@ -1646,7 +1658,7 @@ function startListeners() {
             if (done === gids.length && count > 0) { badge.textContent = '❤️ ' + count; badge.style.display = 'inline'; }
           }).catch(function(){ done++; });
         });
-      })(maidCntBadge, tableEntries, String(parseDateNum(date)));
+      })(maidCntBadge, _cntGids, _cntDk);
 
       if (isToday) {
         var todayBadge = document.createElement('span');

@@ -90,8 +90,14 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .pad{padding:1rem 1.25rem;}
 
 /* 로그인 — 다크 + 골드 글로우 */
-#loginScreen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;
+#loginScreen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;position:relative;overflow:hidden;
   background:radial-gradient(700px 500px at 50% 2%, rgba(212,168,67,0.22), transparent 52%), #100f0b;}
+/* 로그인 잔향(호출 신호) + CALL 둥실 */
+.login-halo{position:absolute;top:38%;left:50%;width:330px;height:330px;border-radius:50%;background:radial-gradient(circle,rgba(232,200,122,0.26) 0%,rgba(212,168,67,0.12) 40%,transparent 68%);filter:blur(11px);transform:translate(-50%,-50%);animation:loginHalo 10.5s linear infinite;z-index:0;pointer-events:none;}
+@keyframes loginHalo{0%{transform:translate(-50%,-50%) scale(0.25);opacity:0;}8%{opacity:0.42;}55%{opacity:0.16;}100%{transform:translate(-50%,-50%) scale(3.2);opacity:0;}}
+@keyframes loginFloat{0%{transform:translateY(3px) rotate(-0.5deg);}50%{transform:translateY(-13px) rotate(0.5deg);}100%{transform:translateY(3px) rotate(-0.5deg);}}
+.login-call-float{display:inline-block;animation:loginFloat 9.5s ease-in-out infinite;}
+#loginScreen .login-logo,#loginScreen .login-sub,#loginScreen .login-box{position:relative;z-index:1;}
 .logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:1.4rem;line-height:1;letter-spacing:-0.02em;font-variant-emoji:text;color:var(--gold2);background:linear-gradient(95deg,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
 .login-logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:3.6rem;letter-spacing:-0.02em;margin-bottom:0.6rem;line-height:1;position:relative;font-variant-emoji:text;color:#d4a843;}
 .login-logo b{color:var(--gold);}
@@ -288,7 +294,14 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 
 <!-- 로그인 -->
 <div id="loginScreen">
-  <div class="login-logo fade-up" style="text-align:center;"><span style="position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(212,168,67,0.4),transparent 65%);filter:blur(22px);z-index:0;pointer-events:none;"></span><span style="position:relative;z-index:1;background:linear-gradient(95deg,#f3da95,#d4a843);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#d4a843;">CALL</span></div>
+  <div class="login-halo" style="animation-delay:0s;"></div>
+  <div class="login-halo" style="animation-delay:-1.5s;"></div>
+  <div class="login-halo" style="animation-delay:-3s;"></div>
+  <div class="login-halo" style="animation-delay:-4.5s;"></div>
+  <div class="login-halo" style="animation-delay:-6s;"></div>
+  <div class="login-halo" style="animation-delay:-7.5s;"></div>
+  <div class="login-halo" style="animation-delay:-9s;"></div>
+  <div class="login-logo fade-up" style="text-align:center;"><span style="position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(212,168,67,0.4),transparent 65%);filter:blur(22px);z-index:0;pointer-events:none;"></span><span class="login-call-float" style="position:relative;z-index:1;background:linear-gradient(95deg,#f3da95,#d4a843);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#d4a843;">CALL</span></div>
   <div class="login-sub fade-up" style="animation-delay:0.05s;">웨이터 전용</div>
   <div class="login-box fade-up" style="animation-delay:0.1s;">
     <div class="auth-tabs">

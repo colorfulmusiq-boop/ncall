@@ -1,6 +1,6 @@
 {
-  "name": "CALL — 웨이터 호출",
-  "short_name": "CALL",
+  "name": "NCALL — 웨이터 호출",
+  "short_name": "NCALL",
   "description": "나이트클럽 웨이터 실시간 호출 시스템",
   "start_url": "/waiter.html",
   "display": "standalone",

@@ -1233,15 +1233,18 @@ function dangolCard(g, isDue) {
       logs.slice(0, 3).forEach(v => box.appendChild(mkRow(v)));
       const hidden = logs.slice(3);
       if (hidden.length) {
-        hidden.forEach(v => { const r = mkRow(v); r.style.display = 'none'; r.dataset.more = '1'; box.appendChild(r); });
+        if (!window._vlogExpanded) window._vlogExpanded = {};
+        const expanded = !!window._vlogExpanded[g._key];
+        hidden.forEach(v => { const r = mkRow(v); r.style.display = expanded ? 'flex' : 'none'; r.dataset.more = '1'; box.appendChild(r); });
         const moreBtn = document.createElement('button');
         moreBtn.className = 'vlog-more';
-        moreBtn.textContent = '＋ 더보기 (' + hidden.length + '개)';
+        moreBtn.textContent = expanded ? '－ 접기' : ('＋ 더보기 (' + hidden.length + '개)');
         moreBtn.onclick = () => {
           const rows = box.querySelectorAll('[data-more]');
           const show = rows.length && rows[0].style.display === 'none';
           rows.forEach(r => r.style.display = show ? 'flex' : 'none');
           moreBtn.textContent = show ? '－ 접기' : '＋ 더보기 (' + hidden.length + '개)';
+          if (show) window._vlogExpanded[g._key] = true; else delete window._vlogExpanded[g._key];
         };
         box.appendChild(moreBtn);
       }

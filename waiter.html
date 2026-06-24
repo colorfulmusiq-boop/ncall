@@ -1643,7 +1643,7 @@ function startListeners() {
       var maidCntBadge = document.createElement('span');
       maidCntBadge.className = 'hist-maid-cnt';
       var _cntDk = String(parseDateNum(date));
-      var _cntGids = tableEntries.map(function(e){ return ((e[1][0]&&e[1][0].guestId)||'').replace(/[^a-zA-Z0-9]/g,'_'); }).filter(Boolean);
+      var _cntGids = [...new Set(tableEntries.map(function(e){ return ((e[1][0]&&e[1][0].guestId)||'').replace(/[^a-zA-Z0-9]/g,'_'); }).filter(Boolean))];
       maidCntBadge.dataset.dk = _cntDk;
       maidCntBadge.dataset.gids = _cntGids.join(',');
       maidCntBadge.style.cssText = 'background:#fde8e8;color:#c0392b;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;display:none;';
@@ -1768,19 +1768,8 @@ function startListeners() {
           fbGet(ref).then(function(snap) {
             if (snap.val() === true) { addB.style.display = 'none'; heartB.style.display = 'inline-flex'; }
           }).catch(function(){});
-          addB.onclick = function(e) {
-            e.stopPropagation(); fbSet(ref, true);
-            addB.style.display = 'none'; heartB.style.display = 'inline-flex';
-            var cur = parseInt((cntBadge.textContent||'').replace(/[^0-9]/g,''))||0;
-            cntBadge.textContent = '❤️ ' + (cur + 1); cntBadge.style.display = 'inline';
-          };
-          heartB.onclick = function(e) {
-            e.stopPropagation(); fbSet(ref, false);
-            heartB.style.display = 'none'; addB.style.display = 'inline-flex';
-            var cur = parseInt((cntBadge.textContent||'').replace(/[^0-9]/g,''))||0;
-            if (cur <= 1) { cntBadge.style.display = 'none'; cntBadge.textContent = ''; }
-            else { cntBadge.textContent = '❤️ ' + (cur - 1); }
-          };
+          addB.onclick = function(e) { e.stopPropagation(); fbSet(ref, true); };
+          heartB.onclick = function(e) { e.stopPropagation(); fbSet(ref, false); };
         })(maidAddBadge, maidHeartBadge, maidRef, maidCntBadge);
         tSummary.appendChild(maidAddBadge);
         tSummary.appendChild(maidHeartBadge);

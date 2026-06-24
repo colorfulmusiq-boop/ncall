@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ncall-v87';
+const CACHE_NAME = 'ncall-v89';
 const CORE_FILES = [
   '/waiter.html',
   '/guest.html',
@@ -13,8 +13,11 @@ self.addEventListener('install', e => {
     caches.open(CACHE_NAME)
       .then(c => c.addAll(CORE_FILES))
       .catch(() => {})
-      .then(() => self.skipWaiting())
   );
+});
+
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {

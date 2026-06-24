@@ -268,8 +268,11 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .dangol-memo{font-size:0.74rem;color:var(--muted);background:var(--bg);border-radius:8px;padding:0.5rem 0.7rem;margin-bottom:0.7rem;line-height:1.5;}
 .dangol-visitlog{background:var(--bg);border-radius:8px;padding:0.5rem 0.7rem;margin-bottom:0.7rem;}
 .vlog-title{font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:0.35rem;}
-.vlog-row{font-size:0.74rem;color:var(--navy);line-height:1.7;font-weight:500;}
+.vlog-row{font-size:0.74rem;color:var(--navy);line-height:1.55;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.18rem 0;}
+.vlog-row .vlog-txt{flex:1;min-width:0;}
 .vlog-row .vlog-ing{color:var(--green);font-weight:600;}
+.vlog-maid{flex-shrink:0;background:var(--bg2);border:0.5px dashed rgba(184,146,63,0.45);border-radius:6px;padding:0.2rem 0.5rem;font-size:0.66rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;white-space:nowrap;}
+.vlog-maid.on{background:#fde8e8;border:0.5px solid #f0b8b8;color:#c0392b;}
 .dangol-arrow{color:var(--muted);font-size:0.7rem;transition:transform 0.2s;flex-shrink:0;}
 .vlog-more{margin-top:0.4rem;background:none;border:none;color:var(--blue);font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;padding:0.25rem 0;}
 .dangol-card.checkout-blink{color:var(--navy)!important;}
@@ -513,6 +516,15 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   </div>
   <button class="install-btn" onclick="installApp()">설치</button>
   <button class="install-close" onclick="document.getElementById('installBanner').style.display='none'">×</button>
+</div>
+
+<div id="updateBanner" style="display:none;position:fixed;bottom:1.5rem;left:1.25rem;right:1.25rem;background:#1a1206;border:0.5px solid rgba(212,168,67,0.45);border-radius:12px;padding:0.85rem 1rem;align-items:center;gap:0.75rem;z-index:350;">
+  <div style="flex:1;">
+    <div style="font-size:0.78rem;font-weight:700;color:#f3da95;">새 버전이 나왔어요</div>
+    <div style="font-size:0.66rem;color:rgba(243,234,211,0.65);margin-top:0.1rem;">새로고침하면 최신 화면으로 바뀌어요</div>
+  </div>
+  <button onclick="applyUpdate()" style="background:linear-gradient(95deg,#e8c87a,#d4a843);border:none;border-radius:8px;padding:0.5rem 1rem;font-size:0.78rem;font-weight:700;color:#1a1206;cursor:pointer;font-family:inherit;white-space:nowrap;">새로고침</button>
+  <button onclick="document.getElementById('updateBanner').style.display='none'" style="background:none;border:none;color:rgba(243,234,211,0.45);font-size:0.72rem;font-weight:600;cursor:pointer;padding:0.2rem 0.3rem;white-space:nowrap;">나중에</button>
 </div>
 
 <div id="toast"></div>
@@ -1176,7 +1188,8 @@ function dangolCard(g, isDue) {
   }
 
   if (g.visitLog) {
-    const logs = Object.values(g.visitLog)
+    const logs = Object.entries(g.visitLog)
+      .map(([k,v]) => ({...v, _vkey:k}))
       .sort((a,b) => ((a.date||'')+(a.enter||'')) < ((b.date||'')+(b.enter||'')) ? 1 : -1);
     if (logs.length) {
       const box = document.createElement('div');
@@ -1185,19 +1198,36 @@ function dangolCard(g, isDue) {
       t.className = 'vlog-title';
       t.textContent = '최근 방문 (' + logs.length + '회)';
       box.appendChild(t);
+      const DAY_KR = ['일','월','화','수','목','금','토'];
       const mkRow = v => {
         const row = document.createElement('div');
         row.className = 'vlog-row';
         const p = (v.date || '').split('-');
-        const md = p.length === 3 ? (+p[1]) + '월 ' + (+p[2]) + '일' : (v.dateLabel || '');
-        if (v.exit) row.textContent = '📅 ' + md + '  ' + v.enter + ' ~ ' + v.exit;
-        else {
-          row.textContent = '📅 ' + md + '  ' + v.enter + ' ~ ';
+        let md;
+        if (p.length === 3) {
+          const dObj = new Date(+p[0], +p[1]-1, +p[2]);
+          const dow = isNaN(dObj.getTime()) ? '' : ' (' + DAY_KR[dObj.getDay()] + ')';
+          md = (+p[0]) + '년 ' + (+p[1]) + '월 ' + (+p[2]) + '일' + dow;
+        } else { md = (v.dateLabel || ''); }
+        const txt = document.createElement('span');
+        txt.className = 'vlog-txt';
+        txt.textContent = md + '  ' + (v.enter || '') + ' ~ ' + (v.exit || '');
+        if (!v.exit) {
           const ing = document.createElement('span');
           ing.className = 'vlog-ing';
           ing.textContent = '체류중';
-          row.appendChild(ing);
+          txt.appendChild(ing);
         }
+        row.appendChild(txt);
+        const maidBtn = document.createElement('button');
+        const setMaid = on => { maidBtn.className = 'vlog-maid' + (on ? ' on' : ''); maidBtn.textContent = on ? '❤️ 메이드' : '+ 메이드'; };
+        setMaid(!!v.maid);
+        maidBtn.onclick = e => {
+          e.stopPropagation();
+          const nv = !v.maid; v.maid = nv; setMaid(nv);
+          waitFb(() => fbUpdate(fbRef(db, `guests/${W.id}/${g._key}/visitLog/${v._vkey}`), { maid: nv }));
+        };
+        row.appendChild(maidBtn);
         return row;
       };
       logs.slice(0, 3).forEach(v => box.appendChild(mkRow(v)));
@@ -1210,7 +1240,7 @@ function dangolCard(g, isDue) {
         moreBtn.onclick = () => {
           const rows = box.querySelectorAll('[data-more]');
           const show = rows.length && rows[0].style.display === 'none';
-          rows.forEach(r => r.style.display = show ? 'block' : 'none');
+          rows.forEach(r => r.style.display = show ? 'flex' : 'none');
           moreBtn.textContent = show ? '－ 접기' : '＋ 더보기 (' + hidden.length + '개)';
         };
         box.appendChild(moreBtn);
@@ -2154,8 +2184,43 @@ function toast(msg) {
   toastT = setTimeout(() => el.classList.remove('show'), 2000);
 }
 
-// PWA
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+// PWA + 새 버전 자동 감지
+let _swReg = null;
+let _reloadingForUpdate = false;
+function showUpdateBanner() {
+  var b = document.getElementById('updateBanner');
+  if (b) b.style.display = 'flex';
+}
+function applyUpdate() {
+  document.getElementById('updateBanner').style.display = 'none';
+  if (_swReg && _swReg.waiting) {
+    _reloadingForUpdate = true;
+    _swReg.waiting.postMessage({ type: 'SKIP_WAITING' });
+  } else {
+    location.reload();
+  }
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    _swReg = reg;
+    // 이미 대기 중인 새 버전이 있으면 즉시 안내
+    if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner();
+    // 새 버전이 설치되는 순간 감지
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner();
+      });
+    });
+  }).catch(() => {});
+  // 사용자가 새로고침을 누른 뒤 새 버전이 장악하면 그때 한 번만 리로드
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!_reloadingForUpdate) return;
+    _reloadingForUpdate = false;
+    location.reload();
+  });
+}
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); deferredPrompt = e;

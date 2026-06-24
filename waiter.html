@@ -1199,12 +1199,15 @@ function dangolCard(g, isDue) {
       t.textContent = '최근 방문 (' + logs.length + '회)';
       box.appendChild(t);
       const DAY_KR = ['일','월','화','수','목','금','토'];
+      const maidGid = (g._key || '').replace(/[^a-zA-Z0-9]/g,'_');
+      const setMaidBtn = (btn, on) => { btn.className = 'vlog-maid' + (on ? ' on' : ''); btn.textContent = on ? '❤️ 메이드' : '+ 메이드'; };
       const mkRow = v => {
         const row = document.createElement('div');
         row.className = 'vlog-row';
         const p = (v.date || '').split('-');
-        let md;
+        let md, dk = '';
         if (p.length === 3) {
+          dk = String((+p[0])*10000 + (+p[1])*100 + (+p[2]));
           const dObj = new Date(+p[0], +p[1]-1, +p[2]);
           const dow = isNaN(dObj.getTime()) ? '' : ' (' + DAY_KR[dObj.getDay()] + ')';
           md = (+p[0]) + '년 ' + (+p[1]) + '월 ' + (+p[2]) + '일' + dow;
@@ -1220,12 +1223,14 @@ function dangolCard(g, isDue) {
         }
         row.appendChild(txt);
         const maidBtn = document.createElement('button');
-        const setMaid = on => { maidBtn.className = 'vlog-maid' + (on ? ' on' : ''); maidBtn.textContent = on ? '❤️ 메이드' : '+ 메이드'; };
-        setMaid(!!v.maid);
+        maidBtn.dataset.dk = dk;
+        setMaidBtn(maidBtn, false);
         maidBtn.onclick = e => {
           e.stopPropagation();
-          const nv = !v.maid; v.maid = nv; setMaid(nv);
-          waitFb(() => fbUpdate(fbRef(db, `guests/${W.id}/${g._key}/visitLog/${v._vkey}`), { maid: nv }));
+          if (!dk || !maidGid) return;
+          const nv = !maidBtn.classList.contains('on');
+          box.querySelectorAll('.vlog-maid').forEach(b => { if (b.dataset.dk === dk) setMaidBtn(b, nv); });
+          waitFb(() => fbSet(fbRef(db, `maid/${W.id}/${maidGid}/${dk}`), nv));
         };
         row.appendChild(maidBtn);
         return row;
@@ -1247,6 +1252,12 @@ function dangolCard(g, isDue) {
           if (show) window._vlogExpanded[g._key] = true; else delete window._vlogExpanded[g._key];
         };
         box.appendChild(moreBtn);
+      }
+      if (maidGid) {
+        fbGet(fbRef(db, `maid/${W.id}/${maidGid}`)).then(snap => {
+          const m = snap.val() || {};
+          box.querySelectorAll('.vlog-maid').forEach(b => setMaidBtn(b, !!m[b.dataset.dk]));
+        }).catch(() => {});
       }
       body.appendChild(box);
     }
@@ -1603,18 +1614,18 @@ function startListeners() {
       var maidCntBadge = document.createElement('span');
       maidCntBadge.style.cssText = 'background:#fde8e8;color:#c0392b;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;display:none;';
       dateLeft.appendChild(maidCntBadge);
-      (function(badge, entries) {
+      (function(badge, entries, dkey) {
         var gids = entries.map(function(e){ return ((e[1][0]&&e[1][0].guestId)||'').replace(/[^a-zA-Z0-9]/g,'_'); }).filter(Boolean);
         if (!gids.length) return;
         var count = 0; var done = 0;
         gids.forEach(function(gid) {
-          fbGet(fbRef(db, 'maid/' + wid + '/' + gid)).then(function(snap) {
+          fbGet(fbRef(db, 'maid/' + wid + '/' + gid + '/' + dkey)).then(function(snap) {
             if (snap.val() === true) count++;
             done++;
             if (done === gids.length && count > 0) { badge.textContent = '❤️ ' + count; badge.style.display = 'inline'; }
           }).catch(function(){ done++; });
         });
-      })(maidCntBadge, tableEntries);
+      })(maidCntBadge, tableEntries, String(parseDateNum(date)));
 
       if (isToday) {
         var todayBadge = document.createElement('span');
@@ -1706,7 +1717,7 @@ function startListeners() {
           tSummary.appendChild(badge);
         });
         var maidGid = ((tItems[0]&&tItems[0].guestId) || tbl).replace(/[^a-zA-Z0-9]/g,'_');
-        var maidRef = fbRef(db, 'maid/' + wid + '/' + maidGid);
+        var maidRef = fbRef(db, 'maid/' + wid + '/' + maidGid + '/' + String(parseDateNum(date)));
         var maidHeartBadge = document.createElement('span');
         maidHeartBadge.style.cssText = 'display:none;align-items:center;gap:0.2rem;background:#fde8e8;border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:#c0392b;cursor:pointer;';
         maidHeartBadge.textContent = '❤️ 메이드';

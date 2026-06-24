@@ -1224,6 +1224,7 @@ function dangolCard(g, isDue) {
         row.appendChild(txt);
         const maidBtn = document.createElement('button');
         maidBtn.dataset.dk = dk;
+        maidBtn.dataset.gid = maidGid;
         setMaidBtn(maidBtn, false);
         maidBtn.onclick = e => {
           e.stopPropagation();
@@ -1512,6 +1513,26 @@ function startListeners() {
       });
     }
   });
+  // 메이드 실시간 동기화 (VIP·내역 양쪽 버튼 자동 갱신)
+  function applyMaidToDom() {
+    var m = window._maidMap || {};
+    var isOn = function(el){ return !!(m[el.dataset.gid] && m[el.dataset.gid][el.dataset.dk] === true); };
+    document.querySelectorAll('.vlog-maid[data-gid]').forEach(function(b){
+      var on = isOn(b);
+      b.className = 'vlog-maid' + (on ? ' on' : '');
+      b.textContent = on ? '❤️ 메이드' : '+ 메이드';
+    });
+    document.querySelectorAll('.hist-maid-add[data-gid]').forEach(function(b){
+      b.style.display = isOn(b) ? 'none' : 'inline-flex';
+    });
+    document.querySelectorAll('.hist-maid-heart[data-gid]').forEach(function(b){
+      b.style.display = isOn(b) ? 'inline-flex' : 'none';
+    });
+  }
+  fbOnValue(fbRef(db, `maid/${wid}`), function(snap){
+    window._maidMap = snap.val() || {};
+    applyMaidToDom();
+  });
   // 내역
   fbOnValue(fbRef(db, `history/${wid}`), snap => {
     var raw = snap.val() || {};
@@ -1717,11 +1738,18 @@ function startListeners() {
           tSummary.appendChild(badge);
         });
         var maidGid = ((tItems[0]&&tItems[0].guestId) || tbl).replace(/[^a-zA-Z0-9]/g,'_');
-        var maidRef = fbRef(db, 'maid/' + wid + '/' + maidGid + '/' + String(parseDateNum(date)));
+        var maidDk = String(parseDateNum(date));
+        var maidRef = fbRef(db, 'maid/' + wid + '/' + maidGid + '/' + maidDk);
         var maidHeartBadge = document.createElement('span');
+        maidHeartBadge.className = 'hist-maid-heart';
+        maidHeartBadge.dataset.gid = maidGid;
+        maidHeartBadge.dataset.dk = maidDk;
         maidHeartBadge.style.cssText = 'display:none;align-items:center;gap:0.2rem;background:#fde8e8;border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:#c0392b;cursor:pointer;';
         maidHeartBadge.textContent = '❤️ 메이드';
         var maidAddBadge = document.createElement('span');
+        maidAddBadge.className = 'hist-maid-add';
+        maidAddBadge.dataset.gid = maidGid;
+        maidAddBadge.dataset.dk = maidDk;
         maidAddBadge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--muted);cursor:pointer;border:0.5px dashed rgba(184,146,63,0.45);';
         maidAddBadge.textContent = '+ 메이드';
         (function(addB, heartB, ref, cntBadge) {

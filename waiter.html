@@ -71,6 +71,8 @@ body[data-theme="dark"]{
   --gold:#e8c87a;--gold2:#d4a843;
 }
 body[data-theme="dark"] .badge{background:#b06848;}
+/* 다크모드: 내역 게스트 카드 삭제 버튼 테두리를 날짜 헤더 삭제 버튼과 동일하게 (라이트모드 영향 없음) */
+body[data-theme="dark"] .hist-del-btn{border:0.5px solid var(--border) !important;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-system,sans-serif;height:100vh;display:flex;flex-direction:column;}
@@ -1854,6 +1856,7 @@ function startListeners() {
         tRight.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;flex-shrink:0;';
 
         var delBtn = document.createElement('button');
+        delBtn.className = 'hist-del-btn';
         delBtn.style.cssText = 'background:var(--bg2);border:none;color:var(--muted);font-size:0.7rem;font-weight:600;cursor:pointer;padding:0.25rem 0.5rem;border-radius:6px;';
         delBtn.textContent = '삭제';
         (function(keys,t){ delBtn.onclick = function(e){ e.stopPropagation(); deleteTableGroup(wid, keys, t); }; })(tItems.map(function(n){ return n._key; }).filter(Boolean), tbl);

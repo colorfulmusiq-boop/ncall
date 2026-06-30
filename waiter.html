@@ -24,6 +24,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <script>
 (function() {
   var cfg = {
@@ -682,6 +683,7 @@ function enterDash() {
   _dashOpen = true;
   requestWakeLock();
   requestNotifPerm();
+  registerFcmToken();
   startListeners();
   updateNoticeBadge();
   cleanOldHistory();
@@ -2090,6 +2092,36 @@ async function requestNotifPerm() {
   }
   if (Notification.permission === 'denied') {
     toast('⚠️ 알림이 차단돼 있어요. 브라우저 설정에서 허용해주세요.');
+  }
+}
+
+// ── FCM 푸시 토큰 등록 (앱이 꺼져 있어도 호출 푸시를 받기 위함) ──
+const FCM_VAPID_KEY = 'BFRN5r7d23Xb1PTp04MxTVq01FfYpgBf3fiyIQZKBN1lchSj4uOAPMYWPGALqNO9TGvwXbTilyD9bnOZA1YgurU';
+let _fcmMessaging = null;
+async function registerFcmToken() {
+  try {
+    if (!W || !W.id) return;
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+    if (typeof firebase === 'undefined' || !firebase.messaging) return;
+    // FCM 미지원 환경(구형 iOS Safari 등)이면 조용히 종료 — 기존 in-app 알림은 그대로 동작
+    if (firebase.messaging.isSupported && !firebase.messaging.isSupported()) return;
+    // 권한 확보
+    if (Notification.permission === 'default') {
+      const r = await Notification.requestPermission();
+      if (r !== 'granted') return;
+    }
+    if (Notification.permission !== 'granted') return;
+    // FCM 전용 서비스워커 등록 (캐시용 /sw.js 와 별개 스코프)
+    const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/firebase-cloud-messaging-push-scope' });
+    if (!_fcmMessaging) _fcmMessaging = firebase.messaging();
+    const token = await _fcmMessaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
+    if (!token) return;
+    // RTDB 저장: fcmTokens/{wid}/{token} — 웨이터당 기기 여러 대 허용
+    await fbSet(fbRef(db, `fcmTokens/${W.id}/${token}`), { ua: navigator.userAgent.slice(0, 120), ts: Date.now() });
+    // 포그라운드 수신은 기존 onValue 리스너가 이미 in-app 알림을 띄우므로 무시
+    _fcmMessaging.onMessage(function() {});
+  } catch (e) {
+    // 권한 거부/미지원 — 무시
   }
 }
 

@@ -761,73 +761,141 @@ function updateNoticeBadge() {
   else { badge.style.display = 'none'; }
 }
 
+// 날짜별 공지 카드 1개 생성 (기존 디자인 그대로 — gold: 금색 강조, open: 펼침 상태)
+function buildDateCard(date, items, gold, open) {
+  const folderId = 'update-' + date.replace(/\./g, '-');
+  const _typeOrder = { '신규 기능': 0, '업데이트': 1 };
+  const types = [...new Set(items.map(function(i){ return i.type; }))]
+    .sort(function(a, b){ return (_typeOrder[a] ?? 99) - (_typeOrder[b] ?? 99); })
+    .join(' · ');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (gold?'linear-gradient(135deg,#d4a843,#e8c87a)':'var(--bg2)') + ';cursor:pointer;';
+  hdr.onclick = function() {
+    const body = document.getElementById(folderId);
+    const arrow = document.getElementById('arrow-' + folderId);
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+  };
+  const left = document.createElement('div');
+  const typeSpan = document.createElement('div');
+  typeSpan.style.cssText = 'font-size:0.6rem;font-weight:700;color:' + (gold?'rgba(26,18,6,0.7)':'var(--muted)') + ';margin-bottom:0.15rem;';
+  typeSpan.textContent = types;
+  const dateSpan = document.createElement('div');
+  dateSpan.style.cssText = 'font-size:0.82rem;font-weight:800;color:' + (gold?'#1a1206':'var(--navy)') + ';';
+  dateSpan.textContent = date;
+  left.append(typeSpan, dateSpan);
+  const arrow = document.createElement('span');
+  arrow.id = 'arrow-' + folderId;
+  arrow.style.cssText = 'color:' + (gold?'#1a1206':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (open?'transform:rotate(180deg);':'');
+  arrow.textContent = '▼';
+  hdr.append(left, arrow);
+  wrap.appendChild(hdr);
+  const body = document.createElement('div');
+  body.id = folderId;
+  body.style.display = open ? 'block' : 'none';
+  items.forEach(function(item, itemIdx) {
+    const row = document.createElement('div');
+    row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;line-height:1.5;';
+    var numSpan = document.createElement('span');
+    numSpan.style.cssText = 'font-weight:800;color:var(--blue);';
+    numSpan.textContent = String(itemIdx + 1).padStart(2, '0') + '. ';
+    row.appendChild(numSpan);
+    var parts = item.content.split(' — ');
+    var titleSpan = document.createElement('span');
+    titleSpan.style.cssText = 'font-weight:800;color:var(--blue);';
+    titleSpan.textContent = parts[0];
+    row.appendChild(titleSpan);
+    if (parts.length > 1) {
+      var descSpan = document.createElement('span');
+      descSpan.style.cssText = 'color:var(--muted);font-weight:400;';
+      descSpan.textContent = ' — ' + parts.slice(1).join(' — ');
+      row.appendChild(descSpan);
+    }
+    body.appendChild(row);
+  });
+  wrap.appendChild(body);
+  return wrap;
+}
+
 function showUpdates() {
   const list = document.getElementById('updatesList');
   list.innerHTML = '';
+
+  // 날짜별 그룹화
   const groups = {};
   APP_UPDATES.forEach(function(u) {
     if (!groups[u.date]) groups[u.date] = [];
     groups[u.date].push({ type: u.type, content: u.content });
   });
-  Object.keys(groups).forEach(function(date, idx) {
-    const folderId = 'update-' + date.replace(/\./g, '-');
-    const _typeOrder = { '신규 기능': 0, '업데이트': 1 };
-    const types = [...new Set(groups[date].map(function(i){ return i.type; }))]
-      .sort(function(a, b){ return (_typeOrder[a] ?? 99) - (_typeOrder[b] ?? 99); })
-      .join(' · ');
+  const dates = Object.keys(groups).sort().reverse(); // 최신 날짜가 위로
+
+  // 1) 가장 최신 공지 1개 — 폴더 밖, 금색 강조 + 펼침 (기존 카드 그대로)
+  if (dates.length) {
+    list.appendChild(buildDateCard(dates[0], groups[dates[0]], true, true));
+  }
+
+  // 2) 나머지 지난 공지 — 월별 폴더로 묶기 (최신 월이 위로)
+  const months = {}; // "2026.06" -> ["2026.06.24", ...]
+  dates.slice(1).forEach(function(date) {
+    const ym = date.slice(0, 7);
+    if (!months[ym]) months[ym] = [];
+    months[ym].push(date);
+  });
+  Object.keys(months).sort().reverse().forEach(function(ym) {
+    const monthDates = months[ym]; // dates가 내림차순이라 이미 최신순
+    const mId = 'month-' + ym.replace(/\./g, '-');
+    const label = ym.slice(0, 4) + '년 ' + parseInt(ym.slice(5, 7), 10) + '월';
+
     const wrap = document.createElement('div');
     wrap.style.cssText = 'margin-bottom:0.5rem;border:0.5px solid var(--border);border-radius:10px;overflow:hidden;';
+
     const hdr = document.createElement('div');
-    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:' + (idx===0?'linear-gradient(135deg,#d4a843,#e8c87a)':'var(--bg2)') + ';cursor:pointer;';
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:var(--bg2);cursor:pointer;';
     hdr.onclick = function() {
-      const body = document.getElementById(folderId);
-      const arrow = document.getElementById('arrow-' + folderId);
+      const body = document.getElementById(mId);
+      const arrow = document.getElementById('arrow-' + mId);
       const isOpen = body.style.display !== 'none';
       body.style.display = isOpen ? 'none' : 'block';
       if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
     };
     const left = document.createElement('div');
-    const typeSpan = document.createElement('div');
-    typeSpan.style.cssText = 'font-size:0.6rem;font-weight:700;color:' + (idx===0?'rgba(26,18,6,0.7)':'var(--muted)') + ';margin-bottom:0.15rem;';
-    typeSpan.textContent = types;
-    const dateSpan = document.createElement('div');
-    dateSpan.style.cssText = 'font-size:0.82rem;font-weight:800;color:' + (idx===0?'#1a1206':'var(--navy)') + ';';
-    dateSpan.textContent = date;
-    left.append(typeSpan, dateSpan);
+    left.style.cssText = 'display:flex;align-items:center;gap:0.45rem;';
+    const icon = document.createElement('span');
+    icon.style.cssText = 'font-size:0.95rem;';
+    icon.textContent = '📁';
+    const labelSpan = document.createElement('span');
+    labelSpan.style.cssText = 'font-size:0.85rem;font-weight:800;color:var(--navy);';
+    labelSpan.textContent = label;
+    left.append(icon, labelSpan);
+
+    const right = document.createElement('div');
+    right.style.cssText = 'display:flex;align-items:center;gap:0.5rem;';
+    const badge = document.createElement('span');
+    badge.style.cssText = 'background:var(--pink-soft);border:0.5px solid var(--pink-border);color:var(--blue);font-size:0.68rem;font-weight:800;padding:0.12rem 0.5rem;border-radius:8px;';
+    badge.textContent = monthDates.length + '건';
     const arrow = document.createElement('span');
-    arrow.id = 'arrow-' + folderId;
-    arrow.style.cssText = 'color:' + (idx===0?'#1a1206':'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (idx===0?'transform:rotate(180deg);':'');
+    arrow.id = 'arrow-' + mId;
+    arrow.style.cssText = 'color:var(--muted);font-size:0.8rem;transition:transform 0.2s;';
     arrow.textContent = '▼';
-    hdr.append(left, arrow);
+    right.append(badge, arrow);
+
+    hdr.append(left, right);
     wrap.appendChild(hdr);
+
     const body = document.createElement('div');
-    body.id = folderId;
-    body.style.display = idx === 0 ? 'block' : 'none';
-    groups[date].forEach(function(item, itemIdx) {
-      const row = document.createElement('div');
-      row.style.cssText = 'padding:0.75rem 1rem;border-top:0.5px solid var(--border);font-size:0.83rem;line-height:1.5;';
-      var numSpan = document.createElement('span');
-      numSpan.style.cssText = 'font-weight:800;color:var(--blue);';
-      numSpan.textContent = String(itemIdx + 1).padStart(2, '0') + '. ';
-      row.appendChild(numSpan);
-      var parts = item.content.split(' — ');
-      var titleSpan = document.createElement('span');
-      titleSpan.style.cssText = 'font-weight:800;color:var(--blue);';
-      titleSpan.textContent = parts[0];
-      row.appendChild(titleSpan);
-      if (parts.length > 1) {
-        var descSpan = document.createElement('span');
-        descSpan.style.cssText = 'color:var(--muted);font-weight:400;';
-        descSpan.textContent = ' — ' + parts.slice(1).join(' — ');
-        row.appendChild(descSpan);
-      }
-      body.appendChild(row);
+    body.id = mId;
+    body.style.cssText = 'display:none;padding:0.5rem;background:var(--bg);'; // 기본 접힘
+    monthDates.forEach(function(date) {
+      body.appendChild(buildDateCard(date, groups[date], false, false)); // 폴더 안 카드: 회색·접힘
     });
     wrap.appendChild(body);
     list.appendChild(wrap);
   });
-  var _allDates = [...new Set(APP_UPDATES.map(function(u){ return u.date; }))].sort().reverse();
-  if (_allDates.length) lsSet('ncall_seen_updates', _allDates[0]);
+
+  if (dates.length) lsSet('ncall_seen_updates', dates[0]);
   updateNoticeBadge();
   document.getElementById('updatesModal').classList.add('open');
 }

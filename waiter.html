@@ -1063,15 +1063,17 @@ function doSaveDangol() {
   if (!name) { err.textContent='VIP 이름을 입력해주세요'; err.classList.add('show'); return; }
   waitFb(() => {
     if (editingDangolKey) {
-      fbUpdate(fbRef(db, `guests/${W.id}/${editingDangolKey}`), { label:name, phone, memo });
+      fbUpdate(fbRef(db, `guests/${W.id}/${editingDangolKey}`), { label:name });
+      fbUpdate(fbRef(db, `dangolInfo/${W.id}/${editingDangolKey}`), { phone, memo });
       toast('✓ 수정됨');
       closeModal('dangolModal');
     } else {
       const ref = fbPush(fbRef(db, `guests/${W.id}`), {
-        label:name, phone, memo, isDangol:true, active:true,
+        label:name, isDangol:true, active:true,
         lastVisit: '', visitCount: 0, bookingCount: 0, createdAt: nowStr()
       });
       const key = ref.key;
+      fbSet(fbRef(db, `dangolInfo/${W.id}/${key}`), { phone, memo });
       closeModal('dangolModal');
       toast('✓ VIP 등록됨');
       setTimeout(() => showDangolQR(key, name, phone), 400);
@@ -1157,14 +1159,18 @@ function openSmsApp(phone, body) {
 
 function deleteDangol(key, name) {
   if (!confirm(name + '\nVIP 목록에서 삭제할까요?')) return;
-  waitFb(() => fbRemove(fbRef(db, `guests/${W.id}/${key}`)));
+  waitFb(() => {
+    fbRemove(fbRef(db, `guests/${W.id}/${key}`));
+    fbRemove(fbRef(db, `dangolInfo/${W.id}/${key}`));
+  });
   toast('✓ 삭제됨');
 }
 
 function renderDangol(data) {
   const list = document.getElementById('dangolList');
+  const info = window._dangolInfo || {};
   const dangols = Object.entries(data || {})
-    .map(([k,v]) => ({...v, _key:k}))
+    .map(([k,v]) => ({...v, ...(info[k]||{}), _key:k}))
     .filter(g => g.isDangol);
   const badge = document.getElementById('dangolBadge');
 
@@ -1525,6 +1531,12 @@ function startListeners() {
         feed.appendChild(card);
       });
     }
+  });
+
+  // VIP 개인정보(전화번호·메모) — 인증 필요한 별도 노드
+  fbOnValue(fbRef(db, `dangolInfo/${wid}`), snap => {
+    window._dangolInfo = snap.val() || {};
+    if (window._lastGuests) renderDangol(window._lastGuests);
   });
 
   // 손님 목록

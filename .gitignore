@@ -1,0 +1,12 @@
+# Firebase 서비스 계정 키 (절대 커밋 금지)
+nightcall-*-firebase-adminsdk-*.json
+serviceAccount*.json
+*-firebase-adminsdk-*.json
+
+# 의존성
+node_modules/
+functions/node_modules/
+
+# 로그
+*.log
+npm-debug.log*

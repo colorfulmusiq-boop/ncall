@@ -644,7 +644,8 @@ function cdLockBtn(type) {
 }
 
 function cdRestoreOnLoad() {
-  ['call', 'booking'].forEach(t => { if (cdRemain(t) > 0) cdLockBtn(t); });
+  // 쿨다운 제거됨 — 예전 버전에서 저장된 잠금 기록이 있으면 지워 버튼이 잠기지 않게 함
+  ['call', 'booking'].forEach(t => { try { localStorage.removeItem(cdKey(t)); } catch(e) {} });
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', cdRestoreOnLoad);
@@ -653,10 +654,6 @@ if (document.readyState === 'loading') {
 }
 
 function sendAction(type) {
-  if (cdRemain(type) > 0) {
-    toast('방금 ' + (type === 'call' ? '호출했어요' : '요청했어요') + '! 잠시 후 다시 가능해요');
-    return;
-  }
   pendingType = type;
   document.getElementById('modalIcon').textContent = type==='call' ? '🙋' : '🔔';
   document.getElementById('modalTitle').textContent = type==='call' ? '웨이터 호출' : '부킹 요청';
@@ -703,7 +700,6 @@ function sendNotif(type) {
     waiterName: waiterData.name, guestId,
     time: sentTime, date: sentDate, done: false
   }).then(() => {
-    cdStart(type);
     const bar = document.getElementById('sentBar');
     document.getElementById('sentMsg').textContent = type==='call' ? '호출이 전송됐어요' : '부킹 요청이 전송됐어요';
     bar.classList.add('show');

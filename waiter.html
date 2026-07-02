@@ -199,6 +199,23 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .modal-handle{width:36px;height:4px;background:var(--bg2);border-radius:2px;margin:0 auto 1.5rem;}
 .modal-title{font-weight:800;font-size:1.2rem;color:var(--navy);margin-bottom:1.25rem;}
 
+/* 사용법 튜토리얼 */
+.tut-overlay{display:none;position:fixed;inset:0;background:rgba(16,15,11,0.72);backdrop-filter:blur(5px);z-index:600;align-items:center;justify-content:center;padding:1.25rem;}
+.tut-overlay.open{display:flex;}
+.tut-card{background:var(--card);border:0.5px solid rgba(184,146,63,0.4);border-radius:20px;width:100%;max-width:360px;padding:1.4rem 1.5rem 1.6rem;position:relative;animation:fadeUp 0.3s ease both;box-shadow:0 18px 50px rgba(0,0,0,0.35);}
+.tut-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+.tut-step{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;color:var(--gold2);}
+.tut-x{background:var(--bg2);border:none;border-radius:8px;width:30px;height:30px;font-size:1.2rem;line-height:1;color:var(--muted);cursor:pointer;flex-shrink:0;padding:0;}
+.tut-emoji{font-size:2.9rem;text-align:center;margin:0.6rem 0 0.7rem;line-height:1;}
+.tut-title{font-size:1.18rem;font-weight:800;color:var(--navy);text-align:center;margin-bottom:0.7rem;}
+.tut-body{font-size:0.96rem;line-height:1.75;color:var(--navy);text-align:center;min-height:5.6rem;}
+.tut-dots{display:flex;justify-content:center;gap:0.5rem;margin:1.15rem 0;}
+.tut-dot{width:9px;height:9px;border-radius:50%;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);padding:0;cursor:pointer;}
+.tut-dot.on{background:linear-gradient(95deg,var(--gold),var(--gold2));border-color:transparent;}
+.tut-nav{display:flex;gap:0.6rem;align-items:center;}
+.tut-prev{flex:0 0 auto;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:100px;padding:0.75rem 1.1rem;font-family:inherit;font-size:0.9rem;font-weight:600;color:var(--muted);cursor:pointer;}
+.tut-next{flex:1;background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;border:none;border-radius:100px;padding:0.8rem;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;}
+
 /* 내역 */
 .hist-card{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:0.85rem 1rem;display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;opacity:0.65;}
 .hist-ico{font-size:1rem;flex-shrink:0;}
@@ -347,6 +364,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
       <div class="live-dot"></div>
       <button class="mode-btn" id="modeBtn" onclick="toggleTheme()" title="화면 밝기">🌙</button>
       <button class="logout-btn" onclick="showUpdates()" style="position:relative;">공지사항<span id="noticeBadge" class="notice-pulse-badge" style="display:none;">0</span></button>
+      <button class="logout-btn" onclick="openTutorial()">사용법</button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -382,6 +400,24 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <button class="btn btn-danger" style="margin-bottom:1rem;" onclick="clearHistory()">🗑 내역 전체 삭제</button>
     <div id="histList"><div class="empty"><div style="font-size:1.5rem;margin-bottom:0.5rem;">—</div><div style="font-size:0.82rem;">처리된 내역이 쌓여요</div></div></div>
   </div></div>
+</div>
+
+<!-- 사용법 튜토리얼 팝업 -->
+<div class="tut-overlay" id="tutOverlay">
+  <div class="tut-card">
+    <div class="tut-top">
+      <div class="tut-step" id="tutStep"></div>
+      <button class="tut-x" onclick="closeTutorial()" aria-label="닫기">×</button>
+    </div>
+    <div class="tut-emoji" id="tutEmoji"></div>
+    <div class="tut-title" id="tutTitle"></div>
+    <div class="tut-body" id="tutBody"></div>
+    <div class="tut-dots" id="tutDots"></div>
+    <div class="tut-nav">
+      <button class="tut-prev" id="tutPrev" onclick="tutPrev()">이전</button>
+      <button class="tut-next" id="tutNext" onclick="tutNext()">다음</button>
+    </div>
+  </div>
 </div>
 
 <!-- 공지사항 모달 (전체화면) -->
@@ -689,6 +725,7 @@ function enterDash() {
   startListeners();
   updateNoticeBadge();
   cleanOldHistory();
+  maybeShowTutorial();
   // 자동로그인 등 제스처 없이 진입한 경우 — 화면 첫 터치 때 오디오/진동 깨우기
   if (!_mediaUnlocked) {
     const _unlockOnce = () => { unlockMedia(); document.removeEventListener('pointerdown', _unlockOnce); };
@@ -2337,6 +2374,44 @@ function hideInAppBanner() {
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── 사용법 튜토리얼 ──
+var TUT_STEPS = [
+  { emoji:'📲', title:'손님에게 QR·링크 보내기',
+    body:"위쪽 <b>‘내 손님’</b> 탭에서 <b>‘+ 손님 추가’</b>를 누르면 QR 코드와 링크가 나와요. 손님에게 QR을 보여주거나 링크를 문자로 보내주세요. 손님이 그걸 열면 준비 끝이에요." },
+  { emoji:'🔔', title:'손님이 부르면 알림 받기',
+    body:"손님이 자기 화면에서 호출 버튼을 누르면 <b>‘알림’</b> 탭에 바로 뜨고, 소리와 진동으로 알려드려요. 앱을 닫아두거나 화면을 꺼둬도 알림이 옵니다.<br>(처음에 ‘알림 허용’을 한 번 눌러주세요.)" },
+  { emoji:'⭐', title:'단골·VIP 등록하기',
+    body:"자주 오시는 손님은 <b>‘VIP’</b> 탭에서 <b>‘+ VIP 등록’</b>을 눌러 이름을 적어두세요. 방문 기록과 메모도 남길 수 있어, 손님을 더 잘 챙길 수 있어요." },
+  { emoji:'♾️', title:'영구 QR로 단골 다시 부르기',
+    body:"VIP로 등록하면 바뀌지 않는 <b>‘영구 QR’</b>이 생겨요. 이 QR을 손님에게 한 번 문자로 보내두면, 다음에 언제 다시 오셔도 그 QR로 형님을 바로 부를 수 있어요." }
+];
+var _tutIdx = 0;
+function tutSeenKey(){ return 'ncall_tut_seen_' + ((W && W.id) ? W.id : 'x'); }
+function renderTut() {
+  var s = TUT_STEPS[_tutIdx], n = TUT_STEPS.length;
+  document.getElementById('tutStep').textContent = (_tutIdx+1) + ' / ' + n;
+  document.getElementById('tutEmoji').textContent = s.emoji;
+  document.getElementById('tutTitle').textContent = s.title;
+  document.getElementById('tutBody').innerHTML = s.body;
+  document.getElementById('tutPrev').style.visibility = (_tutIdx === 0) ? 'hidden' : 'visible';
+  document.getElementById('tutNext').textContent = (_tutIdx === n-1) ? '시작하기' : '다음';
+  var dots = '';
+  for (var i=0; i<n; i++) dots += '<button class="tut-dot'+(i===_tutIdx?' on':'')+'" onclick="tutGoto('+i+')" aria-label="'+(i+1)+'단계"></button>';
+  document.getElementById('tutDots').innerHTML = dots;
+}
+function openTutorial() { _tutIdx = 0; renderTut(); document.getElementById('tutOverlay').classList.add('open'); }
+function closeTutorial() { document.getElementById('tutOverlay').classList.remove('open'); }
+function tutNext() { if (_tutIdx >= TUT_STEPS.length-1) { closeTutorial(); return; } _tutIdx++; renderTut(); }
+function tutPrev() { if (_tutIdx > 0) { _tutIdx--; renderTut(); } }
+function tutGoto(i) { _tutIdx = i; renderTut(); }
+// 처음 로그인한 웨이터에게만 자동 안내 (이 폰에 봤다는 표시 저장)
+function maybeShowTutorial() {
+  if (!W || !W.id) return;
+  if (lsGet(tutSeenKey())) return;
+  lsSet(tutSeenKey(), '1');
+  setTimeout(openTutorial, 500);
+}
 
 let toastT;
 function toast(msg) {

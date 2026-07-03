@@ -217,6 +217,8 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .gtut-btn-skip{flex:0 0 auto;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:100px;padding:0.7rem 1.05rem;font-family:inherit;font-size:0.9rem;font-weight:600;color:var(--muted);cursor:pointer;}
 .gtut-btn-next{flex:1;background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;border:none;border-radius:100px;padding:0.8rem;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;}
 .gtut-arrow{position:absolute;width:16px;height:16px;background:var(--card);border:0.5px solid rgba(184,146,63,0.5);transform:rotate(45deg);display:none;}
+.gtut-mask{display:none;position:fixed;z-index:619;background:transparent;}
+.gtut-mask.on{display:block;}
 
 /* 내역 */
 .hist-card{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:0.85rem 1rem;display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;opacity:0.65;}
@@ -2385,6 +2387,12 @@ function gtBuild(){
   document.body.appendChild(spot);
   document.body.appendChild(hit);
   document.body.appendChild(bubble);
+  // interactive 단계(입력칸 등)용: 하이라이트 구멍 주변만 막는 4방향 마스크
+  ['gtutMaskT','gtutMaskB','gtutMaskL','gtutMaskR'].forEach(function(id){
+    var m=document.createElement('div'); m.id=id; m.className='gtut-mask';
+    m.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); });
+    document.body.appendChild(m);
+  });
   // 배경(하이라이트 외 영역) 클릭은 무시, 하이라이트 영역/‘다음’은 진행
   block.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); });
   hit.addEventListener('click', function(){ gtNext(); });
@@ -2481,7 +2489,7 @@ function gtSteps(){ return [
   { setup:function(){ gtCloseDemoModals(); switchTab('guests'); },
     target:function(){ return document.getElementById('btnAddGuest'); },
     text:"<b>‘손님 추가’</b>를 눌러 새 손님을 등록해 주십시오." },
-  { setup:gtDemoAddGuest,
+  { setup:gtDemoAddGuest, interactive:true, place:'above',
     target:function(){ return document.getElementById('addGuestLabel'); },
     text:"손님의 <b>테이블 또는 룸 정보</b>를 입력해 주십시오." },
   { setup:function(){ document.getElementById('addGuestModal').classList.add('open'); },
@@ -2525,6 +2533,7 @@ function gtEnd(){
   clearTimeout(_gt.t); clearTimeout(_gt.autoT);
   gtRestoreAll();
   gtCloseDemoModals();
+  gtSetMasks(false);
   ['gtutBlock','gtutSpot','gtutHit','gtutBubble'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('on'); });
   try { switchTab('guests'); } catch(_){}
   _gt.idx = -1;
@@ -2550,6 +2559,19 @@ function gtRender(){
   if (s.auto){ var at=_gt.idx; _gt.autoT = setTimeout(function(){ if(_gt.idx===at) gtNext(); }, s.auto); }
 }
 
+// interactive 단계: 하이라이트 구멍(l,tp,r,b) 주변만 4방향으로 막고, 구멍은 열어둔다
+function gtSetMasks(on, l, tp, r, b, vw, vh){
+  var T=document.getElementById('gtutMaskT'), B=document.getElementById('gtutMaskB'),
+      L=document.getElementById('gtutMaskL'), R=document.getElementById('gtutMaskR');
+  if (!T) return;
+  if (!on){ [T,B,L,R].forEach(function(m){ m.classList.remove('on'); }); return; }
+  function put(m,x,y,w,h){ m.style.left=x+'px'; m.style.top=y+'px'; m.style.width=Math.max(0,w)+'px'; m.style.height=Math.max(0,h)+'px'; m.classList.add('on'); }
+  put(T, 0, 0, vw, tp);
+  put(B, 0, b, vw, vh-b);
+  put(L, 0, tp, l, b-tp);
+  put(R, r, tp, vw-r, b-tp);
+}
+
 function gtReposition(){
   if (_gt.idx < 0) return;
   var s = gtSteps()[_gt.idx];
@@ -2559,28 +2581,43 @@ function gtReposition(){
   bubble.classList.add('on');
   var els = null;
   if (!s.center && s.target){ var t=s.target(); els=(Array.isArray(t)?t:[t]).filter(Boolean); }
+  var vw=window.innerWidth, vh=window.innerHeight;
   // 타깃이 없거나(중앙 안내) 못 찾으면 화면 중앙 말풍선
   if (!els || !els.length){
+    gtSetMasks(false);
     spot.classList.remove('on'); hit.classList.remove('on');
+    block.classList.add('on');
     block.style.background='rgba(8,7,4,0.66)';
     arrow.style.display='none';
     bubble.style.transform='translate(-50%,-50%)';
     bubble.style.left='50%'; bubble.style.top='50%';
     return;
   }
-  block.style.background='transparent';
   bubble.style.transform='none';
   var l=1e9,tp=1e9,r=-1e9,b=-1e9;
   els.forEach(function(el){ var q=el.getBoundingClientRect(); l=Math.min(l,q.left); tp=Math.min(tp,q.top); r=Math.max(r,q.right); b=Math.max(b,q.bottom); });
   var pad=8; l-=pad; tp-=pad; r+=pad; b+=pad;
   var w=r-l, h=b-tp;
-  spot.classList.add('on'); hit.classList.add('on');
+  spot.classList.add('on');
   spot.style.left=l+'px'; spot.style.top=tp+'px'; spot.style.width=w+'px'; spot.style.height=h+'px';
-  hit.style.left=l+'px'; hit.style.top=tp+'px'; hit.style.width=w+'px'; hit.style.height=h+'px';
-  // 말풍선: 아래 공간이 있으면 아래, 없으면 위
-  var vw=window.innerWidth, vh=window.innerHeight;
+  // 클릭 레이어: 기본은 전체 차단(block) + 하이라이트 탭 시 진행(hit).
+  // interactive 단계(입력칸)는 구멍을 열어 실제 입력이 되도록, 주변만 4방향 마스크로 차단.
+  if (s.interactive){
+    block.classList.remove('on');
+    hit.classList.remove('on');
+    gtSetMasks(true, l, tp, r, b, vw, vh);
+  } else {
+    gtSetMasks(false);
+    block.classList.add('on');
+    block.style.background='transparent';
+    hit.classList.add('on');
+    hit.style.left=l+'px'; hit.style.top=tp+'px'; hit.style.width=w+'px'; hit.style.height=h+'px';
+  }
+  // 말풍선: 아래 공간이 있으면 아래, 없으면 위 (place로 강제 가능 — 입력칸 등은 위로)
   var bw=bubble.offsetWidth, bh=bubble.offsetHeight, gap=14;
   var below = (b + gap + bh) <= (vh - 8);
+  if (s.place==='above') below=false;
+  else if (s.place==='below') below=true;
   var bTop = below ? (b + gap) : (tp - gap - bh);
   if (bTop < 8) bTop = 8;
   if (bTop + bh > vh-8) bTop = vh-8-bh;

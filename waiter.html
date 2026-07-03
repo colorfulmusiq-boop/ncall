@@ -199,22 +199,24 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .modal-handle{width:36px;height:4px;background:var(--bg2);border-radius:2px;margin:0 auto 1.5rem;}
 .modal-title{font-weight:800;font-size:1.2rem;color:var(--navy);margin-bottom:1.25rem;}
 
-/* 사용법 튜토리얼 */
-.tut-overlay{display:none;position:fixed;inset:0;background:rgba(16,15,11,0.72);backdrop-filter:blur(5px);z-index:600;align-items:center;justify-content:center;padding:1.25rem;}
-.tut-overlay.open{display:flex;}
-.tut-card{background:var(--card);border:0.5px solid rgba(184,146,63,0.4);border-radius:20px;width:100%;max-width:360px;padding:1.4rem 1.5rem 1.6rem;position:relative;animation:fadeUp 0.3s ease both;box-shadow:0 18px 50px rgba(0,0,0,0.35);}
-.tut-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
-.tut-step{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;color:var(--gold2);}
-.tut-x{background:var(--bg2);border:none;border-radius:8px;width:30px;height:30px;font-size:1.2rem;line-height:1;color:var(--muted);cursor:pointer;flex-shrink:0;padding:0;}
-.tut-emoji{font-size:2.9rem;text-align:center;margin:0.6rem 0 0.7rem;line-height:1;}
-.tut-title{font-size:1.18rem;font-weight:800;color:var(--navy);text-align:center;margin-bottom:0.7rem;}
-.tut-body{font-size:0.96rem;line-height:1.75;color:var(--navy);text-align:center;min-height:5.6rem;}
-.tut-dots{display:flex;justify-content:center;gap:0.5rem;margin:1.15rem 0;}
-.tut-dot{width:9px;height:9px;border-radius:50%;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);padding:0;cursor:pointer;}
-.tut-dot.on{background:linear-gradient(95deg,var(--gold),var(--gold2));border-color:transparent;}
-.tut-nav{display:flex;gap:0.6rem;align-items:center;}
-.tut-prev{flex:0 0 auto;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:100px;padding:0.75rem 1.1rem;font-family:inherit;font-size:0.9rem;font-weight:600;color:var(--muted);cursor:pointer;}
-.tut-next{flex:1;background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;border:none;border-radius:100px;padding:0.8rem;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;}
+/* 사용법 게임 튜토리얼 (스포트라이트 코치마크) */
+#gtutBlock{display:none;position:fixed;inset:0;z-index:619;background:transparent;}
+#gtutBlock.on{display:block;}
+#gtutSpot{display:none;position:fixed;border-radius:12px;pointer-events:none;z-index:620;box-shadow:0 0 0 9999px rgba(8,7,4,0.66),0 0 0 3px rgba(212,168,67,0.95),0 0 16px 4px rgba(212,168,67,0.5);transition:top 0.3s cubic-bezier(.4,0,.2,1),left 0.3s cubic-bezier(.4,0,.2,1),width 0.3s cubic-bezier(.4,0,.2,1),height 0.3s cubic-bezier(.4,0,.2,1);animation:gtutPulse 1.15s ease-in-out infinite;}
+#gtutSpot.on{display:block;}
+@keyframes gtutPulse{0%,100%{box-shadow:0 0 0 9999px rgba(8,7,4,0.66),0 0 0 3px rgba(212,168,67,0.95),0 0 16px 4px rgba(212,168,67,0.5);}50%{box-shadow:0 0 0 9999px rgba(8,7,4,0.66),0 0 0 6px rgba(212,168,67,0.55),0 0 30px 10px rgba(212,168,67,0.85);}}
+#gtutHit{display:none;position:fixed;z-index:621;cursor:pointer;background:transparent;}
+#gtutHit.on{display:block;}
+#gtutBubble{display:none;position:fixed;z-index:622;width:min(340px,calc(100vw - 2rem));background:var(--card);border:0.5px solid rgba(184,146,63,0.5);border-radius:16px;padding:1.15rem 1.25rem 1.1rem;box-shadow:0 16px 44px rgba(0,0,0,0.4);animation:gtutBubbleIn 0.28s ease both;}
+#gtutBubble.on{display:block;}
+@keyframes gtutBubbleIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+#gtutStepNo{font-size:0.68rem;font-weight:800;letter-spacing:0.1em;color:var(--gold2);margin-bottom:0.5rem;}
+#gtutText{font-size:1rem;line-height:1.7;color:var(--navy);font-weight:500;}
+#gtutText b{color:var(--gold2);font-weight:800;}
+#gtutBar{display:flex;gap:0.6rem;align-items:center;margin-top:1.1rem;}
+.gtut-btn-skip{flex:0 0 auto;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:100px;padding:0.7rem 1.05rem;font-family:inherit;font-size:0.9rem;font-weight:600;color:var(--muted);cursor:pointer;}
+.gtut-btn-next{flex:1;background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;border:none;border-radius:100px;padding:0.8rem;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;}
+.gtut-arrow{position:absolute;width:16px;height:16px;background:var(--card);border:0.5px solid rgba(184,146,63,0.5);transform:rotate(45deg);display:none;}
 
 /* 내역 */
 .hist-card{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:0.85rem 1rem;display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;opacity:0.65;}
@@ -363,8 +365,8 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div class="hdr-right">
       <div class="live-dot"></div>
       <button class="mode-btn" id="modeBtn" onclick="toggleTheme()" title="화면 밝기">🌙</button>
-      <button class="logout-btn" onclick="showUpdates()" style="position:relative;">공지사항<span id="noticeBadge" class="notice-pulse-badge" style="display:none;">0</span></button>
       <button class="logout-btn" onclick="openTutorial()">사용법</button>
+      <button class="logout-btn" onclick="showUpdates()" style="position:relative;">공지사항<span id="noticeBadge" class="notice-pulse-badge" style="display:none;">0</span></button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -384,14 +386,14 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 
   <!-- 내 손님 -->
   <div id="panel-guests" class="scroll" style="display:none;"><div class="pad">
-    <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="openAddGuest()">+ 손님 추가</button>
+    <button class="btn btn-primary" id="btnAddGuest" style="margin-bottom:1rem;" onclick="openAddGuest()">+ 손님 추가</button>
     <div id="guestList"><div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div></div>
   </div></div>
 
   <!-- VIP -->
   <div id="panel-dangol" class="scroll" style="display:none;"><div class="pad">
     <div class="dangol-hint">⭐ VIP를 등록하면 영구 호출 QR이 생겨요. VIP에게 한 번 문자로 보내두면, 언제 와도 그 링크로 형님을 호출해요. 오래 안 온 VIP는 자동으로 위에 떠요.</div>
-    <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="openAddDangol()">+ VIP 등록</button>
+    <button class="btn btn-primary" id="btnAddDangol" style="margin-bottom:1rem;" onclick="openAddDangol()">+ VIP 등록</button>
     <div id="dangolList"><div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 VIP 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 VIP를 등록하세요</span></div></div>
   </div></div>
 
@@ -402,23 +404,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   </div></div>
 </div>
 
-<!-- 사용법 튜토리얼 팝업 -->
-<div class="tut-overlay" id="tutOverlay">
-  <div class="tut-card">
-    <div class="tut-top">
-      <div class="tut-step" id="tutStep"></div>
-      <button class="tut-x" onclick="closeTutorial()" aria-label="닫기">×</button>
-    </div>
-    <div class="tut-emoji" id="tutEmoji"></div>
-    <div class="tut-title" id="tutTitle"></div>
-    <div class="tut-body" id="tutBody"></div>
-    <div class="tut-dots" id="tutDots"></div>
-    <div class="tut-nav">
-      <button class="tut-prev" id="tutPrev" onclick="tutPrev()">이전</button>
-      <button class="tut-next" id="tutNext" onclick="tutNext()">다음</button>
-    </div>
-  </div>
-</div>
+<!-- 사용법 게임 튜토리얼(스포트라이트)은 JS에서 동적으로 DOM을 생성합니다 -->
 
 <!-- 공지사항 모달 (전체화면) -->
 <div class="modal-bg" id="updatesModal">
@@ -491,7 +477,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div class="modal-title">손님 추가</div>
     <label class="inp-label">테이블/룸 정보</label>
     <input class="inp" id="addGuestLabel" type="text" placeholder="예: 4번 룸 남성 2분">
-    <button class="btn btn-primary" onclick="doAddGuest()">추가 + QR 생성</button>
+    <button class="btn btn-primary" id="btnDoAddGuest" onclick="doAddGuest()">추가 + QR 생성</button>
     <button class="btn btn-ghost" onclick="closeModal('addGuestModal')">취소</button>
   </div>
 </div>
@@ -532,7 +518,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div class="qr-sheet-sub" id="qrPopupSub">손님에게 스캔하게 해주세요</div>
     <div class="qr-img-box" id="qrPopupBox"></div>
     <div class="qr-url-text" id="qrPopupUrl"></div>
-    <button class="btn btn-primary" onclick="sendSMS()" style="margin-bottom:0.5rem;width:100%;">✉️ 문자로 보내기</button>
+    <button class="btn btn-primary" id="btnSendSMS" onclick="sendSMS()" style="margin-bottom:0.5rem;width:100%;">✉️ 문자로 보내기</button>
     <button class="qr-close" onclick="closeQR()">닫기</button>
   </div>
 </div>
@@ -2375,42 +2361,250 @@ function hideInAppBanner() {
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// ── 사용법 튜토리얼 ──
-var TUT_STEPS = [
-  { emoji:'📲', title:'손님에게 QR·링크 보내기',
-    body:"위쪽 <b>‘내 손님’</b> 탭에서 <b>‘+ 손님 추가’</b>를 누르면 QR 코드와 링크가 나와요. 손님에게 QR을 보여주거나 링크를 문자로 보내주세요. 손님이 그걸 열면 준비 끝이에요." },
-  { emoji:'🔔', title:'손님이 부르면 알림 받기',
-    body:"손님이 자기 화면에서 호출 버튼을 누르면 <b>‘알림’</b> 탭에 바로 뜨고, 소리와 진동으로 알려드려요. 앱을 닫아두거나 화면을 꺼둬도 알림이 옵니다.<br>(처음에 ‘알림 허용’을 한 번 눌러주세요.)" },
-  { emoji:'⭐', title:'단골·VIP 등록하기',
-    body:"자주 오시는 손님은 <b>‘VIP’</b> 탭에서 <b>‘+ VIP 등록’</b>을 눌러 이름을 적어두세요. 방문 기록과 메모도 남길 수 있어, 손님을 더 잘 챙길 수 있어요." },
-  { emoji:'♾️', title:'영구 QR로 단골 다시 부르기',
-    body:"VIP로 등록하면 바뀌지 않는 <b>‘영구 QR’</b>이 생겨요. 이 QR을 손님에게 한 번 문자로 보내두면, 다음에 언제 다시 오셔도 그 QR로 형님을 바로 부를 수 있어요." }
-];
-var _tutIdx = 0;
-function tutSeenKey(){ return 'ncall_tut_seen_' + ((W && W.id) ? W.id : 'x'); }
-function renderTut() {
-  var s = TUT_STEPS[_tutIdx], n = TUT_STEPS.length;
-  document.getElementById('tutStep').textContent = (_tutIdx+1) + ' / ' + n;
-  document.getElementById('tutEmoji').textContent = s.emoji;
-  document.getElementById('tutTitle').textContent = s.title;
-  document.getElementById('tutBody').innerHTML = s.body;
-  document.getElementById('tutPrev').style.visibility = (_tutIdx === 0) ? 'hidden' : 'visible';
-  document.getElementById('tutNext').textContent = (_tutIdx === n-1) ? '시작하기' : '다음';
-  var dots = '';
-  for (var i=0; i<n; i++) dots += '<button class="tut-dot'+(i===_tutIdx?' on':'')+'" onclick="tutGoto('+i+')" aria-label="'+(i+1)+'단계"></button>';
-  document.getElementById('tutDots').innerHTML = dots;
+// ── 사용법 게임 튜토리얼 (실제 화면 위 스포트라이트 코치마크) ──
+var _gt = { idx:-1, built:false, saved:{}, t:null, autoT:null };
+
+function gtSeenKey(){ return 'ncall_gtut_seen_' + ((typeof W!=='undefined' && W && W.id) ? W.id : 'x'); }
+
+// 오버레이 DOM 최초 1회 생성
+function gtBuild(){
+  if (_gt.built) return;
+  var block = document.createElement('div'); block.id = 'gtutBlock';
+  var spot  = document.createElement('div'); spot.id  = 'gtutSpot';
+  var hit   = document.createElement('div'); hit.id   = 'gtutHit';
+  var bubble= document.createElement('div'); bubble.id= 'gtutBubble';
+  bubble.innerHTML =
+      '<div class="gtut-arrow"></div>'
+    + '<div id="gtutStepNo"></div>'
+    + '<div id="gtutText"></div>'
+    + '<div id="gtutBar">'
+    +   '<button type="button" class="gtut-btn-skip" id="gtutSkip">건너뛰기</button>'
+    +   '<button type="button" class="gtut-btn-next" id="gtutNext">다음</button>'
+    + '</div>';
+  document.body.appendChild(block);
+  document.body.appendChild(spot);
+  document.body.appendChild(hit);
+  document.body.appendChild(bubble);
+  // 배경(하이라이트 외 영역) 클릭은 무시, 하이라이트 영역/‘다음’은 진행
+  block.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); });
+  hit.addEventListener('click', function(){ gtNext(); });
+  document.getElementById('gtutSkip').addEventListener('click', gtEnd);
+  document.getElementById('gtutNext').addEventListener('click', gtNext);
+  window.addEventListener('resize', gtReposition);
+  window.addEventListener('scroll', gtReposition, true);
+  _gt.built = true;
 }
-function openTutorial() { _tutIdx = 0; renderTut(); document.getElementById('tutOverlay').classList.add('open'); }
-function closeTutorial() { document.getElementById('tutOverlay').classList.remove('open'); }
-function tutNext() { if (_tutIdx >= TUT_STEPS.length-1) { closeTutorial(); return; } _tutIdx++; renderTut(); }
-function tutPrev() { if (_tutIdx > 0) { _tutIdx--; renderTut(); } }
-function tutGoto(i) { _tutIdx = i; renderTut(); }
+
+// ── 데모용 임시 데이터 (실제 요청이 없으니 샘플만 얹어 시연) ──
+function gtSaveHtml(id){ var el=document.getElementById(id); if(el && !(id in _gt.saved)) _gt.saved[id]=el.innerHTML; }
+function gtRestoreAll(){
+  Object.keys(_gt.saved).forEach(function(id){ var el=document.getElementById(id); if(el) el.innerHTML=_gt.saved[id]; });
+  _gt.saved = {};
+}
+function gtCloseDemoModals(){
+  var m=document.getElementById('addGuestModal'); if(m) m.classList.remove('open');
+  var q=document.getElementById('qrPopup'); if(q) q.classList.remove('open');
+}
+function gtDemoAddGuest(){
+  gtCloseDemoModals();
+  document.getElementById('addGuestLabel').value = '3번 룸 손님';
+  document.getElementById('addGuestModal').classList.add('open');
+}
+function gtDemoQR(){
+  document.getElementById('addGuestModal').classList.remove('open');
+  document.getElementById('qrPopupTitle').textContent = '손님 호출 QR (예시)';
+  document.getElementById('qrPopupSub').textContent = '손님에게 스캔하게 해주세요';
+  document.getElementById('qrPopupUrl').textContent = 'https://ncall.kr/guest.html?...';
+  var box = document.getElementById('qrPopupBox'); box.innerHTML='';
+  try { new QRCode(box, { text:'https://ncall.kr', width:150, height:150, colorDark:'#1a2535', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.L }); }
+  catch(_){ box.textContent='QR'; }
+  document.getElementById('qrPopup').classList.add('open');
+}
+function gtDemoNotif(){
+  gtSaveHtml('notifFeed');
+  document.getElementById('notifFeed').innerHTML =
+      '<div class="notif-card type-booking">'
+    +   '<div class="notif-ico">🔔</div>'
+    +   '<div class="notif-body">'
+    +     '<div class="notif-tag">부킹 요청</div>'
+    +     '<div class="notif-msg">3번 룸 손님</div>'
+    +     '<div class="notif-time">방금 전</div>'
+    +     '<div style="display:flex;gap:0.4rem;margin-top:0.5rem;">'
+    +       '<button type="button" style="background:#e8f0fe;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#3a5a8a;font-family:inherit;">곧 갈게요</button>'
+    +       '<button type="button" style="background:#fef3e8;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#e67e22;font-family:inherit;">잠시만요</button>'
+    +       '<button type="button" id="gtutDemoConfirm" style="background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:6px;padding:0.4rem 0.65rem;font-size:0.72rem;font-weight:600;color:var(--muted);font-family:inherit;">확인</button>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+}
+function gtDemoHist(){
+  gtSaveHtml('histList');
+  document.getElementById('histList').innerHTML =
+      '<div style="margin-bottom:0.6rem;background:var(--card);border-radius:12px;border:2px solid #c0c8d2;opacity:0.75;overflow:hidden;">'
+    +   '<div style="padding:0.85rem 1rem;">'
+    +     '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">'
+    +       '<span style="font-size:0.65rem;font-weight:700;color:var(--muted);">#01</span>'
+    +       '<span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 3번 룸 손님</span>'
+    +       '<span style="background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;-webkit-text-fill-color:#1a1206;font-size:0.62rem;font-weight:800;border-radius:10px;padding:0.1rem 0.45rem;">3건</span>'
+    +     '</div>'
+    +     '<div style="display:flex;flex-wrap:wrap;gap:0.3rem;">'
+    +       '<span style="background:var(--bg2);border:0.5px solid rgba(184,146,63,0.35);border-radius:6px;padding:0.18rem 0.55rem;font-size:0.7rem;font-weight:600;color:var(--navy);">🚪 입장 22:14</span>'
+    +       '<span style="background:var(--bg2);border:0.5px solid rgba(184,146,63,0.35);border-radius:6px;padding:0.18rem 0.55rem;font-size:0.7rem;font-weight:600;color:var(--navy);">🔔 부킹 1회</span>'
+    +       '<span style="background:var(--bg2);border:0.5px solid rgba(184,146,63,0.35);border-radius:6px;padding:0.18rem 0.55rem;font-size:0.7rem;font-weight:600;color:#27ae60;">✓ 계산 완료 23:40</span>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+}
+function gtDemoGuest(){
+  gtSaveHtml('guestList');
+  document.getElementById('guestList').innerHTML =
+      '<div class="guest-card">'
+    +   '<div class="guest-card-top">'
+    +     '<div class="guest-dot" style="background:var(--green);"></div>'
+    +     '<div class="guest-label">3번 룸 손님</div>'
+    +     '<div class="guest-booking-count">부킹 1회</div>'
+    +   '</div>'
+    +   '<div class="guest-card-btns">'
+    +     '<button type="button" class="guest-qr-btn">📱 QR 보기</button>'
+    +     '<button type="button" class="guest-qr-btn" style="background:#fbeaea;color:var(--red);">🔕 호출 차단</button>'
+    +     '<button type="button" class="guest-checkout-btn" id="gtutDemoCheckout">✓ 계산 완료</button>'
+    +   '</div>'
+    + '</div>';
+}
+
+// ── 단계 대본 (격식체) ──
+function gtSteps(){ return [
+  { center:true, auto:2000,
+    text:"웨이터님, 환영합니다.<br>사용법을 안내해 드리겠습니다." },
+  { target:function(){ return document.getElementById('tab-guests'); },
+    text:"먼저 <b>‘내 손님’</b>을 눌러 주십시오." },
+  { setup:function(){ gtCloseDemoModals(); switchTab('guests'); },
+    target:function(){ return document.getElementById('btnAddGuest'); },
+    text:"<b>‘손님 추가’</b>를 눌러 새 손님을 등록해 주십시오." },
+  { setup:gtDemoAddGuest,
+    target:function(){ return document.getElementById('addGuestLabel'); },
+    text:"손님의 <b>테이블 또는 룸 정보</b>를 입력해 주십시오." },
+  { setup:function(){ document.getElementById('addGuestModal').classList.add('open'); },
+    target:function(){ return document.getElementById('btnDoAddGuest'); },
+    text:"입력을 마치셨으면 여기를 눌러 <b>QR을 생성</b>해 주십시오." },
+  { setup:gtDemoQR,
+    target:function(){ return [document.getElementById('qrPopupBox'), document.getElementById('btnSendSMS')]; },
+    text:"두 가지 방법으로 손님에게 전달할 수 있습니다.<br>・<b>QR</b>: 손님이 휴대폰 카메라로 촬영하여 접속합니다.<br>・<b>문자</b>: 손님 번호로 접속 링크가 문자로 전송됩니다." },
+  { setup:function(){ gtCloseDemoModals(); switchTab('notif'); },
+    target:function(){ return document.getElementById('tab-notif'); },
+    text:"손님이 호출하면 이곳 <b>‘알림’</b>에 표시됩니다." },
+  { setup:function(){ switchTab('notif'); gtDemoNotif(); },
+    target:function(){ return document.getElementById('gtutDemoConfirm'); },
+    text:"이렇게 손님 호출이 접수됩니다.<br><b>‘확인’</b>을 눌러 보십시오." },
+  { setup:function(){ switchTab('hist'); gtDemoHist(); },
+    target:function(){ return document.getElementById('tab-hist'); },
+    text:"확인하신 손님은 <b>‘내역’</b>에 자동으로 기록됩니다. 입장 시간과 부킹 요청 내역이 이곳에 남습니다." },
+  { setup:function(){ switchTab('guests'); gtDemoGuest(); },
+    target:function(){ return document.getElementById('gtutDemoCheckout'); },
+    text:"손님이 계산을 요청하면, ‘내 손님’에서 <b>‘계산 완료’</b> 버튼을 눌러 주십시오. 이 버튼을 눌러야 손님 링크와의 연결이 종료됩니다." },
+  { setup:function(){ switchTab('dangol'); },
+    target:function(){ return [document.getElementById('btnAddDangol'), document.querySelector('#panel-dangol .dangol-hint')]; },
+    text:"자주 오시는 손님은 <b>‘VIP’</b>에 등록하여 관리할 수 있습니다. 이름·연락처·취향 메모와 방문 이력이 저장되어, 다음 방문 때 바로 알아보고 응대할 수 있습니다." },
+  { center:true, last:true,
+    text:"이제 모든 준비가 끝났습니다.<br><b>첫 손님을 추가해 보십시오.</b>" }
+]; }
+
+function gtStart(){
+  gtBuild();
+  _gt.idx = 0;
+  document.getElementById('gtutBlock').classList.add('on');
+  gtRender();
+}
+function gtNext(){
+  var steps = gtSteps();
+  if (_gt.idx >= steps.length-1){ gtEnd(); return; }
+  _gt.idx++;
+  gtRender();
+}
+function gtEnd(){
+  clearTimeout(_gt.t); clearTimeout(_gt.autoT);
+  gtRestoreAll();
+  gtCloseDemoModals();
+  ['gtutBlock','gtutSpot','gtutHit','gtutBubble'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('on'); });
+  try { switchTab('guests'); } catch(_){}
+  _gt.idx = -1;
+}
+
+function gtRender(){
+  var steps = gtSteps();
+  var s = steps[_gt.idx];
+  if (s.setup){ try { s.setup(); } catch(_){} }
+  // 단계 번호 (중앙 안내 화면 제외)
+  var stepNo = document.getElementById('gtutStepNo');
+  var numbered = steps.length - 2; // 시작/끝 안내 제외
+  if (s.center){ stepNo.style.display='none'; }
+  else { stepNo.style.display='block'; stepNo.textContent = _gt.idx + ' / ' + numbered; }
+  document.getElementById('gtutText').innerHTML = s.text;
+  document.getElementById('gtutSkip').style.display = s.last ? 'none' : '';
+  document.getElementById('gtutNext').textContent = s.last ? '닫기' : (s.center ? '시작' : '다음');
+  // 탭 전환·모달 오픈 후 레이아웃이 잡히도록 한 틱 뒤 위치 계산
+  clearTimeout(_gt.t);
+  _gt.t = setTimeout(gtReposition, s.setup ? 130 : 40);
+  // 시작 안내는 2초 뒤 자동 진행
+  clearTimeout(_gt.autoT);
+  if (s.auto){ var at=_gt.idx; _gt.autoT = setTimeout(function(){ if(_gt.idx===at) gtNext(); }, s.auto); }
+}
+
+function gtReposition(){
+  if (_gt.idx < 0) return;
+  var s = gtSteps()[_gt.idx];
+  var block=document.getElementById('gtutBlock'), spot=document.getElementById('gtutSpot');
+  var hit=document.getElementById('gtutHit'), bubble=document.getElementById('gtutBubble');
+  var arrow=bubble.querySelector('.gtut-arrow');
+  bubble.classList.add('on');
+  var els = null;
+  if (!s.center && s.target){ var t=s.target(); els=(Array.isArray(t)?t:[t]).filter(Boolean); }
+  // 타깃이 없거나(중앙 안내) 못 찾으면 화면 중앙 말풍선
+  if (!els || !els.length){
+    spot.classList.remove('on'); hit.classList.remove('on');
+    block.style.background='rgba(8,7,4,0.66)';
+    arrow.style.display='none';
+    bubble.style.transform='translate(-50%,-50%)';
+    bubble.style.left='50%'; bubble.style.top='50%';
+    return;
+  }
+  block.style.background='transparent';
+  bubble.style.transform='none';
+  var l=1e9,tp=1e9,r=-1e9,b=-1e9;
+  els.forEach(function(el){ var q=el.getBoundingClientRect(); l=Math.min(l,q.left); tp=Math.min(tp,q.top); r=Math.max(r,q.right); b=Math.max(b,q.bottom); });
+  var pad=8; l-=pad; tp-=pad; r+=pad; b+=pad;
+  var w=r-l, h=b-tp;
+  spot.classList.add('on'); hit.classList.add('on');
+  spot.style.left=l+'px'; spot.style.top=tp+'px'; spot.style.width=w+'px'; spot.style.height=h+'px';
+  hit.style.left=l+'px'; hit.style.top=tp+'px'; hit.style.width=w+'px'; hit.style.height=h+'px';
+  // 말풍선: 아래 공간이 있으면 아래, 없으면 위
+  var vw=window.innerWidth, vh=window.innerHeight;
+  var bw=bubble.offsetWidth, bh=bubble.offsetHeight, gap=14;
+  var below = (b + gap + bh) <= (vh - 8);
+  var bTop = below ? (b + gap) : (tp - gap - bh);
+  if (bTop < 8) bTop = 8;
+  if (bTop + bh > vh-8) bTop = vh-8-bh;
+  var cx=(l+r)/2, bLeft=cx - bw/2;
+  if (bLeft < 8) bLeft = 8;
+  if (bLeft + bw > vw-8) bLeft = vw-8-bw;
+  bubble.style.left=bLeft+'px'; bubble.style.top=bTop+'px';
+  // 화살표
+  arrow.style.display='block';
+  arrow.style.border='0.5px solid rgba(184,146,63,0.5)';
+  var ax=Math.max(14, Math.min(bw-30, cx - bLeft - 8));
+  arrow.style.left=ax+'px';
+  if (below){ arrow.style.top='-8px'; arrow.style.borderRight='none'; arrow.style.borderBottom='none'; }
+  else { arrow.style.top=(bh-8)+'px'; arrow.style.borderLeft='none'; arrow.style.borderTop='none'; }
+}
+
+// 사용법 버튼으로 언제든 다시 보기
+function openTutorial(){ gtStart(); }
 // 처음 로그인한 웨이터에게만 자동 안내 (이 폰에 봤다는 표시 저장)
 function maybeShowTutorial() {
-  if (!W || !W.id) return;
-  if (lsGet(tutSeenKey())) return;
-  lsSet(tutSeenKey(), '1');
-  setTimeout(openTutorial, 500);
+  if (typeof W==='undefined' || !W || !W.id) return;
+  if (lsGet(gtSeenKey())) return;
+  lsSet(gtSeenKey(), '1');
+  setTimeout(gtStart, 600);
 }
 
 let toastT;

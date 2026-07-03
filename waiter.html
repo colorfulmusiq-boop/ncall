@@ -141,11 +141,14 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .hdr-right{display:flex;align-items:center;gap:0.6rem;}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite;flex-shrink:0;}
 /* 헤더 메뉴 버튼 + 드롭다운 */
+.hdr-left{display:flex;align-items:center;gap:0.5rem;}
+.mode-btn{width:28px;height:28px;border-radius:50%;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);font-size:0.85rem;cursor:pointer;display:grid;place-items:center;padding:0;line-height:1;}
 .menu-wrap{position:relative;}
 .menu-btn{position:relative;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:6px;padding:0.45rem 0.8rem;font-size:0.7rem;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:500;display:flex;align-items:center;gap:0.35rem;}
 .menu-btn .menu-ico{font-size:0.85rem;line-height:1;}
 .menu-dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff2d55;border:2px solid var(--card);animation:noticePulse 1.6s infinite;}
-.menu-dropdown{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:186px;background:var(--card);border:0.5px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(26,37,53,0.22);z-index:500;padding:0.35rem;}
+.menu-dropdown{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:186px;background:#faf6ea;border:0.5px solid var(--gold2);border-radius:12px;box-shadow:0 12px 32px rgba(26,37,53,0.22);z-index:500;padding:0.35rem;}
+body[data-theme="dark"] .menu-dropdown{background:#1a1813;box-shadow:0 12px 32px rgba(0,0,0,0.55);}
 .menu-dropdown.open{display:block;}
 .menu-item{display:flex;align-items:center;gap:0.5rem;width:100%;min-height:44px;padding:0 0.9rem;background:transparent;border:none;border-radius:8px;font-family:inherit;font-size:0.88rem;font-weight:600;color:var(--navy);cursor:pointer;text-align:left;}
 .menu-item:active{background:var(--bg2);}
@@ -370,16 +373,18 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 <div id="dashScreen">
   <div class="hdr">
     <div>
-      <div class="logo">CALL</div>
+      <div class="hdr-left">
+        <div class="logo">CALL</div>
+        <button class="mode-btn" id="modeBtn" onclick="toggleTheme()" title="화면 밝기">☀️</button>
+      </div>
       <div class="hdr-name"><span class="live-dot"></span><span id="dashName">웨이터</span></div>
     </div>
     <div class="hdr-right">
+      <button class="menu-btn" onclick="openTutorial()">사용법</button>
       <div class="menu-wrap" id="menuWrap">
         <button class="menu-btn" id="menuBtn" onclick="toggleMenu()"><span class="menu-ico">☰</span>메뉴<span id="menuDot" class="menu-dot" style="display:none;"></span></button>
         <div class="menu-dropdown" id="menuDropdown">
-          <button class="menu-item" onclick="closeMenu();openTutorial()">사용법</button>
           <button class="menu-item" onclick="closeMenu();showUpdates()">공지사항<span id="noticeBadge" class="menu-notice-badge" style="display:none;">0</span></button>
-          <button class="menu-item" onclick="closeMenu();toggleTheme()"><span id="menuThemeIcon">🌙</span>밤·낮 바꾸기</button>
           <div class="menu-divider"></div>
           <button class="menu-item" onclick="closeMenu();confirmLogout()">로그아웃</button>
         </div>
@@ -701,8 +706,8 @@ document.addEventListener('visibilitychange', () => {
 // 테마(밝게/어둡게) — 저장된 설정 적용, 토글
 function applyTheme(t) {
   document.body.setAttribute('data-theme', t);
-  var ico = document.getElementById('menuThemeIcon');
-  if (ico) ico.textContent = (t === 'dark') ? '☀️' : '🌙';
+  var btn = document.getElementById('modeBtn');
+  if (btn) btn.textContent = (t === 'dark') ? '🌙' : '☀️';
 }
 function toggleTheme() {
   var cur = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';

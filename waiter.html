@@ -2365,7 +2365,7 @@ function hideInAppBanner() {
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 // ── 사용법 게임 튜토리얼 (실제 화면 위 스포트라이트 코치마크) ──
-var _gt = { idx:-1, built:false, saved:{}, t:null, autoT:null };
+var _gt = { idx:-1, built:false, saved:{}, t:null, autoT:null, badgeSaved:null };
 
 function gtSeenKey(){ return 'ncall_gtut_seen_' + ((typeof W!=='undefined' && W && W.id) ? W.id : 'x'); }
 
@@ -2405,10 +2405,40 @@ function gtBuild(){
 }
 
 // ── 데모용 임시 데이터 (실제 요청이 없으니 샘플만 얹어 시연) ──
-function gtSaveHtml(id){ var el=document.getElementById(id); if(el && !(id in _gt.saved)) _gt.saved[id]=el.innerHTML; }
+// innerHTML 문자열이 아니라 실제 노드를 떼어 보관한다.
+// 문자열로 복원하면 .onclick 프로퍼티 핸들러(내역 폴더 펼치기, 알림 버튼 등)가 전부 사라지기 때문.
+function gtSaveHtml(id){
+  var el=document.getElementById(id);
+  if(el && !(id in _gt.saved)){
+    var frag=document.createDocumentFragment();
+    while(el.firstChild) frag.appendChild(el.firstChild);
+    _gt.saved[id]=frag;
+  }
+}
 function gtRestoreAll(){
-  Object.keys(_gt.saved).forEach(function(id){ var el=document.getElementById(id); if(el) el.innerHTML=_gt.saved[id]; });
+  Object.keys(_gt.saved).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){ el.innerHTML=''; el.appendChild(_gt.saved[id]); }
+  });
   _gt.saved = {};
+}
+// 3단계에서 웨이터가 직접 입력한 테이블/룸 정보를 이후 데모 카드에 그대로 사용
+function gtGuestLabel(){
+  var v='';
+  try { v=(document.getElementById('addGuestLabel').value||'').trim(); } catch(_){}
+  v=v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return v || '3번 룸 손님';
+}
+// 알림 탭 빨간 배지 시연 (원래 상태 보관 후 복원)
+function gtDemoBadge(on){
+  var b=document.getElementById('notifBadge'); if(!b) return;
+  if(on){
+    if(!_gt.badgeSaved) _gt.badgeSaved={txt:b.textContent, disp:b.style.display};
+    b.textContent='1'; b.style.display='inline';
+  } else if(_gt.badgeSaved){
+    b.textContent=_gt.badgeSaved.txt; b.style.display=_gt.badgeSaved.disp;
+    _gt.badgeSaved=null;
+  }
 }
 function gtCloseDemoModals(){
   var m=document.getElementById('addGuestModal'); if(m) m.classList.remove('open');
@@ -2438,9 +2468,9 @@ function gtDemoNotif(){
     +   '<div class="notif-ico">🔔</div>'
     +   '<div class="notif-body">'
     +     '<div class="notif-tag">부킹 요청</div>'
-    +     '<div class="notif-msg">3번 룸 손님</div>'
+    +     '<div class="notif-msg">' + gtGuestLabel() + '</div>'
     +     '<div class="notif-time">방금 전</div>'
-    +     '<div style="display:flex;gap:0.4rem;margin-top:0.5rem;">'
+    +     '<div id="gtutDemoBtns" style="display:flex;gap:0.4rem;margin-top:0.5rem;">'
     +       '<button type="button" style="background:#e8f0fe;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#3a5a8a;font-family:inherit;">곧 갈게요</button>'
     +       '<button type="button" style="background:#fef3e8;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#e67e22;font-family:inherit;">잠시만요</button>'
     +       '<button type="button" id="gtutDemoConfirm" style="background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:6px;padding:0.4rem 0.65rem;font-size:0.72rem;font-weight:600;color:var(--muted);font-family:inherit;">확인</button>'
@@ -2455,7 +2485,7 @@ function gtDemoHist(){
     +   '<div style="padding:0.85rem 1rem;">'
     +     '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">'
     +       '<span style="font-size:0.65rem;font-weight:700;color:var(--muted);">#01</span>'
-    +       '<span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 3번 룸 손님</span>'
+    +       '<span style="font-size:0.95rem;font-weight:700;color:var(--navy);">📁 ' + gtGuestLabel() + '</span>'
     +       '<span style="background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;-webkit-text-fill-color:#1a1206;font-size:0.62rem;font-weight:800;border-radius:10px;padding:0.1rem 0.45rem;">3건</span>'
     +     '</div>'
     +     '<div style="display:flex;flex-wrap:wrap;gap:0.3rem;">'
@@ -2472,7 +2502,7 @@ function gtDemoGuest(){
       '<div class="guest-card">'
     +   '<div class="guest-card-top">'
     +     '<div class="guest-dot" style="background:var(--green);"></div>'
-    +     '<div class="guest-label">3번 룸 손님</div>'
+    +     '<div class="guest-label">' + gtGuestLabel() + '</div>'
     +     '<div class="guest-booking-count">부킹 1회</div>'
     +   '</div>'
     +   '<div class="guest-card-btns">'
@@ -2480,6 +2510,20 @@ function gtDemoGuest(){
     +     '<button type="button" class="guest-qr-btn" style="background:#fbeaea;color:var(--red);">🔕 호출 차단</button>'
     +     '<button type="button" class="guest-checkout-btn" id="gtutDemoCheckout">✓ 계산 완료</button>'
     +   '</div>'
+    + '</div>';
+}
+
+// 손님 화면(guest.html) 간이 미리보기 — 실제 로드 없이 버튼 구성만 보여준다
+function gtGuestPreviewHtml(){
+  function pill(ico,label,wide){
+    return '<div style="' + (wide?'grid-column:1/-1;':'')
+      + 'background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.16);border-radius:9px;padding:8px 4px;text-align:center;font-size:12px;font-weight:600;color:#f0ead8;">'
+      + ico + ' ' + label + '</div>';
+  }
+  return '<div style="background:#1a2535;border-radius:14px;padding:10px;margin:10px 0 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">'
+    + pill('🔔','부킹 요청') + pill('🍾','맥주 추가')
+    + pill('🙋','웨이터 호출') + pill('💬','메시지 보내기')
+    + pill('🧾','계산해 주세요', true)
     + '</div>';
 }
 
@@ -2501,13 +2545,16 @@ function gtSteps(){ return [
   { setup:gtDemoQR,
     target:function(){ return [document.getElementById('qrPopupBox'), document.getElementById('btnSendSMS')]; },
     text:"두 가지 방법으로 손님에게 전달할 수 있습니다.<br>・<b>QR</b>: 손님이 휴대폰 카메라로 촬영하여 접속합니다.<br>・<b>문자</b>: 손님 번호로 접속 링크가 문자로 전송됩니다." },
-  { setup:function(){ gtCloseDemoModals(); switchTab('notif'); },
+  { setup:gtCloseDemoModals,
+    text:"접속한 손님의 휴대폰에는 이런 화면이 표시됩니다." + gtGuestPreviewHtml()
+      + "손님은 이 화면에서 <b>부킹 요청, 맥주 추가, 웨이터 호출, 메시지 보내기, 계산 요청</b>을 보낼 수 있습니다." },
+  { setup:function(){ gtCloseDemoModals(); switchTab('notif'); gtDemoBadge(true); },
     target:function(){ return document.getElementById('tab-notif'); },
-    text:"손님이 호출하면 이곳 <b>‘알림’</b>에 표시됩니다." },
+    text:"손님이 요청을 보내면 이곳 <b>‘알림’</b> 탭에 숫자 <b>1</b>이 빨간 배지로 뜨고, 호출 내용이 표시됩니다." },
   { setup:function(){ switchTab('notif'); gtDemoNotif(); },
-    target:function(){ return document.getElementById('gtutDemoConfirm'); },
-    text:"이렇게 손님 호출이 접수됩니다.<br><b>‘확인’</b>을 눌러 보십시오." },
-  { setup:function(){ switchTab('hist'); gtDemoHist(); },
+    target:function(){ return document.getElementById('gtutDemoBtns'); },
+    text:"이렇게 손님 호출이 접수됩니다.<br>・<b>‘곧 갈게요’</b>나 <b>‘잠시만요’</b>를 누르면 손님 휴대폰에 그 말이 바로 뜹니다.<br>・확인이 끝난 호출은 <b>‘확인’</b>을 눌러 정리합니다. 지금 ‘확인’을 눌러 보십시오." },
+  { setup:function(){ switchTab('hist'); gtDemoHist(); gtDemoBadge(false); },
     target:function(){ return document.getElementById('tab-hist'); },
     text:"확인하신 손님은 <b>‘내역’</b>에 자동으로 기록됩니다. 입장 시간과 부킹 요청 내역이 이곳에 남습니다." },
   { setup:function(){ switchTab('guests'); gtDemoGuest(); },
@@ -2536,6 +2583,7 @@ function gtEnd(){
   clearTimeout(_gt.t); clearTimeout(_gt.t2); clearTimeout(_gt.t3); clearTimeout(_gt.autoT);
   gtRestoreAll();
   gtCloseDemoModals();
+  gtDemoBadge(false);
   gtSetMasks(false);
   ['gtutBlock','gtutSpot','gtutHit','gtutBubble'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('on'); });
   try { switchTab('guests'); } catch(_){}

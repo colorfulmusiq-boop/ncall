@@ -137,18 +137,26 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .hdr{padding:1rem 1.25rem 0.9rem;display:flex;align-items:center;justify-content:space-between;background:var(--card);border-bottom:0.5px solid var(--border);flex-shrink:0;}
 .logo{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:1.4rem;line-height:1;letter-spacing:-0.02em;color:var(--gold2);background:linear-gradient(95deg,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
 .logo b{color:var(--pink);}
-.hdr-name{font-size:0.68rem;color:var(--muted);margin-top:0.15rem;}
+.hdr-name{font-size:0.68rem;color:var(--muted);margin-top:0.15rem;display:flex;align-items:center;gap:0.35rem;}
 .hdr-right{display:flex;align-items:center;gap:0.6rem;}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite;}
-.logout-btn{background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:6px;padding:0.4rem 0.75rem;font-size:0.7rem;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:500;}
-.mode-btn{background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:6px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:grid;place-items:center;padding:0;line-height:1;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite;flex-shrink:0;}
+/* 헤더 메뉴 버튼 + 드롭다운 */
+.menu-wrap{position:relative;}
+.menu-btn{position:relative;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:6px;padding:0.45rem 0.8rem;font-size:0.7rem;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:500;display:flex;align-items:center;gap:0.35rem;}
+.menu-btn .menu-ico{font-size:0.85rem;line-height:1;}
+.menu-dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff2d55;border:2px solid var(--card);animation:noticePulse 1.6s infinite;}
+.menu-dropdown{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:186px;background:var(--card);border:0.5px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(26,37,53,0.22);z-index:500;padding:0.35rem;}
+.menu-dropdown.open{display:block;}
+.menu-item{display:flex;align-items:center;gap:0.5rem;width:100%;min-height:44px;padding:0 0.9rem;background:transparent;border:none;border-radius:8px;font-family:inherit;font-size:0.88rem;font-weight:600;color:var(--navy);cursor:pointer;text-align:left;}
+.menu-item:active{background:var(--bg2);}
+.menu-divider{height:0.5px;background:var(--border);margin:0.35rem 0.4rem;}
+.menu-notice-badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;background:#ff2d55;color:#fff;border-radius:9px;font-size:0.62rem;font-weight:800;place-items:center;}
 
 /* 탭 */
 .tabs{display:flex;gap:0.4rem;padding:0.75rem 1.25rem 0;flex-shrink:0;}
 .tab{flex:1;padding:0.6rem;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:600;transition:all 0.15s;}
 .tab.active{background:linear-gradient(95deg,#f0d590,#d4a843);border-color:transparent;color:#1a1206;-webkit-text-fill-color:#1a1206;font-weight:600;box-shadow:0 3px 12px -3px rgba(212,168,67,0.5);}
 .badge{display:inline-block;background:#c77b4a;color:#fff;-webkit-text-fill-color:#fff;font-size:0.58rem;font-weight:700;border-radius:8px;padding:0.05rem 0.35rem;margin-left:0.2rem;vertical-align:middle;}
-.notice-pulse-badge{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;padding:0 5px;background:#ff2d55;color:#fff;border-radius:9px;font-size:0.62rem;font-weight:800;place-items:center;border:2px solid #fff;z-index:2;animation:noticePulse 1.6s infinite;}
 @keyframes noticePulse{0%{box-shadow:0 0 0 0 rgba(255,45,85,0.55);}70%{box-shadow:0 0 0 9px rgba(255,45,85,0);}100%{box-shadow:0 0 0 0 rgba(255,45,85,0);}}
 
 /* 알림 카드 */
@@ -363,14 +371,19 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   <div class="hdr">
     <div>
       <div class="logo">CALL</div>
-      <div class="hdr-name" id="dashName">웨이터</div>
+      <div class="hdr-name"><span class="live-dot"></span><span id="dashName">웨이터</span></div>
     </div>
     <div class="hdr-right">
-      <div class="live-dot"></div>
-      <button class="mode-btn" id="modeBtn" onclick="toggleTheme()" title="화면 밝기">🌙</button>
-      <button class="logout-btn" onclick="openTutorial()">사용법</button>
-      <button class="logout-btn" onclick="showUpdates()" style="position:relative;">공지사항<span id="noticeBadge" class="notice-pulse-badge" style="display:none;">0</span></button>
-      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+      <div class="menu-wrap" id="menuWrap">
+        <button class="menu-btn" id="menuBtn" onclick="toggleMenu()"><span class="menu-ico">☰</span>메뉴<span id="menuDot" class="menu-dot" style="display:none;"></span></button>
+        <div class="menu-dropdown" id="menuDropdown">
+          <button class="menu-item" onclick="closeMenu();openTutorial()">사용법</button>
+          <button class="menu-item" onclick="closeMenu();showUpdates()">공지사항<span id="noticeBadge" class="menu-notice-badge" style="display:none;">0</span></button>
+          <button class="menu-item" onclick="closeMenu();toggleTheme()"><span id="menuThemeIcon">🌙</span>밤·낮 바꾸기</button>
+          <div class="menu-divider"></div>
+          <button class="menu-item" onclick="closeMenu();confirmLogout()">로그아웃</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -688,8 +701,8 @@ document.addEventListener('visibilitychange', () => {
 // 테마(밝게/어둡게) — 저장된 설정 적용, 토글
 function applyTheme(t) {
   document.body.setAttribute('data-theme', t);
-  var btn = document.getElementById('modeBtn');
-  if (btn) btn.textContent = (t === 'dark') ? '☀️' : '🌙';
+  var ico = document.getElementById('menuThemeIcon');
+  if (ico) ico.textContent = (t === 'dark') ? '☀️' : '🌙';
 }
 function toggleTheme() {
   var cur = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -702,6 +715,25 @@ function toggleTheme() {
   try { saved = localStorage.getItem('ncall_theme') || 'light'; } catch(e) {}
   applyTheme(saved);
 })();
+
+// 헤더 메뉴 드롭다운 열기/닫기 (바깥 터치 시 닫힘)
+function toggleMenu() {
+  var d = document.getElementById('menuDropdown');
+  if (d) d.classList.toggle('open');
+}
+function closeMenu() {
+  var d = document.getElementById('menuDropdown');
+  if (d) d.classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  var d = document.getElementById('menuDropdown');
+  if (!d || !d.classList.contains('open')) return;
+  var wrap = document.getElementById('menuWrap');
+  if (wrap && !wrap.contains(e.target)) closeMenu();
+});
+function confirmLogout() {
+  if (confirm('정말 로그아웃할까요?')) doLogout();
+}
 
 function enterDash() {
   document.getElementById('loginScreen').style.display = 'none';
@@ -784,9 +816,12 @@ function updateNoticeBadge() {
   var seen = lsGet('ncall_seen_updates') || '';
   var unread = dates.filter(function(d){ return d > seen; }).length;
   var badge = document.getElementById('noticeBadge');
-  if (!badge) return;
-  if (unread > 0) { badge.textContent = unread; badge.style.display = 'grid'; }
-  else { badge.style.display = 'none'; }
+  if (badge) {
+    if (unread > 0) { badge.textContent = unread; badge.style.display = 'grid'; }
+    else { badge.style.display = 'none'; }
+  }
+  var dot = document.getElementById('menuDot');
+  if (dot) dot.style.display = unread > 0 ? 'block' : 'none';
 }
 
 // 날짜별 공지 카드 1개 생성 (기존 디자인 그대로 — gold: 금색 강조, open: 펼침 상태)

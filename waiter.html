@@ -207,16 +207,17 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 @keyframes gtutPulse{0%,100%{box-shadow:0 0 0 9999px rgba(8,7,4,0.66),0 0 0 3px rgba(212,168,67,0.95),0 0 16px 4px rgba(212,168,67,0.5);}50%{box-shadow:0 0 0 9999px rgba(8,7,4,0.66),0 0 0 6px rgba(212,168,67,0.55),0 0 30px 10px rgba(212,168,67,0.85);}}
 #gtutHit{display:none;position:fixed;z-index:621;cursor:pointer;background:transparent;}
 #gtutHit.on{display:block;}
-#gtutBubble{display:none;position:fixed;z-index:622;box-sizing:border-box;width:min(340px,calc(100vw - 24px));max-width:calc(100vw - 24px);background:var(--card);border:0.5px solid rgba(184,146,63,0.5);border-radius:16px;padding:1.15rem 1.25rem 1.1rem;box-shadow:0 16px 44px rgba(0,0,0,0.4);animation:gtutBubbleIn 0.28s ease both;}
+/* 아이보리+골드 말풍선 — 색을 하드코딩해 라이트/다크 모드 모두 동일하게 보이도록 */
+#gtutBubble{display:none;position:fixed;z-index:622;box-sizing:border-box;width:min(340px,calc(100vw - 24px));max-width:calc(100vw - 24px);background:#fdfaf3;border:1px solid #e6d3a0;border-radius:16px;padding:16px 18px;box-shadow:0 14px 40px rgba(60,44,10,0.28);animation:gtutBubbleIn 0.28s ease both;}
 #gtutBubble.on{display:block;}
 @keyframes gtutBubbleIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-#gtutStepNo{font-size:0.68rem;font-weight:800;letter-spacing:0.1em;color:var(--gold2);margin-bottom:0.5rem;}
-#gtutText{font-size:1rem;line-height:1.7;color:var(--navy);font-weight:500;}
-#gtutText b{color:var(--gold2);font-weight:800;}
+#gtutStepNo{font-size:12px;font-weight:500;letter-spacing:0.06em;color:#c19a3e;margin-bottom:8px;}
+#gtutText{font-size:15px;line-height:1.55;color:#2a2419;font-weight:400;}
+#gtutText b{color:#b8862b;font-weight:500;}
 #gtutBar{display:flex;gap:0.6rem;align-items:center;margin-top:1.1rem;}
-.gtut-btn-skip{flex:0 0 auto;background:var(--bg2);border:0.5px solid rgba(184,146,63,0.4);border-radius:100px;padding:0.7rem 1.05rem;font-family:inherit;font-size:0.9rem;font-weight:600;color:var(--muted);cursor:pointer;}
-.gtut-btn-next{flex:1;background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;border:none;border-radius:100px;padding:0.8rem;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;}
-.gtut-arrow{position:absolute;width:16px;height:16px;background:var(--card);border:0.5px solid rgba(184,146,63,0.5);transform:rotate(45deg);display:none;}
+.gtut-btn-skip{flex:0 0 auto;background:transparent;border:1px solid #d8cbb0;border-radius:999px;padding:9px 18px;font-family:inherit;font-size:13px;font-weight:500;color:#8a7f68;cursor:pointer;}
+.gtut-btn-next{flex:1;background:linear-gradient(135deg,#f0d590,#d4a843);color:#3a2c0a;border:none;border-radius:999px;padding:9px 18px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;}
+.gtut-arrow{position:absolute;width:16px;height:16px;background:#fdfaf3;border:1px solid #e6d3a0;transform:rotate(45deg);display:none;}
 .gtut-mask{display:none;position:fixed;z-index:619;background:transparent;}
 .gtut-mask.on{display:block;}
 
@@ -2415,7 +2416,9 @@ function gtCloseDemoModals(){
 }
 function gtDemoAddGuest(){
   gtCloseDemoModals();
-  document.getElementById('addGuestLabel').value = '3번 룸 손님';
+  // 웨이터가 직접 입력해 볼 수 있도록 비워 둔다(placeholder가 예시를 보여줌).
+  // 입력한 값은 이후 단계에서 건드리지 않아 그대로 유지된다.
+  document.getElementById('addGuestLabel').value = '';
   document.getElementById('addGuestModal').classList.add('open');
 }
 function gtDemoQR(){
@@ -2530,7 +2533,7 @@ function gtNext(){
   gtRender();
 }
 function gtEnd(){
-  clearTimeout(_gt.t); clearTimeout(_gt.autoT);
+  clearTimeout(_gt.t); clearTimeout(_gt.t2); clearTimeout(_gt.t3); clearTimeout(_gt.autoT);
   gtRestoreAll();
   gtCloseDemoModals();
   gtSetMasks(false);
@@ -2551,9 +2554,17 @@ function gtRender(){
   document.getElementById('gtutText').innerHTML = s.text;
   document.getElementById('gtutSkip').style.display = s.last ? 'none' : '';
   document.getElementById('gtutNext').textContent = s.last ? '닫기' : (s.center ? '시작' : '다음');
-  // 탭 전환·모달 오픈 후 레이아웃이 잡히도록 한 틱 뒤 위치 계산
-  clearTimeout(_gt.t);
-  _gt.t = setTimeout(gtReposition, s.setup ? 130 : 40);
+  // 탭 전환·모달 오픈 후 레이아웃이 잡히도록 위치 계산.
+  // 모달 slideUp(0.25s) 등 진입 애니메이션이 끝난 뒤에도 다시 잡아야
+  // 구멍(마스크)·말풍선이 최종 입력칸 위치에 정확히 맞는다.
+  clearTimeout(_gt.t); clearTimeout(_gt.t2); clearTimeout(_gt.t3);
+  if (s.setup){
+    _gt.t  = setTimeout(gtReposition, 60);
+    _gt.t2 = setTimeout(gtReposition, 300);
+    _gt.t3 = setTimeout(gtReposition, 480);
+  } else {
+    _gt.t = setTimeout(gtReposition, 40);
+  }
   // 시작 안내는 2초 뒤 자동 진행
   clearTimeout(_gt.autoT);
   if (s.auto){ var at=_gt.idx; _gt.autoT = setTimeout(function(){ if(_gt.idx===at) gtNext(); }, s.auto); }
@@ -2630,7 +2641,7 @@ function gtReposition(){
   bubble.style.left=bLeft+'px'; bubble.style.top=bTop+'px';
   // 화살표
   arrow.style.display='block';
-  arrow.style.border='0.5px solid rgba(184,146,63,0.5)';
+  arrow.style.border='1px solid #e6d3a0';
   var ax=Math.max(14, Math.min(bw-30, cx - bLeft - 8));
   arrow.style.left=ax+'px';
   if (below){ arrow.style.top='-8px'; arrow.style.borderRight='none'; arrow.style.borderBottom='none'; }

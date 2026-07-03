@@ -207,7 +207,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 @keyframes gtutPulse{0%,100%{box-shadow:0 0 0 9999px rgba(8,7,4,0.66),0 0 0 3px rgba(212,168,67,0.95),0 0 16px 4px rgba(212,168,67,0.5);}50%{box-shadow:0 0 0 9999px rgba(8,7,4,0.66),0 0 0 6px rgba(212,168,67,0.55),0 0 30px 10px rgba(212,168,67,0.85);}}
 #gtutHit{display:none;position:fixed;z-index:621;cursor:pointer;background:transparent;}
 #gtutHit.on{display:block;}
-#gtutBubble{display:none;position:fixed;z-index:622;width:min(340px,calc(100vw - 2rem));background:var(--card);border:0.5px solid rgba(184,146,63,0.5);border-radius:16px;padding:1.15rem 1.25rem 1.1rem;box-shadow:0 16px 44px rgba(0,0,0,0.4);animation:gtutBubbleIn 0.28s ease both;}
+#gtutBubble{display:none;position:fixed;z-index:622;box-sizing:border-box;width:min(340px,calc(100vw - 24px));max-width:calc(100vw - 24px);background:var(--card);border:0.5px solid rgba(184,146,63,0.5);border-radius:16px;padding:1.15rem 1.25rem 1.1rem;box-shadow:0 16px 44px rgba(0,0,0,0.4);animation:gtutBubbleIn 0.28s ease both;}
 #gtutBubble.on{display:block;}
 @keyframes gtutBubbleIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 #gtutStepNo{font-size:0.68rem;font-weight:800;letter-spacing:0.1em;color:var(--gold2);margin-bottom:0.5rem;}
@@ -2559,6 +2559,9 @@ function gtRender(){
   if (s.auto){ var at=_gt.idx; _gt.autoT = setTimeout(function(){ if(_gt.idx===at) gtNext(); }, s.auto); }
 }
 
+// 값 v를 [lo,hi]로 가둔다. 공간이 부족(hi<lo)하면 시작 가장자리(lo)를 우선해 화면 안에 둔다.
+function gtClamp(v, lo, hi){ if (hi < lo) return lo; return Math.max(lo, Math.min(v, hi)); }
+
 // interactive 단계: 하이라이트 구멍(l,tp,r,b) 주변만 4방향으로 막고, 구멍은 열어둔다
 function gtSetMasks(on, l, tp, r, b, vw, vh){
   var T=document.getElementById('gtutMaskT'), B=document.getElementById('gtutMaskB'),
@@ -2581,19 +2584,21 @@ function gtReposition(){
   bubble.classList.add('on');
   var els = null;
   if (!s.center && s.target){ var t=s.target(); els=(Array.isArray(t)?t:[t]).filter(Boolean); }
-  var vw=window.innerWidth, vh=window.innerHeight;
-  // 타깃이 없거나(중앙 안내) 못 찾으면 화면 중앙 말풍선
+  var vw=window.innerWidth, vh=window.innerHeight, M=12; // M: 뷰포트 좌우/상하 최소 여백
+  bubble.style.transform='none';
+  // 타깃이 없거나(중앙 안내) 못 찾으면 화면 중앙 말풍선 (transform 대신 clamp된 px 좌표)
   if (!els || !els.length){
     gtSetMasks(false);
     spot.classList.remove('on'); hit.classList.remove('on');
     block.classList.add('on');
     block.style.background='rgba(8,7,4,0.66)';
     arrow.style.display='none';
-    bubble.style.transform='translate(-50%,-50%)';
-    bubble.style.left='50%'; bubble.style.top='50%';
+    var cbw=bubble.offsetWidth, cbh=bubble.offsetHeight;
+    var cLeft=gtClamp((vw-cbw)/2, M, vw-M-cbw);
+    var cTop =gtClamp((vh-cbh)/2, M, vh-M-cbh);
+    bubble.style.left=cLeft+'px'; bubble.style.top=cTop+'px';
     return;
   }
-  bubble.style.transform='none';
   var l=1e9,tp=1e9,r=-1e9,b=-1e9;
   els.forEach(function(el){ var q=el.getBoundingClientRect(); l=Math.min(l,q.left); tp=Math.min(tp,q.top); r=Math.max(r,q.right); b=Math.max(b,q.bottom); });
   var pad=8; l-=pad; tp-=pad; r+=pad; b+=pad;
@@ -2619,11 +2624,9 @@ function gtReposition(){
   if (s.place==='above') below=false;
   else if (s.place==='below') below=true;
   var bTop = below ? (b + gap) : (tp - gap - bh);
-  if (bTop < 8) bTop = 8;
-  if (bTop + bh > vh-8) bTop = vh-8-bh;
-  var cx=(l+r)/2, bLeft=cx - bw/2;
-  if (bLeft < 8) bLeft = 8;
-  if (bLeft + bw > vw-8) bLeft = vw-8-bw;
+  bTop = gtClamp(bTop, M, vh - M - bh);
+  var cx=(l+r)/2;
+  var bLeft = gtClamp(cx - bw/2, M, vw - M - bw);
   bubble.style.left=bLeft+'px'; bubble.style.top=bTop+'px';
   // 화살표
   arrow.style.display='block';

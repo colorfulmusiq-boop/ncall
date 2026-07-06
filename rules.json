@@ -1,0 +1,68 @@
+{
+  "rules": {
+    "waiters": {
+      ".read": true,
+      "$wname": {
+        ".write": "auth != null"
+      }
+    },
+    "guests": {
+      "$wid": {
+        ".read": "auth != null",
+        "$gid": {
+          ".read": true,
+          ".write": true
+        }
+      }
+    },
+    "dangolInfo": {
+      "$wid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "notifs": {
+      "$wid": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$nid": {
+          ".write": true,
+          "done": {
+            ".read": true
+          }
+        }
+      }
+    },
+    "history": {
+      "$wid": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$hid": {
+          ".write": true
+        }
+      }
+    },
+    "guestReplies": {
+      "$wid": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$gid": {
+          ".read": true,
+          ".write": true
+        }
+      }
+    },
+    "maid": {
+      "$wid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "fcmTokens": {
+      "$wid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}

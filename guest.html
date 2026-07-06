@@ -202,6 +202,12 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <span id="replyMsg"></span>
   </div>
 
+  <!-- 호출 3분 미확인 안내 바 -->
+  <div id="waitBar" style="display:none;margin:0.5rem 1.5rem 0;background:#fff7e6;border:0.5px solid #f0dcb0;border-radius:10px;padding:0.75rem 1rem;font-size:0.85rem;color:#8a6d1f;align-items:center;gap:0.5rem;font-weight:600;">
+    <span>⏳</span>
+    <span>웨이터가 확인 중입니다. 곧 갑니다!</span>
+  </div>
+
   <div class="main-area fade-up" style="animation-delay:0.1s;">
     <button class="action-btn btn-booking" onclick="sendAction('booking')">
       <div class="btn-icon">🔔</div>
@@ -653,6 +659,40 @@ if (document.readyState === 'loading') {
   cdRestoreOnLoad();
 }
 
+/* ── 호출 3분 미확인 안내 ── */
+const WAIT_NOTICE_MS = 180000;
+let waitNoticeTimer = null;
+let waitNoticeRef = null;
+
+function clearWaitNotice(hideBar) {
+  if (waitNoticeTimer) { clearTimeout(waitNoticeTimer); waitNoticeTimer = null; }
+  if (waitNoticeRef) { try { waitNoticeRef.off(); } catch(e) {} waitNoticeRef = null; }
+  if (hideBar) {
+    const bar = document.getElementById('waitBar');
+    if (bar) bar.style.display = 'none';
+  }
+}
+
+function watchCallAck(notifKey) {
+  clearWaitNotice(true); // 새 호출이면 이전 타이머/안내 초기화
+  const path = `notifs/${waiterData.id}/${notifKey}/done`;
+  waitNoticeTimer = setTimeout(() => {
+    waitNoticeTimer = null;
+    // 3분 뒤 Firebase에서 상태 재확인 — 여전히 미확인(done=false)일 때만 안내
+    fbGet(fbRef(db, path)).then(snap => {
+      if (snap.val() === false && isActive) {
+        const bar = document.getElementById('waitBar');
+        if (bar) bar.style.display = 'flex';
+      }
+    }).catch(() => {});
+  }, WAIT_NOTICE_MS);
+  // 웨이터가 확인(done=true)하거나 알림이 삭제되면 타이머 취소 + 안내 숨김
+  waitNoticeRef = fbRef(db, path);
+  fbOnValue(waitNoticeRef, snap => {
+    if (snap.val() !== false) clearWaitNotice(true);
+  });
+}
+
 function sendAction(type) {
   pendingType = type;
   document.getElementById('modalIcon').textContent = type==='call' ? '🙋' : '🔔';
@@ -695,11 +735,13 @@ function doSend() {
 function sendNotif(type) {
   const sentTime = nowStr();
   const sentDate = todayStr();
-  fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+  const pushRef = fbPush(fbRef(db, `notifs/${waiterData.id}`), {
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,
     time: sentTime, date: sentDate, done: false
-  }).then(() => {
+  });
+  pushRef.then(() => {
+    if (type === 'call') watchCallAck(pushRef.key);
     const bar = document.getElementById('sentBar');
     document.getElementById('sentMsg').textContent = type==='call' ? '호출이 전송됐어요' : '부킹 요청이 전송됐어요';
     bar.classList.add('show');

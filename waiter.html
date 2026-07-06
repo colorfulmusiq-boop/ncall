@@ -295,6 +295,8 @@ body[data-theme="dark"] .menu-dropdown{background:#1a1813;box-shadow:0 12px 32px
 .new-today-name{flex:1;min-width:0;font-size:0.92rem;font-weight:600;color:var(--navy);display:flex;align-items:center;}
 .new-today-reg-btn{flex-shrink:0;min-height:44px;padding:0 1.1rem;border:none;border-radius:10px;background:linear-gradient(95deg,#f0d590,#d4a843);color:#1a1206;-webkit-text-fill-color:#1a1206;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px -5px rgba(212,168,67,0.45);}
 .new-today-reg-btn:active{transform:scale(0.97);}
+.new-today-del-btn{flex-shrink:0;min-height:44px;padding:0 0.9rem;border:0.5px solid rgba(181,82,58,0.25);border-radius:10px;background:#fbeaea;color:var(--red);font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;}
+.new-today-del-btn:active{transform:scale(0.97);}
 .new-today-empty{background:var(--card);border:0.5px dashed var(--border);border-radius:12px;padding:0.9rem 1rem;font-size:0.8rem;color:var(--muted);text-align:center;}
 
 /* VIP CRM */
@@ -413,7 +415,7 @@ body[data-theme="dark"] .menu-dropdown{background:#1a1813;box-shadow:0 12px 32px
     <button class="btn btn-danger" style="margin-bottom:1rem;" id="clearNotifsBtn" onclick="clearAllNotifs()" style="display:none;">✓ 알림 전체 확인</button>
     <div id="notifFeed"><div class="empty"><div class="empty-icon">🔕</div>호출 없음</div></div>
     <div id="newTodaySection" style="display:none;">
-      <div class="new-today-head">🆕 오늘의 신규 손님</div>
+      <div class="new-today-head">🆕 신규 손님 (최근 7일)</div>
       <div id="newTodayList"></div>
     </div>
   </div></div>
@@ -1131,51 +1133,133 @@ function updateNewBadges() {
   });
 }
 
+// lastVisit(YYYY-MM-DD)이 오늘(새벽 6시 기준) 기준 며칠 전인지
+function newListDayDiff(iso) {
+  if (!iso) return null;
+  const p = String(iso).split('-');
+  if (p.length !== 3) return null;
+  const t = todayISO().split('-');
+  const d1 = new Date(+p[0], +p[1]-1, +p[2]);
+  const d0 = new Date(+t[0], +t[1]-1, +t[2]);
+  return Math.round((d0 - d1) / 86400000);
+}
+
 function renderNewToday(data) {
   const sec = document.getElementById('newTodaySection');
   const list = document.getElementById('newTodayList');
   if (!sec || !list) return;
-  const today = todayISO();
+
+  // 최근 7일(오늘 포함) 이내 접속한 VIP 미등록 손님 — 목록에서 삭제(newHidden)한 손님 제외
   const fresh = Object.entries(data || {})
     .map(([k,v]) => ({...v, _key:k}))
-    .filter(g => !g.isDangol && g.lastVisit === today);
-  // 테이블 라벨 기준 중복 제거 (최근 접속이 위)
+    .filter(g => !g.isDangol && !g.newHidden)
+    .map(g => ({...g, _dayDiff: newListDayDiff(g.lastVisit)}))
+    .filter(g => g._dayDiff !== null && g._dayDiff >= 0 && g._dayDiff < 7);
+
+  // 날짜별 그룹 (날짜 안에서는 테이블 라벨 기준 중복 제거, 최근 접속이 위)
   fresh.sort((a,b) => b._key.localeCompare(a._key));
-  const seen = new Set();
-  const uniq = fresh.filter(g => {
+  const groups = {};
+  fresh.forEach(g => {
+    const d = g.lastVisit;
+    if (!groups[d]) groups[d] = { seen: new Set(), items: [] };
     const lb = g.label || '손님';
-    if (seen.has(lb)) return false;
-    seen.add(lb);
-    return true;
+    if (groups[d].seen.has(lb)) return;
+    groups[d].seen.add(lb);
+    groups[d].items.push(g);
   });
+  const dates = Object.keys(groups).sort().reverse();
+
+  // 재렌더 전 폴더 열림 상태 보존 (처음 그려지는 폴더는 오늘만 펼침)
+  const prevOpen = {};
+  list.querySelectorAll('[id^="ngf-"]').forEach(el => { prevOpen[el.id] = el.style.display !== 'none'; });
+
   sec.style.display = '';
-  if (uniq.length === 0) {
-    list.innerHTML = '<div class="new-today-empty">오늘 신규 손님이 없어요</div>';
+  list.innerHTML = '';
+  if (dates.length === 0) {
+    list.innerHTML = '<div class="new-today-empty">최근 7일간 신규 손님이 없어요</div>';
     return;
   }
-  list.innerHTML = '';
-  uniq.forEach(g => {
-    const row = document.createElement('div');
-    row.className = 'new-today-item';
-    const nm = document.createElement('div');
-    nm.className = 'new-today-name';
-    const txt = document.createElement('span');
-    txt.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-    txt.textContent = g.label || '손님';
-    nm.append(txt, newBadgeEl(g._key));
-    const btn = document.createElement('button');
-    btn.className = 'new-today-reg-btn';
-    btn.textContent = '단골 등록';
-    btn.onclick = () => openAddDangolFromGuest(g.label || '');
-    row.append(nm, btn);
-    list.appendChild(row);
+
+  const today = todayISO();
+  dates.forEach(date => {
+    const items = groups[date].items;
+    const isToday = date === today;
+    const fid = 'ngf-' + date;
+    const isOpen = (fid in prevOpen) ? prevOpen[fid] : isToday;
+
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '0.8rem';
+
+    // 폴더 헤더 — 내역 탭 날짜 폴더와 동일한 스타일 (오늘=골드 그라데이션)
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:0.5rem;min-height:44px;background:' + (isToday ? 'linear-gradient(135deg,#d4a843,#e8c87a)' : 'var(--bg2)') + ';border-radius:12px;padding:0.85rem 1rem;cursor:pointer;user-select:none;margin-bottom:0.5rem;';
+    hdr.onclick = () => toggleFolder(fid);
+
+    const left = document.createElement('div');
+    left.style.cssText = 'display:flex;align-items:center;gap:0.5rem;flex:1 1 auto;min-width:0;';
+    const dTxt = document.createElement('span');
+    dTxt.style.cssText = 'font-size:0.85rem;font-weight:800;color:' + (isToday ? '#1a1206' : 'var(--navy)') + ';';
+    const p = date.split('-');
+    dTxt.textContent = (+p[1]) + '월 ' + (+p[2]) + '일' + (isToday ? ' (오늘)' : '');
+    const cnt = document.createElement('span');
+    cnt.style.cssText = 'background:' + (isToday ? 'rgba(26,18,6,0.2)' : 'var(--border)') + ';color:' + (isToday ? '#1a1206' : 'var(--navy)') + ';font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
+    cnt.textContent = items.length + '명';
+    left.append(dTxt, cnt);
+
+    const arrow = document.createElement('span');
+    arrow.id = 'arrow-' + fid;
+    arrow.style.cssText = 'color:' + (isToday ? '#1a1206' : 'var(--muted)') + ';font-size:0.8rem;transition:transform 0.2s;' + (isOpen ? 'transform:rotate(180deg);' : '');
+    arrow.textContent = '▼';
+
+    hdr.append(left, arrow);
+    wrap.appendChild(hdr);
+
+    const body = document.createElement('div');
+    body.id = fid;
+    body.style.display = isOpen ? 'block' : 'none';
+
+    items.forEach(g => {
+      const row = document.createElement('div');
+      row.className = 'new-today-item';
+      const nm = document.createElement('div');
+      nm.className = 'new-today-name';
+      const txt = document.createElement('span');
+      txt.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+      txt.textContent = g.label || '손님';
+      nm.append(txt, newBadgeEl(g._key));
+      const regBtn = document.createElement('button');
+      regBtn.className = 'new-today-reg-btn';
+      regBtn.textContent = '단골 등록';
+      regBtn.onclick = () => openAddDangolFromGuest(g.label || '', g._key);
+      const delBtn = document.createElement('button');
+      delBtn.className = 'new-today-del-btn';
+      delBtn.textContent = '삭제';
+      delBtn.onclick = () => hideNewGuest(g._key, g.label || '손님');
+      row.append(nm, regBtn, delBtn);
+      body.appendChild(row);
+    });
+
+    wrap.appendChild(body);
+    list.appendChild(wrap);
   });
 }
 
+// 신규 목록에서만 제외 (내역·손님 데이터는 그대로) — newHidden 플래그를 Firebase에 저장
+function hideNewGuest(gid, label) {
+  if (!confirm(label + '\n이 손님을 신규 목록에서 삭제할까요?\n(내역과 손님 데이터는 그대로 유지됩니다)')) return;
+  waitFb(() => {
+    fbUpdate(fbRef(db, `guests/${W.id}/${gid}`), { newHidden: true });
+  });
+  toast('✓ 신규 목록에서 삭제됨');
+}
+
 // 신규 손님 → 기존 VIP 등록 모달로 연결 (이름 미리 채움)
-function openAddDangolFromGuest(label) {
+// gid를 기억해뒀다가 등록 완료 시 신규 목록에서 자동 제외
+let _newGuestSrcGid = null;
+function openAddDangolFromGuest(label, gid) {
   switchTab('dangol');
   openAddDangol();
+  _newGuestSrcGid = gid || null;
   if (label) document.getElementById('dangolName').value = label;
 }
 
@@ -1201,6 +1285,7 @@ function cleanPhone(p) { return (p||'').replace(/[^0-9]/g, ''); }
 
 function openAddDangol() {
   editingDangolKey = null;
+  _newGuestSrcGid = null;
   document.getElementById('dangolModalTitle').textContent = 'VIP 등록';
   document.getElementById('dangolName').value = '';
   document.getElementById('dangolPhone').value = '';
@@ -1239,6 +1324,11 @@ function doSaveDangol() {
       });
       const key = ref.key;
       fbSet(fbRef(db, `dangolInfo/${W.id}/${key}`), { phone, memo });
+      // 신규 목록의 '단골 등록'에서 온 경우 — 등록 완료된 손님을 신규 목록에서 자동 제외
+      if (_newGuestSrcGid) {
+        fbUpdate(fbRef(db, `guests/${W.id}/${_newGuestSrcGid}`), { newHidden: true });
+        _newGuestSrcGid = null;
+      }
       closeModal('dangolModal');
       toast('✓ VIP 등록됨');
       setTimeout(() => showDangolQR(key, name, phone), 400);

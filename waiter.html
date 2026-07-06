@@ -1004,16 +1004,25 @@ function autoLogin() {
   let data;
   try { data = JSON.parse(saved); } catch(e) { lsRem('ncall_waiter'); return; }
   if (!data || !data.id || !data.name) { lsRem('ncall_waiter'); return; }
+  // 로그인 플래그(ncall_waiter)가 있으면 Auth 확인을 기다리지 않고 대시보드 화면부터 표시
+  // (데이터 리스너 등 초기화는 Auth 확인 후 enterDash에서 — 인증 전 notifs 구독이 거부되는 것 방지)
+  W = { id: data.id, name: data.name };
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashScreen').style.display = 'flex';
+  document.getElementById('dashName').textContent = W.name + ' 웨이터님';
   waitFb(() => {
     let done = false;
     firebase.auth().onAuthStateChanged(user => {
       if (done) return;
       done = true;
       if (user) {
-        W = { id: data.id, name: data.name };
         enterDash();
       } else {
+        // 예외: 실제로는 비로그인 — 플래그 삭제하고 로그인 화면으로 전환
         lsRem('ncall_waiter');
+        W = null;
+        document.getElementById('dashScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
       }
     });
   });

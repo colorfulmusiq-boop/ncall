@@ -2405,7 +2405,7 @@ async function showPush(type, msg, tableLabel) {
     body,
     icon: emojiIcon,
     badge: emojiIcon,
-    vibrate: type === 'booking' ? [200, 100, 200, 100, 400] : [150, 80, 150],
+    vibrate: (type === 'booking' || type === 'call') ? [200, 100, 200, 100, 400] : [150, 80, 150],
     tag: type + '-' + Date.now(),
     renotify: true,
     requireInteraction: false
@@ -2421,7 +2421,7 @@ async function showPush(type, msg, tableLabel) {
 }
 function vibrate(type) {
   if (!navigator.vibrate) return;
-  navigator.vibrate(type==='booking' ? [200,100,200,100,400] : [150,80,150]);
+  navigator.vibrate((type==='booking' || type==='call') ? [200,100,200,100,400] : [150,80,150]);
 }
 let audioCtx;
 let _mediaUnlocked = false;

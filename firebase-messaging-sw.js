@@ -22,7 +22,7 @@ messaging.onBackgroundMessage(function(payload) {
     body: d.body || '새 호출이 왔어요',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
-    vibrate: d.type === 'booking' ? [200, 100, 200, 100, 400] : [150, 80, 150],
+    vibrate: (d.type === 'booking' || d.type === 'call') ? [200, 100, 200, 100, 400] : [150, 80, 150],
     tag: (d.type || 'call') + '_' + (d.ts || ''),
     renotify: true,
     requireInteraction: false,

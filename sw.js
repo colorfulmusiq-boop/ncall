@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ncall-v114';
+const CACHE_NAME = 'ncall-v115';
 const CORE_FILES = [
   '/waiter.html',
   '/guest.html',
@@ -62,7 +62,7 @@ self.addEventListener('push', e => {
     body: data.body || '새 알림이 왔어요',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
-    vibrate: data.type === 'booking' ? [200,100,200,100,400] : [150,80,150],
+    vibrate: (data.type === 'booking' || data.type === 'call') ? [200,100,200,100,400] : [150,80,150],
     tag: data.type + '_' + Date.now(),
     renotify: true,
     data: { url: '/waiter.html' }

@@ -138,6 +138,37 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .pref-opt{min-height:56px;background:var(--card);border:0.5px solid var(--border);border-radius:14px;font-family:inherit;font-size:1.1rem;font-weight:600;color:var(--navy);cursor:pointer;padding:0.9rem 1.25rem;text-align:left;transition:all 0.15s;animation:fadeUp 0.3s ease both;}
 .pref-opt:active{transform:scale(0.98);border-color:var(--blue);background:#e8f0fe;}
 
+/* ── 우선 부킹권 쿠폰 화면 (coupon 파라미터 진입 전용) ── */
+#couponScreen,#couponInvalid{display:none;position:fixed;inset:0;z-index:400;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 1.5rem;text-align:center;overflow-y:auto;}
+#couponScreen.open,#couponInvalid.open{display:flex;}
+.coupon-title{font-size:1.45rem;font-weight:700;line-height:1.5;color:var(--navy);background:linear-gradient(135deg,#1a2535,#3a5a8a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:var(--navy);margin-bottom:2rem;}
+.coupon-card{width:100%;max-width:340px;background:var(--card);border:1.5px solid #b8ccf0;border-radius:18px;padding:1.9rem 1.5rem;box-shadow:0 16px 36px rgba(26,37,53,0.12);margin-bottom:1.9rem;flex-shrink:0;}
+.coupon-badge{display:inline-block;font-size:0.62rem;letter-spacing:0.22em;font-weight:700;color:var(--blue);border:1px solid #b8ccf0;border-radius:999px;padding:0.32rem 0.85rem;margin-bottom:1.1rem;text-transform:uppercase;}
+.coupon-name{font-family:'DM Serif Display',serif;font-size:2.1rem;color:var(--navy);line-height:1.2;}
+.coupon-count{font-size:1.05rem;font-weight:600;color:var(--blue);margin:0.4rem 0 1.3rem;}
+.coupon-divider{height:1px;background:var(--border);margin-bottom:1.1rem;}
+.coupon-row{display:flex;align-items:center;justify-content:space-between;font-size:0.95rem;color:var(--muted);padding:0.4rem 0;}
+.coupon-row b{color:var(--navy);font-weight:600;font-size:1.02rem;}
+.coupon-foot{font-size:0.92rem;color:var(--muted);line-height:1.75;}
+.coupon-err-icon{font-size:2.6rem;margin-bottom:1.1rem;}
+.coupon-err-title{font-size:1.15rem;font-weight:700;color:var(--navy);margin-bottom:0.6rem;}
+.coupon-err-desc{font-size:0.9rem;color:var(--muted);line-height:1.7;}
+@media (prefers-color-scheme: dark){
+  body.coupon-mode{background:#10131a;}
+  body.coupon-mode #couponScreen,body.coupon-mode #couponInvalid{background:#10131a;}
+  body.coupon-mode .coupon-title{color:#e8eef7;-webkit-text-fill-color:#e8eef7;background:linear-gradient(135deg,#e8eef7,#9fb8dd);-webkit-background-clip:text;background-clip:text;}
+  body.coupon-mode .coupon-card{background:#18202e;border-color:#3a5a8a;box-shadow:0 16px 36px rgba(0,0,0,0.55);}
+  body.coupon-mode .coupon-badge{color:#9fb8dd;border-color:#3a5a8a;}
+  body.coupon-mode .coupon-name{color:#f0f4fa;}
+  body.coupon-mode .coupon-count{color:#9fb8dd;}
+  body.coupon-mode .coupon-divider{background:rgba(159,184,221,0.22);}
+  body.coupon-mode .coupon-row{color:#8fa0b8;}
+  body.coupon-mode .coupon-row b{color:#e8eef7;}
+  body.coupon-mode .coupon-foot{color:#8fa0b8;}
+  body.coupon-mode .coupon-err-title{color:#e8eef7;}
+  body.coupon-mode .coupon-err-desc{color:#8fa0b8;}
+}
+
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
 .fade-up{animation:fadeUp 0.4s ease both;}
@@ -341,6 +372,26 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   </div>
 </div>
 
+<!-- 우선 부킹권 쿠폰 화면 (coupon 파라미터 진입 전용 — 호출 기능과 완전 분리) -->
+<div id="couponScreen">
+  <div class="coupon-title">오늘은 아쉬웠지만,<br>다음엔 제가 책임지겠습니다</div>
+  <div class="coupon-card">
+    <div class="coupon-badge">Priority Booking</div>
+    <div class="coupon-name">우선 부킹권</div>
+    <div class="coupon-count">1매</div>
+    <div class="coupon-divider"></div>
+    <div class="coupon-row"><span>담당 웨이터</span><b id="couponWaiter">—</b></div>
+    <div class="coupon-row"><span>유효기간</span><b id="couponExpiry">—</b></div>
+  </div>
+  <div class="coupon-foot">다음 방문 시 이 화면을 담당 웨이터에게 보여주시기 바랍니다.<br>가장 먼저 부킹을 도와드리겠습니다.</div>
+</div>
+
+<div id="couponInvalid">
+  <div class="coupon-err-icon">🎟️</div>
+  <div class="coupon-err-title">유효하지 않은 쿠폰입니다</div>
+  <div class="coupon-err-desc">쿠폰이 만료되었거나 이미 사용되었습니다.<br>담당 웨이터에게 문의해 주시기 바랍니다.</div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -500,8 +551,35 @@ function handleGuestReply(key, reply, sourcePath) {
 }
 
 
+/* ── 우선 부킹권 쿠폰 화면 (coupon 파라미터 전용 — 호출 기능과 분리) ── */
+function initCouponView(couponId) {
+  document.body.classList.add('coupon-mode');
+  waitFb(() => {
+    fbGet(fbRef(db, 'coupons/' + couponId)).then(snap => {
+      const c = snap.val();
+      const valid = c && c.status === 'issued' && (!c.expiresAt || Date.now() <= c.expiresAt);
+      if (!valid) { showCouponInvalid(); return; }
+      document.getElementById('couponWaiter').textContent = (c.waiterName || '담당') + ' 웨이터';
+      document.getElementById('couponExpiry').textContent = fmtCouponDate(c.expiresAt) + '까지';
+      document.getElementById('couponScreen').classList.add('open');
+    }).catch(showCouponInvalid);
+  });
+}
+function showCouponInvalid() {
+  document.getElementById('couponInvalid').classList.add('open');
+}
+function fmtCouponDate(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일';
+}
+
 function init() {
   const params = new URLSearchParams(location.search);
+
+  // 우선 부킹권 쿠폰 링크 진입 — 아래 호출/입장 로직을 전혀 타지 않고 종료
+  const couponParam = params.get('coupon');
+  if (couponParam) { initCouponView(couponParam); return; }
+
   let wname = params.get('w');
   let savedGuestId = params.get('g');
 

@@ -308,6 +308,11 @@ body[data-theme="dark"] .pref-plus{background:#453818;color:#e8c87a;}
 /* 내역 탭 VIP 등록 버튼·배지 */
 .hist-vip-btn{display:inline-flex;align-items:center;gap:0.2rem;background:var(--card);border:0.5px solid var(--gold2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--gold2);cursor:pointer;}
 .hist-vip-btn.reg{background:#e8f8ee;border:0.5px solid rgba(39,174,96,0.35);color:var(--green);cursor:default;pointer-events:none;}
+/* 우선 부킹권(까임 케어 쿠폰) 버튼 — VIP 버튼과 같은 칩 스타일, 보이지 않는 44px 터치 영역 확보 */
+.hist-coupon-btn{display:inline-flex;align-items:center;gap:0.2rem;background:var(--card);border:0.5px solid var(--gold2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--gold2);cursor:pointer;position:relative;}
+.hist-coupon-btn::after{content:'';position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:44px;}
+.hist-coupon-btn.sent{background:#e8f8ee;border:0.5px solid rgba(39,174,96,0.35);color:var(--green);cursor:default;pointer-events:none;}
+body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);}
 .hist-vip-badge{display:none;background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;-webkit-text-fill-color:#1a1206;font-size:0.6rem;font-weight:800;border-radius:6px;padding:0.08rem 0.4rem;vertical-align:middle;flex-shrink:0;}
 
 /* VIP CRM */
@@ -1168,6 +1173,83 @@ function openAddDangolFromGuest(label) {
   if (label) document.getElementById('dangolName').value = label;
 }
 
+// ── 내역 탭 우선 부킹권 (까임 케어 쿠폰) ──
+const COUPON_VALID_DAYS = 14;
+
+// 이 손님에게 내가 발급한 쿠폰 — guestId 우선, 없으면 이름으로 매칭
+function findGuestCoupon(gid, label) {
+  const all = window._allCoupons || {};
+  return Object.values(all).find(c =>
+    c && c.waiterId === (W && W.id) &&
+    ((gid && c.guestId === gid) || (!gid && label && c.guestName === label))
+  ) || null;
+}
+
+// 쿠폰 데이터가 바뀔 때 내역 카드의 쿠폰 버튼 상태를 실시간 갱신
+function updateHistCouponBtns() {
+  document.querySelectorAll('[data-hist-coupon-btn]').forEach(b => {
+    const on = !!findGuestCoupon(b.dataset.gid, b.dataset.label);
+    b.classList.toggle('sent', on);
+    b.textContent = on ? '✓ 발송 완료' : '🎟️ 우선 부킹권';
+  });
+}
+
+function issueCoupon(gid, label) {
+  if (!W) return;
+  if (findGuestCoupon(gid, label)) { toast('이미 발급한 손님이에요'); return; }
+  const couponId = 'cp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const issuedAt = Date.now();
+  const coupon = {
+    couponId,
+    waiterId: W.id,
+    waiterName: W.name,
+    guestId: gid || '',
+    guestName: label || '손님',
+    issuedAt,
+    expiresAt: issuedAt + COUPON_VALID_DAYS * 86400000,
+    status: 'issued'
+  };
+  // 리스너 반영 전 연타로 인한 중복 발급 방지 — 로컬 캐시에 먼저 기록
+  if (!window._allCoupons) window._allCoupons = {};
+  window._allCoupons[couponId] = coupon;
+  updateHistCouponBtns();
+  waitFb(() => {
+    fbSet(fbRef(db, 'coupons/' + couponId), coupon).catch(() => {
+      delete window._allCoupons[couponId];
+      updateHistCouponBtns();
+      toast('쿠폰 저장에 실패했어요. 신호를 확인해주세요');
+    });
+  });
+  shareCouponLink(couponId);
+}
+
+function shareCouponLink(couponId) {
+  const url = location.origin + '/guest.html?coupon=' + couponId;
+  const text = '오늘은 아쉬웠지만 다음엔 제가 책임지겠습니다. 우선 부킹권 확인해 주세요:\n' + url;
+  if (navigator.share) {
+    navigator.share({ text: text }).catch(() => {});
+  } else {
+    copyCouponText(text);
+  }
+}
+
+function copyCouponText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => toast('링크가 복사되었습니다')).catch(() => legacyCopyText(text));
+  } else {
+    legacyCopyText(text);
+  }
+}
+function legacyCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); toast('링크가 복사되었습니다'); } catch(e) { toast('복사에 실패했어요'); }
+  document.body.removeChild(ta);
+}
+
 // ── VIP CRM ──
 const REMIND_DAYS = 30; // 한 달 이상 안 오면 "연락할 때 됐어요"에 뜸
 let editingDangolKey = null;
@@ -1836,6 +1918,11 @@ function startListeners() {
     window._maidMap = snap.val() || {};
     applyMaidToDom();
   });
+  // 우선 부킹권 쿠폰 — 발급 여부를 내역 카드 버튼에 실시간 반영
+  fbOnValue(fbRef(db, 'coupons'), function(snap){
+    window._allCoupons = snap.val() || {};
+    updateHistCouponBtns();
+  });
   // 내역
   fbOnValue(fbRef(db, `history/${wid}`), snap => {
     var raw = snap.val() || {};
@@ -2089,6 +2176,17 @@ function startListeners() {
         vipBtn.textContent = _vipOn ? '✓ 등록됨' : '⭐ VIP 등록';
         (function(lb){ vipBtn.onclick = function(e){ e.stopPropagation(); openAddDangolFromGuest(lb); }; })(tbl);
         tSummary.appendChild(vipBtn);
+
+        var couponBtn = document.createElement('span');
+        couponBtn.className = 'hist-coupon-btn';
+        couponBtn.dataset.gid = vipGidRaw;
+        couponBtn.dataset.label = tbl;
+        couponBtn.setAttribute('data-hist-coupon-btn', '');
+        var _cpOn = !!findGuestCoupon(vipGidRaw, tbl);
+        if (_cpOn) couponBtn.classList.add('sent');
+        couponBtn.textContent = _cpOn ? '✓ 발송 완료' : '🎟️ 우선 부킹권';
+        (function(g, lb){ couponBtn.onclick = function(e){ e.stopPropagation(); issueCoupon(g, lb); }; })(vipGidRaw, tbl);
+        tSummary.appendChild(couponBtn);
 
         tLeft.appendChild(tSummary);
 

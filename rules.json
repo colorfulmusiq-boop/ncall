@@ -63,6 +63,13 @@
         ".read": "auth != null",
         ".write": "auth != null"
       }
+    },
+    "coupons": {
+      ".read": "auth != null",
+      "$cid": {
+        ".read": true,
+        ".write": "auth != null"
+      }
     }
   }
 }

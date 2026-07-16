@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ncall-v129';
+const CACHE_NAME = 'ncall-v130';
 const CORE_FILES = [
   '/waiter.html',
   '/guest.html',

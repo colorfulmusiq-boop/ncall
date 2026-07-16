@@ -127,8 +127,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 /* ── 손님 취향 카드 (1단계) 오버레이 ── */
 #prefOverlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;flex-direction:column;padding:1.25rem 1.5rem 2rem;}
 #prefOverlay.open{display:flex;}
-.pref-top{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.pref-progress{font-size:1rem;font-weight:700;color:var(--blue);letter-spacing:0.08em;}
+.pref-top{display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;}
 .pref-skip{background:var(--card);border:0.5px solid var(--border);border-radius:999px;padding:0.55rem 1.1rem;font-family:inherit;font-size:0.9rem;font-weight:600;color:var(--muted);cursor:pointer;}
 .pref-skip:active{transform:scale(0.97);}
 .pref-body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.75rem;}
@@ -137,6 +136,12 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 .pref-opts{display:flex;flex-direction:column;gap:0.75rem;}
 .pref-opt{min-height:56px;background:var(--card);border:0.5px solid var(--border);border-radius:14px;font-family:inherit;font-size:1.1rem;font-weight:600;color:var(--navy);cursor:pointer;padding:0.9rem 1.25rem;text-align:left;transition:all 0.15s;animation:fadeUp 0.3s ease both;}
 .pref-opt:active{transform:scale(0.98);border-color:var(--blue);background:#e8f0fe;}
+.pref-opt.selected{border-color:var(--blue);background:#e8f0fe;}
+/* 매우 원함 선택 시 안내문 — 확인 팝업 대신 인라인으로 표시 */
+.pref-notice{display:none;background:#fff7e6;border:0.5px solid #f0dcb0;border-radius:14px;padding:1.1rem 1.2rem;font-size:0.92rem;color:#8a6d1f;line-height:1.75;animation:fadeUp 0.3s ease both;}
+.pref-notice.show{display:block;}
+.pref-notice-ok{margin-top:1rem;width:100%;min-height:44px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.95rem;font-weight:600;cursor:pointer;}
+.pref-notice-ok:active{transform:scale(0.98);}
 
 /* ── 우선 부킹권 쿠폰 화면 (coupon 파라미터 진입 전용) ── */
 #couponScreen,#couponInvalid{display:none;position:fixed;inset:0;z-index:400;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 1.5rem;text-align:center;overflow-y:auto;}
@@ -357,18 +362,25 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   </div>
 </div>
 
-<!-- 취향 입력 오버레이 (손님 취향 카드 1단계) -->
+<!-- 부킹 의지 입력 오버레이 (단일 문항) -->
 <div id="prefOverlay">
   <div class="pref-top">
-    <div class="pref-progress" id="prefProgress">1/3</div>
     <button class="pref-skip" type="button" onclick="skipPref()">건너뛰기</button>
   </div>
   <div class="pref-body">
     <div>
       <div class="pref-intro">더 좋은 서비스를 위해 여쭙습니다</div>
-      <div class="pref-title" id="prefTitle">—</div>
+      <div class="pref-title">부킹을 원하십니까?</div>
     </div>
-    <div class="pref-opts" id="prefOpts"></div>
+    <div class="pref-opts">
+      <button type="button" class="pref-opt" data-intent="none" onclick="selectIntent('none')">원하지 않음</button>
+      <button type="button" class="pref-opt" data-intent="want" onclick="selectIntent('want')" style="animation-delay:0.04s;">원함</button>
+      <button type="button" class="pref-opt" data-intent="very" onclick="selectIntent('very')" style="animation-delay:0.08s;">매우 원함</button>
+      <div class="pref-notice" id="prefNotice">
+        매우 원함을 선택하시면 담당 웨이터가 가장 먼저 움직입니다. 부킹이 성사되었을 때 감사 표시(팁)를 전해 주시는 것으로 안내드리며, 이 내용은 담당 웨이터에게도 함께 전달됩니다.
+        <button type="button" class="pref-notice-ok" onclick="confirmVeryIntent()">확인했습니다</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -429,67 +441,45 @@ function todayStr() {
   return n.getFullYear() + "년 " + (n.getMonth()+1) + "월 " + n.getDate() + "일";
 }
 
-/* ── 손님 취향 카드 (1단계) ── */
-const PREF_STORE_KEY = 'ncall_pref';
-const PREF_QUESTIONS = [
-  { key: 'age', title: '나이대를 선택해 주시기 바랍니다', opts: ['20대', '30대', '40대', '50대 이상'] },
-  { key: 'mood', title: '원하시는 분위기를 선택해 주시기 바랍니다', opts: ['차분한 대화 위주', '신나게 노는 분위기', '웨이터님께 맡기겠습니다'] },
-  { key: 'booking', title: '부킹 스타일을 선택해 주시기 바랍니다', opts: ['적극적으로 원합니다', '천천히 편하게', '오늘은 술자리 위주'] }
-];
-let prefStep = 0;
-let prefAnswers = {};
-
-function loadPref() {
-  try { return JSON.parse(localStorage.getItem(PREF_STORE_KEY) || 'null'); } catch(e) { return null; }
-}
-function savePref(data) {
-  try { localStorage.setItem(PREF_STORE_KEY, JSON.stringify(data)); } catch(e) {}
-}
-// 저장된 취향이 있으면 알림 데이터에 필드로 실어서 보냄 — 없으면 필드 생략(기존 동작 유지)
-function withPref(data) {
-  const p = loadPref();
-  if (p && !p.skipped) {
-    if (p.age) data.prefAge = p.age;
-    if (p.mood) data.prefMood = p.mood;
-    if (p.booking) data.prefBooking = p.booking;
-  }
+/* ── 부킹 의지 (단일 문항) ── */
+// 값: 'none'(원하지 않음) / 'want'(원함) / 'very'(매우 원함) / 'skipped'(건너뜀)
+// localStorage가 아니라 손님 노드(guests/{웨이터ID}/{게스트ID}.bookingIntent)에 저장 — 방문(게스트ID) 단위로 관리
+function withIntent(data) {
+  const bi = guestData && guestData.bookingIntent;
+  if (bi && bi !== 'skipped') data.bookingIntent = bi;
   return data;
 }
-function maybeShowPrefOverlay() {
-  if (loadPref()) return; // 이미 답변했거나 건너뛴 기기 — 다시 묻지 않음
-  prefStep = 0; prefAnswers = {};
-  renderPrefStep();
+function maybeShowIntentOverlay() {
+  if (guestData && guestData.bookingIntent) return; // 이 방문에서 이미 답했거나 건너뜀
+  document.getElementById('prefNotice').classList.remove('show');
+  document.querySelectorAll('#prefOverlay .pref-opt').forEach(b => b.classList.remove('selected'));
   document.getElementById('prefOverlay').classList.add('open');
 }
-function renderPrefStep() {
-  const q = PREF_QUESTIONS[prefStep];
-  document.getElementById('prefProgress').textContent = (prefStep + 1) + '/' + PREF_QUESTIONS.length;
-  document.getElementById('prefTitle').textContent = q.title;
-  const box = document.getElementById('prefOpts');
-  box.innerHTML = '';
-  q.opts.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'pref-opt';
-    btn.style.animationDelay = (i * 0.04) + 's';
-    btn.textContent = opt;
-    btn.onclick = () => selectPref(q.key, opt);
-    box.appendChild(btn);
-  });
+function saveIntent(value) {
+  if (guestData) guestData.bookingIntent = value;
+  fbUpdate(fbRef(db, `guests/${waiterData.id}/${guestId}`), { bookingIntent: value }).catch(() => {});
 }
-function selectPref(key, value) {
-  prefAnswers[key] = value;
-  if (prefStep < PREF_QUESTIONS.length - 1) {
-    prefStep++;
-    renderPrefStep();
-  } else {
-    savePref({ age: prefAnswers.age || '', mood: prefAnswers.mood || '', booking: prefAnswers.booking || '', done: true });
-    closePrefOverlay();
-    toast('입력해 주셔서 감사합니다');
+function selectIntent(value) {
+  const notice = document.getElementById('prefNotice');
+  if (value === 'very') {
+    // 안내문을 인라인으로 보여주고, '확인했습니다'를 누르면 그대로 진행 (확인 팝업 없음)
+    document.querySelectorAll('#prefOverlay .pref-opt').forEach(b => b.classList.toggle('selected', b.dataset.intent === 'very'));
+    notice.classList.add('show');
+    return;
   }
+  // 다른 선택지를 고르면 안내문은 사라지고 바로 진행
+  notice.classList.remove('show');
+  saveIntent(value);
+  closePrefOverlay();
+  toast('입력해 주셔서 감사합니다');
+}
+function confirmVeryIntent() {
+  saveIntent('very');
+  closePrefOverlay();
+  toast('입력해 주셔서 감사합니다');
 }
 function skipPref() {
-  savePref({ skipped: true });
+  saveIntent('skipped');
   closePrefOverlay();
 }
 function closePrefOverlay() {
@@ -669,8 +659,8 @@ function init() {
         document.getElementById('checkoutScreen').style.display = 'flex';
         return;
       }
-      // 정상 입장 확정 후 취향 오버레이 (답변/건너뛰기 이력 있으면 안 뜸)
-      maybeShowPrefOverlay();
+      // 정상 입장 확정 후 부킹 의지 오버레이 (이 방문에서 답변/건너뛰기 이력 있으면 안 뜸)
+      maybeShowIntentOverlay();
       const _alreadyIn = guestData.visitOpen === true && guestData.lastVisit === _today;
       if (!_alreadyIn) {
         const enterTime = nowStr();
@@ -742,7 +732,7 @@ function sendMsg() {
     const sentTime = nowStr();
     const sentDate = todayStr();
     const sortKey = nowFull();
-    fbPush(fbRef(db, `notifs/${waiterData.id}`), withPref({
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), withIntent({
       type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
       msgText: text, waiterName: waiterData.name, guestId,
       time: sentTime, date: sentDate, done: false
@@ -778,7 +768,7 @@ function sendBeer() {
     const sentTime = nowStr();
     const sentDate = todayStr();
     const sortKey = nowFull();
-    fbPush(fbRef(db, `notifs/${waiterData.id}`), withPref({
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), withIntent({
       type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
       beerQty, waiterName: waiterData.name, guestId,
       time: sentTime, date: sentDate, done: false
@@ -923,7 +913,7 @@ function doSend() {
 function sendNotif(type) {
   const sentTime = nowStr();
   const sentDate = todayStr();
-  const pushRef = fbPush(fbRef(db, `notifs/${waiterData.id}`), withPref({
+  const pushRef = fbPush(fbRef(db, `notifs/${waiterData.id}`), withIntent({
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,
     time: sentTime, date: sentDate, done: false
@@ -950,7 +940,7 @@ function sendCheckoutReq() {
   closeCheckoutReqModal();
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
-    fbPush(fbRef(db, `notifs/${waiterData.id}`), withPref({
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), withIntent({
       type: 'checkout_req', tableLabel: guestData.label, guestMsg: guestData.label,
       waiterName: waiterData.name, guestId,
       time: nowStr(), date: todayStr(), done: false

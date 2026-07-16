@@ -292,6 +292,13 @@ body[data-theme="dark"] .pref-line{color:#e0c179;}
 body[data-theme="dark"] .pref-line::before{background:#e0c179;}
 body[data-theme="dark"] .pref-line-very{color:#ffb066;}
 body[data-theme="dark"] .pref-line-very::before{background:#ff9d4d;}
+/* '팁 안내 전달됨' — 점선 밑줄로 누를 수 있음을 표시, 보이지 않는 44px 터치 영역 */
+.pref-tip-link{text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer;position:relative;}
+.pref-tip-link::after{content:'';position:absolute;left:-6px;right:-6px;top:50%;transform:translateY(-50%);height:44px;}
+/* 팁 안내 확인 모달 본문 */
+.tip-info-quote{background:var(--bg2);border-left:2.5px solid #d4551f;border-radius:8px;padding:0.9rem 1rem;font-size:0.88rem;color:var(--navy);line-height:1.7;margin-bottom:0.9rem;}
+.tip-info-note{font-size:0.8rem;color:var(--muted);line-height:1.7;margin-bottom:1.25rem;}
+body[data-theme="dark"] .tip-info-quote{border-left-color:#ff9d4d;}
 /* 취향 줄 최초 1회 안내 배너 — 작고 연한 톤, 확인 버튼은 44px 터치 높이 */
 .pref-hint-banner{display:flex;align-items:center;gap:0.6rem;background:#faf3df;border:0.5px solid rgba(184,146,63,0.35);border-radius:10px;padding:0.45rem 0.5rem 0.45rem 0.85rem;margin-bottom:0.6rem;font-size:0.78rem;color:#6b5320;line-height:1.5;}
 .pref-hint-ok{flex-shrink:0;min-height:44px;padding:0 0.9rem;background:#f0e6cc;border:none;border-radius:8px;font-family:inherit;font-size:0.75rem;font-weight:700;color:#8a6d1f;cursor:pointer;}
@@ -528,6 +535,17 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
 </div>
 
 <!-- 손님 추가 모달 -->
+<!-- 매우 원함 · 팁 안내 원문 확인 모달 -->
+<div class="modal-bg" id="tipInfoModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">손님이 확인한 안내</div>
+    <div class="tip-info-quote">매우 원함을 선택하시면 담당 웨이터가 가장 먼저 움직입니다. 부킹이 성사되었을 때 감사 표시(팁)를 전해 주시는 것으로 안내드리며, 이 내용은 담당 웨이터에게도 함께 전달됩니다.</div>
+    <div class="tip-info-note">손님께서 위 안내문을 확인하신 뒤 ‘매우 원함’을 선택하셨다는 의미입니다. 팁 지급이 확정된 것은 아니므로, 부킹 순서를 정하실 때 참고 자료로만 활용해 주시기 바랍니다.</div>
+    <button class="btn btn-ghost" onclick="closeModal('tipInfoModal')" style="margin-top:0;min-height:44px;">닫기</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="addGuestModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -1657,6 +1675,11 @@ function dangolCard(g, isDue) {
   return card;
 }
 
+// ── 매우 원함 · 팁 안내 원문 확인 모달 ──
+function openTipInfoModal() {
+  document.getElementById('tipInfoModal').classList.add('open');
+}
+
 // ── 부킹 의지 줄 최초 1회 안내 배너 ──
 function buildPrefHintBanner() {
   const ban = document.createElement('div');
@@ -1812,7 +1835,17 @@ function startListeners() {
         if (n.bookingIntent === 'want' || n.bookingIntent === 'very') {
           const prefRow = document.createElement('div');
           prefRow.className = 'pref-line' + (n.bookingIntent === 'very' ? ' pref-line-very' : '');
-          prefRow.textContent = n.bookingIntent === 'very' ? '부킹: 매우 원함 · 팁 안내 전달됨' : '부킹: 원함';
+          if (n.bookingIntent === 'very') {
+            prefRow.appendChild(document.createTextNode('부킹: 매우 원함 · '));
+            // '팁 안내 전달됨'만 눌러서 손님이 본 안내문 원문 확인 (매우 원함 전용)
+            const tipLink = document.createElement('span');
+            tipLink.className = 'pref-tip-link';
+            tipLink.textContent = '팁 안내 전달됨';
+            tipLink.onclick = (e) => { e.stopPropagation(); openTipInfoModal(); };
+            prefRow.appendChild(tipLink);
+          } else {
+            prefRow.textContent = '부킹: 원함';
+          }
           body.append(prefRow);
         }
         if (n.type === 'message') {
@@ -2791,7 +2824,7 @@ function gtDemoNotif(withPref){
     +     '<div class="notif-tag">부킹 요청</div>'
     +     '<div class="notif-msg">' + gtGuestLabel() + '</div>'
     +     '<div class="notif-time">방금 전</div>'
-    +     (withPref ? '<div class="pref-line pref-line-very" id="gtutDemoPref">부킹: 매우 원함 · 팁 안내 전달됨</div>' : '')
+    +     (withPref ? '<div class="pref-line pref-line-very" id="gtutDemoPref">부킹: 매우 원함 · <span class="pref-tip-link">팁 안내 전달됨</span></div>' : '')
     +     '<div id="gtutDemoBtns" style="display:flex;gap:0.4rem;margin-top:0.5rem;">'
     +       '<button type="button" style="background:#e8f0fe;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#3a5a8a;font-family:inherit;">곧 갈게요</button>'
     +       '<button type="button" style="background:#fef3e8;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#e67e22;font-family:inherit;">잠시만요</button>'

@@ -313,6 +313,9 @@ body[data-theme="dark"] .pref-plus{background:#453818;color:#e8c87a;}
 .hist-coupon-btn::after{content:'';position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:44px;}
 .hist-coupon-btn.sent{background:#e8f8ee;border:0.5px solid rgba(39,174,96,0.35);color:var(--green);cursor:default;pointer-events:none;}
 body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);}
+.hist-coupon-btn.used{background:var(--bg2);border:0.5px solid var(--border);color:var(--muted);cursor:default;pointer-events:none;}
+.hist-coupon-use-btn{display:inline-flex;align-items:center;gap:0.2rem;background:var(--card);border:0.5px solid var(--blue);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--blue);cursor:pointer;position:relative;}
+.hist-coupon-use-btn::after{content:'';position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:44px;}
 .hist-vip-badge{display:none;background:linear-gradient(95deg,#e8c87a,#d4a843);color:#1a1206;-webkit-text-fill-color:#1a1206;font-size:0.6rem;font-weight:800;border-radius:6px;padding:0.08rem 0.4rem;vertical-align:middle;flex-shrink:0;}
 
 /* VIP CRM */
@@ -1186,17 +1189,43 @@ function findGuestCoupon(gid, label) {
 }
 
 // 쿠폰 데이터가 바뀔 때 내역 카드의 쿠폰 버튼 상태를 실시간 갱신
+// 상태: 없음 → 발급 버튼 / issued → 발송 완료 + 사용 처리 버튼 / used → 사용 완료(종료 상태)
 function updateHistCouponBtns() {
   document.querySelectorAll('[data-hist-coupon-btn]').forEach(b => {
-    const on = !!findGuestCoupon(b.dataset.gid, b.dataset.label);
-    b.classList.toggle('sent', on);
-    b.textContent = on ? '✓ 발송 완료' : '🎟️ 우선 부킹권';
+    const c = findGuestCoupon(b.dataset.gid, b.dataset.label);
+    const used = !!c && c.status === 'used';
+    b.classList.toggle('sent', !!c && !used);
+    b.classList.toggle('used', used);
+    b.textContent = used ? '✓ 사용 완료' : (c ? '✓ 발송 완료' : '🎟️ 우선 부킹권');
+  });
+  document.querySelectorAll('[data-hist-coupon-use-btn]').forEach(b => {
+    const c = findGuestCoupon(b.dataset.gid, b.dataset.label);
+    b.style.display = (c && c.status === 'issued') ? 'inline-flex' : 'none';
+  });
+}
+
+// 발송 완료 상태의 쿠폰을 사용 처리 (used = 종료 상태, 재발급 불가)
+function useCouponForGuest(gid, label) {
+  const c = findGuestCoupon(gid, label);
+  if (!c || c.status !== 'issued') return;
+  if (!confirm((c.guestName || label || '손님') + '\n이 손님의 우선 부킹권을 사용 처리하시겠습니까?')) return;
+  c.status = 'used'; // 로컬 선반영 — 실패 시 되돌림
+  updateHistCouponBtns();
+  waitFb(() => {
+    fbUpdate(fbRef(db, 'coupons/' + c.couponId), { status: 'used', usedAt: Date.now() })
+      .then(() => toast('✓ 사용 처리 완료'))
+      .catch(() => {
+        c.status = 'issued';
+        updateHistCouponBtns();
+        toast('사용 처리에 실패했어요. 신호를 확인해주세요');
+      });
   });
 }
 
 function issueCoupon(gid, label) {
   if (!W) return;
-  if (findGuestCoupon(gid, label)) { toast('이미 발급한 손님이에요'); return; }
+  const dup = findGuestCoupon(gid, label);
+  if (dup) { toast(dup.status === 'used' ? '이미 사용 완료된 손님이에요' : '이미 발급한 손님이에요'); return; }
   const couponId = 'cp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const issuedAt = Date.now();
   const coupon = {
@@ -2174,11 +2203,23 @@ function startListeners() {
         couponBtn.dataset.gid = vipGidRaw;
         couponBtn.dataset.label = tbl;
         couponBtn.setAttribute('data-hist-coupon-btn', '');
-        var _cpOn = !!findGuestCoupon(vipGidRaw, tbl);
-        if (_cpOn) couponBtn.classList.add('sent');
-        couponBtn.textContent = _cpOn ? '✓ 발송 완료' : '🎟️ 우선 부킹권';
+        var _cp = findGuestCoupon(vipGidRaw, tbl);
+        var _cpUsed = !!_cp && _cp.status === 'used';
+        if (_cpUsed) couponBtn.classList.add('used');
+        else if (_cp) couponBtn.classList.add('sent');
+        couponBtn.textContent = _cpUsed ? '✓ 사용 완료' : (_cp ? '✓ 발송 완료' : '🎟️ 우선 부킹권');
         (function(g, lb){ couponBtn.onclick = function(e){ e.stopPropagation(); issueCoupon(g, lb); }; })(vipGidRaw, tbl);
         tSummary.appendChild(couponBtn);
+
+        var couponUseBtn = document.createElement('span');
+        couponUseBtn.className = 'hist-coupon-use-btn';
+        couponUseBtn.dataset.gid = vipGidRaw;
+        couponUseBtn.dataset.label = tbl;
+        couponUseBtn.setAttribute('data-hist-coupon-use-btn', '');
+        couponUseBtn.textContent = '✅ 사용 처리';
+        couponUseBtn.style.display = (_cp && _cp.status === 'issued') ? 'inline-flex' : 'none';
+        (function(g, lb){ couponUseBtn.onclick = function(e){ e.stopPropagation(); useCouponForGuest(g, lb); }; })(vipGidRaw, tbl);
+        tSummary.appendChild(couponUseBtn);
 
         tLeft.appendChild(tSummary);
 

@@ -280,9 +280,11 @@ body[data-theme="dark"] .menu-dropdown{background:#1a1813;box-shadow:0 12px 32px
 
 @keyframes slideIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
 .notif-card.type-checkout_req{border-left:3px solid #27ae60;}
-/* 취향 표시줄 (손님 취향 카드 1단계) — 금색 세로선 + 한 줄 텍스트 */
-.pref-line{margin-top:0.4rem;border-left:2.5px solid #b8923f;padding-left:10px;font-size:13.5px;font-weight:600;color:#6b5320;line-height:1.5;}
+/* 취향 표시줄 (손님 취향 카드 1단계) — 금색 세로선 + 접기/펼치기 */
+.pref-line{margin-top:0.4rem;border-left:2.5px solid #b8923f;padding-left:10px;font-size:13.5px;font-weight:600;color:#6b5320;line-height:1.5;min-height:42px;display:flex;align-items:center;flex-wrap:wrap;}
+.pref-line.expandable{cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;}
 .pref-dot{color:#cdbd97;font-weight:400;margin:0 0.35rem;}
+.pref-plus{display:inline-block;background:#f0e6cc;color:#8a6d1f;border-radius:999px;padding:0.1rem 0.55rem;font-size:12px;font-weight:700;margin-left:0.45rem;line-height:1.5;}
 /* 알림 카드 이름 줄 — 이름 왼쪽, 시각 오른쪽 끝 */
 .notif-name-row{display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;}
 .notif-time-right{font-size:12.5px;color:var(--muted);font-weight:400;flex-shrink:0;}
@@ -1678,17 +1680,41 @@ function startListeners() {
             '차분한 대화 위주': '대화 위주', '신나게 노는 분위기': '노는 분위기', '웨이터님께 맡기겠습니다': '추천 요청',
             '적극적으로 원합니다': '적극적', '천천히 편하게': '편하게', '오늘은 술자리 위주': '술자리 위주'
           };
+          const shortVals = prefVals.map(v => prefShort[v] || v);
           const prefRow = document.createElement('div');
           prefRow.className = 'pref-line';
-          prefVals.forEach((v, i) => {
-            if (i > 0) {
-              const dot = document.createElement('span');
-              dot.className = 'pref-dot';
-              dot.textContent = '·';
-              prefRow.appendChild(dot);
+          const renderPrefRow = (expanded) => {
+            prefRow.innerHTML = '';
+            if (expanded) {
+              shortVals.forEach((v, i) => {
+                if (i > 0) {
+                  const dot = document.createElement('span');
+                  dot.className = 'pref-dot';
+                  dot.textContent = '·';
+                  prefRow.appendChild(dot);
+                }
+                prefRow.appendChild(document.createTextNode(v));
+              });
+            } else {
+              prefRow.appendChild(document.createTextNode(shortVals[0]));
+              if (shortVals.length > 1) {
+                const plus = document.createElement('span');
+                plus.className = 'pref-plus';
+                plus.textContent = '+' + (shortVals.length - 1);
+                prefRow.appendChild(plus);
+              }
             }
-            prefRow.appendChild(document.createTextNode(prefShort[v] || v));
-          });
+          };
+          renderPrefRow(false); // 알림마다 항상 접힌 상태로 시작 (상태 기억 없음)
+          if (shortVals.length > 1) {
+            prefRow.classList.add('expandable');
+            let prefOpen = false;
+            prefRow.onclick = (e) => {
+              e.stopPropagation(); // 카드의 다른 클릭 동작과 겹치지 않게 이 줄에서만 처리
+              prefOpen = !prefOpen;
+              renderPrefRow(prefOpen);
+            };
+          }
           body.append(prefRow);
         }
         if (n.type === 'message') {

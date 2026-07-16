@@ -281,7 +281,9 @@ body[data-theme="dark"] .menu-dropdown{background:#1a1813;box-shadow:0 12px 32px
 @keyframes slideIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
 .notif-card.type-checkout_req{border-left:3px solid #27ae60;}
 /* 취향 표시줄 (손님 취향 카드 1단계) — 금색 세로선 + 접기/펼치기 */
-.pref-line{margin-top:0.4rem;border-left:2.5px solid #b8923f;padding-left:10px;font-size:13.5px;font-weight:600;color:#6b5320;line-height:1.5;min-height:42px;display:flex;align-items:center;flex-wrap:wrap;}
+.pref-line{position:relative;margin-top:0.4rem;padding-left:12.5px;font-size:13.5px;font-weight:600;color:#6b5320;line-height:1.5;min-height:42px;display:flex;align-items:center;flex-wrap:wrap;}
+/* 세로선은 고정 높이 가상 요소로 — 터치 영역(42px)은 그대로, 보이는 선만 텍스트 높이 수준 */
+.pref-line::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:2.5px;height:17px;background:#b8923f;border-radius:1px;}
 .pref-line.expandable{cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;}
 .pref-dot{color:#cdbd97;font-weight:400;margin:0 0.35rem;}
 .pref-plus{display:inline-block;background:#f0e6cc;color:#8a6d1f;border-radius:999px;padding:0.1rem 0.55rem;font-size:12px;font-weight:700;margin-left:0.45rem;line-height:1.5;}

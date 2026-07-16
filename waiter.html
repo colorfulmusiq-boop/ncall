@@ -292,6 +292,12 @@ body[data-theme="dark"] .pref-line{color:#e0c179;}
 body[data-theme="dark"] .pref-line::before{background:#e0c179;}
 body[data-theme="dark"] .pref-dot{color:rgba(224,193,121,0.5);}
 body[data-theme="dark"] .pref-plus{background:#453818;color:#e8c87a;}
+/* 취향 줄 최초 1회 안내 배너 — 작고 연한 톤, 확인 버튼은 44px 터치 높이 */
+.pref-hint-banner{display:flex;align-items:center;gap:0.6rem;background:#faf3df;border:0.5px solid rgba(184,146,63,0.35);border-radius:10px;padding:0.45rem 0.5rem 0.45rem 0.85rem;margin-bottom:0.6rem;font-size:0.78rem;color:#6b5320;line-height:1.5;}
+.pref-hint-ok{flex-shrink:0;min-height:44px;padding:0 0.9rem;background:#f0e6cc;border:none;border-radius:8px;font-family:inherit;font-size:0.75rem;font-weight:700;color:#8a6d1f;cursor:pointer;}
+.pref-hint-ok:active{transform:scale(0.97);}
+body[data-theme="dark"] .pref-hint-banner{background:#221d12;border-color:rgba(212,168,67,0.3);color:#e0c179;}
+body[data-theme="dark"] .pref-hint-ok{background:#453818;color:#e8c87a;}
 /* 알림 카드 이름 줄 — 이름 왼쪽, 시각 오른쪽 끝 */
 .notif-name-row{display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;}
 .notif-time-right{font-size:12.5px;color:var(--muted);font-weight:400;flex-shrink:0;}
@@ -1651,6 +1657,22 @@ function dangolCard(g, isDue) {
   return card;
 }
 
+// ── 취향 줄 최초 1회 안내 배너 ──
+function buildPrefHintBanner() {
+  const ban = document.createElement('div');
+  ban.className = 'pref-hint-banner';
+  const txt = document.createElement('div');
+  txt.style.flex = '1';
+  txt.textContent = '금색 줄은 손님이 입장 시 직접 입력한 취향입니다. 누르면 자세히 보입니다.';
+  const ok = document.createElement('button');
+  ok.type = 'button';
+  ok.className = 'pref-hint-ok';
+  ok.textContent = '확인';
+  ok.onclick = () => { lsSet('ncall_pref_hint_seen', '1'); ban.remove(); };
+  ban.append(txt, ok);
+  return ban;
+}
+
 // ── Firebase 리스너 ──
 let lastNotifKey = null;
 let listenersStarted = false;
@@ -1715,6 +1737,10 @@ function startListeners() {
       feed.innerHTML = '<div class="empty"><div class="empty-icon">🔕</div>호출 없음</div>';
     } else {
       feed.innerHTML = '';
+      // 취향 필드가 있는 알림이 처음 표시될 때 목록 맨 위에 1회성 안내 배너 (확인 누르면 다시 안 뜸)
+      if (!lsGet('ncall_pref_hint_seen') && notifs.some(n => n.prefAge || n.prefMood || n.prefBooking)) {
+        feed.appendChild(buildPrefHintBanner());
+      }
       notifs.forEach(n => {
         const card = document.createElement('div');
         card.className = 'notif-card type-' + n.type;
@@ -2794,7 +2820,7 @@ function gtDemoQR(){
   catch(_){ box.textContent='QR'; }
   document.getElementById('qrPopup').classList.add('open');
 }
-function gtDemoNotif(){
+function gtDemoNotif(withPref){
   gtSaveHtml('notifFeed');
   document.getElementById('notifFeed').innerHTML =
       '<div class="notif-card type-booking">'
@@ -2803,6 +2829,7 @@ function gtDemoNotif(){
     +     '<div class="notif-tag">부킹 요청</div>'
     +     '<div class="notif-msg">' + gtGuestLabel() + '</div>'
     +     '<div class="notif-time">방금 전</div>'
+    +     (withPref ? '<div class="pref-line expandable" id="gtutDemoPref">20대<span class="pref-plus">+2</span></div>' : '')
     +     '<div id="gtutDemoBtns" style="display:flex;gap:0.4rem;margin-top:0.5rem;">'
     +       '<button type="button" style="background:#e8f0fe;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#3a5a8a;font-family:inherit;">곧 갈게요</button>'
     +       '<button type="button" style="background:#fef3e8;border:none;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;color:#e67e22;font-family:inherit;">잠시만요</button>'
@@ -2887,6 +2914,9 @@ function gtSteps(){ return [
   { setup:function(){ switchTab('notif'); gtDemoNotif(); },
     target:function(){ return document.getElementById('gtutDemoBtns'); },
     text:"이렇게 손님 호출이 접수됩니다.<br>・<b>‘곧 갈게요’</b>나 <b>‘잠시만요’</b>를 누르면 손님 휴대폰에 그 말이 바로 뜹니다.<br>・확인이 끝난 호출은 <b>‘확인’</b>을 눌러 정리합니다. 지금 ‘확인’을 눌러 보십시오." },
+  { setup:function(){ switchTab('notif'); gtDemoNotif(true); },
+    target:function(){ return document.getElementById('gtutDemoPref'); },
+    text:"이름 아래의 <b>금색 줄</b>은 손님이 QR로 입장하실 때 직접 선택한 <b>취향 정보</b>입니다.<br>・순서는 <b>나이대 · 원하시는 분위기 · 부킹 스타일</b>입니다.<br>・줄을 누르시면 전체 내용이 펼쳐집니다.<br>부킹 방향을 잡으실 때 참고 자료로 활용해 주십시오." },
   { setup:function(){ switchTab('hist'); gtDemoHist(); gtDemoBadge(false); },
     target:function(){ return document.getElementById('tab-hist'); },
     text:"확인하신 손님은 <b>‘내역’</b>에 자동으로 기록됩니다. 입장 시간과 부킹 요청 내역이 이곳에 남습니다." },

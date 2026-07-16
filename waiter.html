@@ -1220,34 +1220,26 @@ function issueCoupon(gid, label) {
       toast('쿠폰 저장에 실패했어요. 신호를 확인해주세요');
     });
   });
-  shareCouponLink(couponId);
+  shareCouponLink(couponId, gid, label);
 }
 
-function shareCouponLink(couponId) {
+// 손님 전화번호 — VIP로 등록된 손님이면 등록된 번호, 아니면 빈 값(번호 없이 문자 앱만 열림)
+function findGuestPhone(gid, label) {
+  const gs = window._lastGuests || {};
+  const g = gid ? gs[gid] : null;
+  if (g && g.phone) return g.phone;
+  if (label) {
+    const v = Object.values(gs).find(v => v && v.isDangol && (v.label || '') === label && v.phone);
+    if (v) return v.phone;
+  }
+  return '';
+}
+
+// VIP 리마인드와 동일한 sms: 링크 방식으로 문자 앱을 열어 발송
+function shareCouponLink(couponId, gid, label) {
   const url = location.origin + '/guest.html?coupon=' + couponId;
-  const text = '오늘은 아쉬웠지만 다음엔 제가 책임지겠습니다. 우선 부킹권 확인해 주세요:\n' + url;
-  if (navigator.share) {
-    navigator.share({ text: text }).catch(() => {});
-  } else {
-    copyCouponText(text);
-  }
-}
-
-function copyCouponText(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => toast('링크가 복사되었습니다')).catch(() => legacyCopyText(text));
-  } else {
-    legacyCopyText(text);
-  }
-}
-function legacyCopyText(text) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.cssText = 'position:fixed;top:-999px;opacity:0;';
-  document.body.appendChild(ta);
-  ta.select();
-  try { document.execCommand('copy'); toast('링크가 복사되었습니다'); } catch(e) { toast('복사에 실패했어요'); }
-  document.body.removeChild(ta);
+  const body = '오늘은 아쉬웠지만 다음엔 제가 책임지겠습니다. 우선 부킹권 확인해 주세요: ' + url;
+  openSmsApp(findGuestPhone(gid, label), body);
 }
 
 // ── VIP CRM ──

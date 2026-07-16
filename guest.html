@@ -124,6 +124,20 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
 #toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:8px;padding:0.7rem 1.25rem;font-size:0.82rem;white-space:nowrap;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.25s;}
 #toast.show{opacity:1;}
 
+/* ── 손님 취향 카드 (1단계) 오버레이 ── */
+#prefOverlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;flex-direction:column;padding:1.25rem 1.5rem 2rem;}
+#prefOverlay.open{display:flex;}
+.pref-top{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.pref-progress{font-size:1rem;font-weight:700;color:var(--blue);letter-spacing:0.08em;}
+.pref-skip{background:var(--card);border:0.5px solid var(--border);border-radius:999px;padding:0.55rem 1.1rem;font-family:inherit;font-size:0.9rem;font-weight:600;color:var(--muted);cursor:pointer;}
+.pref-skip:active{transform:scale(0.97);}
+.pref-body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.75rem;}
+.pref-intro{font-size:0.9rem;color:var(--muted);margin-bottom:0.5rem;}
+.pref-title{font-size:1.4rem;font-weight:700;line-height:1.4;color:var(--navy);background:linear-gradient(135deg,#1a2535,#3a5a8a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:var(--navy);}
+.pref-opts{display:flex;flex-direction:column;gap:0.75rem;}
+.pref-opt{min-height:56px;background:var(--card);border:0.5px solid var(--border);border-radius:14px;font-family:inherit;font-size:1.1rem;font-weight:600;color:var(--navy);cursor:pointer;padding:0.9rem 1.25rem;text-align:left;transition:all 0.15s;animation:fadeUp 0.3s ease both;}
+.pref-opt:active{transform:scale(0.98);border-color:var(--blue);background:#e8f0fe;}
+
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
 .fade-up{animation:fadeUp 0.4s ease both;}
@@ -312,6 +326,21 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
   </div>
 </div>
 
+<!-- 취향 입력 오버레이 (손님 취향 카드 1단계) -->
+<div id="prefOverlay">
+  <div class="pref-top">
+    <div class="pref-progress" id="prefProgress">1/3</div>
+    <button class="pref-skip" type="button" onclick="skipPref()">건너뛰기</button>
+  </div>
+  <div class="pref-body">
+    <div>
+      <div class="pref-intro">더 좋은 서비스를 위해 여쭙습니다</div>
+      <div class="pref-title" id="prefTitle">—</div>
+    </div>
+    <div class="pref-opts" id="prefOpts"></div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -347,6 +376,73 @@ function todayStr() {
   const n = new Date();
   if (n.getHours() < 6) n.setDate(n.getDate() - 1);
   return n.getFullYear() + "년 " + (n.getMonth()+1) + "월 " + n.getDate() + "일";
+}
+
+/* ── 손님 취향 카드 (1단계) ── */
+const PREF_STORE_KEY = 'ncall_pref';
+const PREF_QUESTIONS = [
+  { key: 'age', title: '나이대를 선택해 주시기 바랍니다', opts: ['20대', '30대', '40대', '50대 이상'] },
+  { key: 'mood', title: '원하시는 분위기를 선택해 주시기 바랍니다', opts: ['차분한 대화 위주', '신나게 노는 분위기', '웨이터님께 맡기겠습니다'] },
+  { key: 'booking', title: '부킹 스타일을 선택해 주시기 바랍니다', opts: ['적극적으로 원합니다', '천천히 편하게', '오늘은 술자리 위주'] }
+];
+let prefStep = 0;
+let prefAnswers = {};
+
+function loadPref() {
+  try { return JSON.parse(localStorage.getItem(PREF_STORE_KEY) || 'null'); } catch(e) { return null; }
+}
+function savePref(data) {
+  try { localStorage.setItem(PREF_STORE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+// 저장된 취향이 있으면 알림 데이터에 필드로 실어서 보냄 — 없으면 필드 생략(기존 동작 유지)
+function withPref(data) {
+  const p = loadPref();
+  if (p && !p.skipped) {
+    if (p.age) data.prefAge = p.age;
+    if (p.mood) data.prefMood = p.mood;
+    if (p.booking) data.prefBooking = p.booking;
+  }
+  return data;
+}
+function maybeShowPrefOverlay() {
+  if (loadPref()) return; // 이미 답변했거나 건너뛴 기기 — 다시 묻지 않음
+  prefStep = 0; prefAnswers = {};
+  renderPrefStep();
+  document.getElementById('prefOverlay').classList.add('open');
+}
+function renderPrefStep() {
+  const q = PREF_QUESTIONS[prefStep];
+  document.getElementById('prefProgress').textContent = (prefStep + 1) + '/' + PREF_QUESTIONS.length;
+  document.getElementById('prefTitle').textContent = q.title;
+  const box = document.getElementById('prefOpts');
+  box.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pref-opt';
+    btn.style.animationDelay = (i * 0.04) + 's';
+    btn.textContent = opt;
+    btn.onclick = () => selectPref(q.key, opt);
+    box.appendChild(btn);
+  });
+}
+function selectPref(key, value) {
+  prefAnswers[key] = value;
+  if (prefStep < PREF_QUESTIONS.length - 1) {
+    prefStep++;
+    renderPrefStep();
+  } else {
+    savePref({ age: prefAnswers.age || '', mood: prefAnswers.mood || '', booking: prefAnswers.booking || '', done: true });
+    closePrefOverlay();
+    toast('입력해 주셔서 감사합니다');
+  }
+}
+function skipPref() {
+  savePref({ skipped: true });
+  closePrefOverlay();
+}
+function closePrefOverlay() {
+  document.getElementById('prefOverlay').classList.remove('open');
 }
 
 const processedReplyKeys = new Set();
@@ -484,6 +580,8 @@ function init() {
         document.getElementById('checkoutScreen').style.display = 'flex';
         return;
       }
+      // 정상 입장 확정 후 취향 오버레이 (답변/건너뛰기 이력 있으면 안 뜸)
+      maybeShowPrefOverlay();
       const _alreadyIn = guestData.visitOpen === true && guestData.lastVisit === _today;
       if (!_alreadyIn) {
         const enterTime = nowStr();
@@ -522,6 +620,7 @@ function init() {
         if (done) {
           isActive = false;
           localStorage.removeItem('ncall_guest'); localStorage.removeItem('entered_' + guestId); // 계산 완료 시 저장 데이터 삭제
+          closePrefOverlay(); // 취향 입력 중이었으면 오버레이 닫고 감사 화면 표시
           document.getElementById('mainScreen').style.display = 'none';
           document.getElementById('checkoutScreen').style.display = 'flex';
         }
@@ -554,11 +653,11 @@ function sendMsg() {
     const sentTime = nowStr();
     const sentDate = todayStr();
     const sortKey = nowFull();
-    fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), withPref({
       type: 'message', tableLabel: guestData.label, guestMsg: guestData.label,
       msgText: text, waiterName: waiterData.name, guestId,
       time: sentTime, date: sentDate, done: false
-    }).then(() => {
+    })).then(() => {
       const bar = document.getElementById('sentBar');
       document.getElementById('sentMsg').textContent = '메시지가 전송됐어요';
       bar.classList.add('show');
@@ -590,11 +689,11 @@ function sendBeer() {
     const sentTime = nowStr();
     const sentDate = todayStr();
     const sortKey = nowFull();
-    fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), withPref({
       type: 'beer', tableLabel: guestData.label, guestMsg: guestData.label,
       beerQty, waiterName: waiterData.name, guestId,
       time: sentTime, date: sentDate, done: false
-    }).then(() => {
+    })).then(() => {
       const bar = document.getElementById('sentBar');
       document.getElementById('sentMsg').textContent = '맥주 ' + beerQty + '병 주문됐어요';
       bar.classList.add('show');
@@ -735,11 +834,11 @@ function doSend() {
 function sendNotif(type) {
   const sentTime = nowStr();
   const sentDate = todayStr();
-  const pushRef = fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+  const pushRef = fbPush(fbRef(db, `notifs/${waiterData.id}`), withPref({
     type, tableLabel: guestData.label, guestMsg: guestData.label,
     waiterName: waiterData.name, guestId,
     time: sentTime, date: sentDate, done: false
-  });
+  }));
   pushRef.then(() => {
     if (type === 'call') watchCallAck(pushRef.key);
     const bar = document.getElementById('sentBar');
@@ -762,11 +861,11 @@ function sendCheckoutReq() {
   closeCheckoutReqModal();
   if (!isActive) { toast('이미 계산 완료된 테이블이에요'); return; }
   waitFb(() => {
-    fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), withPref({
       type: 'checkout_req', tableLabel: guestData.label, guestMsg: guestData.label,
       waiterName: waiterData.name, guestId,
       time: nowStr(), date: todayStr(), done: false
-    }).then(() => {
+    })).then(() => {
       const bar = document.getElementById('sentBar');
       document.getElementById('sentMsg').textContent = '계산 요청이 전송됐어요';
       bar.classList.add('show');

@@ -280,6 +280,9 @@ body[data-theme="dark"] .menu-dropdown{background:#1a1813;box-shadow:0 12px 32px
 
 @keyframes slideIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
 .notif-card.type-checkout_req{border-left:3px solid #27ae60;}
+/* 취향 뱃지 (손님 취향 카드 1단계) */
+.pref-badges{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.4rem;}
+.pref-badge{display:inline-block;background:#f5efe0;border:0.5px solid rgba(184,146,63,0.4);border-radius:6px;padding:0.15rem 0.5rem;font-size:13px;font-weight:600;color:#6b5320;line-height:1.5;}
 .type-checkout_req .notif-tag{color:#27ae60;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
 .checkout-blink{animation:blink 1s ease infinite;background:#e8f8ee!important;color:#27ae60!important;border-color:#27ae60!important;}
@@ -1660,6 +1663,19 @@ function startListeners() {
         };
         btns.append(b3);
         body.append(tag, msgEl);
+        // 취향 필드가 있는 알림만 뱃지 표시 — 없는 기존 알림은 완전히 동일하게 렌더
+        const prefVals = [n.prefAge, n.prefMood, n.prefBooking].filter(Boolean);
+        if (prefVals.length) {
+          const prefRow = document.createElement('div');
+          prefRow.className = 'pref-badges';
+          prefVals.forEach(v => {
+            const pb = document.createElement('span');
+            pb.className = 'pref-badge';
+            pb.textContent = v;
+            prefRow.appendChild(pb);
+          });
+          body.append(prefRow);
+        }
         if (n.type === 'message') {
           const msgContent = document.createElement('div');
           msgContent.style.cssText = 'font-size:0.82rem;color:var(--navy);margin-top:0.3rem;background:var(--bg);border-radius:8px;padding:0.5rem 0.75rem;line-height:1.4;word-break:break-all;';

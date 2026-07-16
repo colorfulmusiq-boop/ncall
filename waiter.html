@@ -287,6 +287,11 @@ body[data-theme="dark"] .menu-dropdown{background:#1a1813;box-shadow:0 12px 32px
 .pref-line.expandable{cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;}
 .pref-dot{color:#cdbd97;font-weight:400;margin:0 0.35rem;}
 .pref-plus{display:inline-block;background:#f0e6cc;color:#8a6d1f;border-radius:999px;padding:0.1rem 0.55rem;font-size:12px;font-weight:700;margin-left:0.45rem;line-height:1.5;}
+/* 취향 줄 다크 모드 — 밝은 금색으로 검정 배경에서 또렷하게 (라이트 모드 무변경) */
+body[data-theme="dark"] .pref-line{color:#e0c179;}
+body[data-theme="dark"] .pref-line::before{background:#e0c179;}
+body[data-theme="dark"] .pref-dot{color:rgba(224,193,121,0.5);}
+body[data-theme="dark"] .pref-plus{background:#453818;color:#e8c87a;}
 /* 알림 카드 이름 줄 — 이름 왼쪽, 시각 오른쪽 끝 */
 .notif-name-row{display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;}
 .notif-time-right{font-size:12.5px;color:var(--muted);font-weight:400;flex-shrink:0;}

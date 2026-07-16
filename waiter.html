@@ -1664,14 +1664,19 @@ function startListeners() {
         btns.append(b3);
         body.append(tag, msgEl);
         // 취향 필드가 있는 알림만 뱃지 표시 — 없는 기존 알림은 완전히 동일하게 렌더
+        // 표시할 때만 축약 (저장값·손님 화면 문구는 그대로) — 매칭 안 되는 값은 원문 표시
         const prefVals = [n.prefAge, n.prefMood, n.prefBooking].filter(Boolean);
         if (prefVals.length) {
+          const prefShort = {
+            '차분한 대화 위주': '대화 위주', '신나게 노는 분위기': '노는 분위기', '웨이터님께 맡기겠습니다': '추천 요청',
+            '적극적으로 원합니다': '적극적', '천천히 편하게': '편하게', '오늘은 술자리 위주': '술자리 위주'
+          };
           const prefRow = document.createElement('div');
           prefRow.className = 'pref-badges';
           prefVals.forEach(v => {
             const pb = document.createElement('span');
             pb.className = 'pref-badge';
-            pb.textContent = v;
+            pb.textContent = prefShort[v] || v;
             prefRow.appendChild(pb);
           });
           body.append(prefRow);

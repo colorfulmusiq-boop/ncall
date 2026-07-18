@@ -381,6 +381,21 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
 .pf-row .inp{flex:1;}
 .dangol-bday{font-size:0.8rem;font-weight:800;color:#b8923f;margin-bottom:0.3rem;}
 .remind-head.bday{color:#b8923f;}
+
+/* 오늘 부킹 대기 (알림 탭 상단) */
+#bookingQueue{margin-bottom:1rem;border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.bq-head{display:flex;align-items:center;justify-content:space-between;padding:0.8rem 1rem;background:linear-gradient(135deg,#d4a843,#e8c87a);cursor:pointer;user-select:none;}
+.bq-title{font-size:0.85rem;font-weight:800;color:#1a1206;}
+.bq-arrow{color:#1a1206;font-size:0.8rem;transition:transform 0.2s;}
+.bq-row{display:flex;align-items:center;gap:0.6rem;padding:0.65rem 1rem;border-top:0.5px solid var(--border);background:var(--card);}
+.bq-row.done{opacity:0.55;}
+.bq-badge{font-size:0.68rem;font-weight:800;border-radius:8px;padding:0.18rem 0.5rem;white-space:nowrap;}
+.bq-badge.very{background:#fdece2;color:#d35400;border:0.5px solid #f5c6a5;}
+.bq-badge.want{background:#faf3e0;color:#b8923f;border:0.5px solid #ecd9a0;}
+.bq-label{flex:1;font-size:0.88rem;font-weight:700;color:var(--navy);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bq-done-btn{min-height:44px;padding:0.45rem 0.8rem;border-radius:8px;border:none;background:#e8f8ee;color:var(--green);font-family:inherit;font-size:0.78rem;font-weight:700;cursor:pointer;}
+.bq-done-btn:active{transform:scale(0.97);}
+.bq-done-txt{font-size:0.75rem;font-weight:800;color:var(--green);white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -456,6 +471,7 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
   <!-- 알림 -->
   <div id="panel-notif" class="scroll"><div class="pad">
     <button class="btn btn-danger" style="margin-bottom:1rem;" id="clearNotifsBtn" onclick="clearAllNotifs()" style="display:none;">✓ 알림 전체 확인</button>
+    <div id="bookingQueue" style="display:none;"></div>
     <div id="notifFeed"><div class="empty"><div class="empty-icon">🔕</div>호출 없음</div></div>
   </div></div>
 
@@ -880,6 +896,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.19", type: "신규 기능", content: "오늘 부킹 대기 — 부킹을 원한다고 답한 손님이 알림 탭 맨 위에 자동으로 줄을 섭니다. 매우 원함 손님이 먼저 표시되며, 부킹을 넣어드린 뒤 부킹 완료 버튼을 누르시면 남은 팀 수가 줄어듭니다. 밤새 누구에게 부킹을 넣어드려야 하는지 이 목록 하나로 확인하실 수 있습니다. 완료하신 부킹은 내역 탭 날짜별로 💃 표시로 집계됩니다." },
   { date: "2026.07.19", type: "신규 기능", content: "VIP 손님 장부 — VIP 등록 화면에서 생일, 주로 드시는 술, 손님 규모(큰손 등)를 기록하실 수 있습니다. 전부 버튼으로 선택만 하시면 되고, 기록한 내용은 VIP 카드에 한눈에 표시됩니다. 생일이 일주일 안으로 다가온 VIP는 VIP 탭 맨 위에 자동으로 떠오르며, 축하 문자 버튼 한 번으로 생일 문자를 보내실 수 있습니다." },
   { date: "2026.07.19", type: "신규 기능", content: "손님 생일 자동 수집 — 웨이터님이 여쭤보실 필요 없이, 손님 호출 화면에 생일 등록 안내가 표시되어 손님이 직접 등록합니다. 생일 주간 케어를 받기 위해 손님이 스스로 남기는 방식이며, 등록된 생일은 VIP 카드에 자동으로 표시됩니다." },
   { date: "2026.07.16", type: "신규 기능", content: "부킹 의지 표시 — 손님의 부킹 의사를 미리 확인하실 수 있는 기능이 추가되었습니다. 손님이 입장하실 때 부킹을 원하는지 직접 선택합니다. 알림 카드에 \"부킹: 원함\" 또는 \"부킹: 매우 원함\"으로 표시됩니다. 부킹을 원하지 않는 손님은 표시되지 않습니다." },
@@ -1493,7 +1510,7 @@ function checkoutDangol(key, name) {
 function showDangolQR(key, name, phone) {
   dangolQrKey = key; dangolQrName = name; dangolQrPhone = phone || '';
   // 호출 QR을 다시 띄우면 계산완료로 닫혔던 링크를 다시 열고, 부킹 의지도 초기화해 다음 방문 때 다시 물음
-  if (key) { waitFb(() => fbUpdate(fbRef(db, `guests/${W.id}/${key}`), { linkClosed: false, bookingIntent: null })); }
+  if (key) { waitFb(() => fbUpdate(fbRef(db, `guests/${W.id}/${key}`), { linkClosed: false, bookingIntent: null, bookingDone: null })); }
   const url = location.origin + '/guest.html?w=' + encodeURIComponent(W.name) + '&g=' + key;
   document.getElementById('dangolQrTitle').textContent = name + ' 전용 QR';
   document.getElementById('dangolQrUrl').textContent = url;
@@ -1514,7 +1531,7 @@ function sendDangolLink() {
   const hn = dangolQrName.endsWith('님') ? dangolQrName : dangolQrName + '님';
   const body = '안녕하세요 ' + hn + ', ' + W.name + '입니다. 늘 찾아주셔서 진심으로 감사드립니다. 아래 링크를 저장해두시면 언제든 편하게 부킹·주문·호출하실 수 있습니다. 정성껏 모시겠습니다.\n' + url;
   // 링크를 다시 보내면 계산완료로 닫혔던 링크를 다시 열고, 부킹 의지도 초기화해 다음 방문 때 다시 물음
-  if (dangolQrKey) { waitFb(() => fbUpdate(fbRef(db, `guests/${W.id}/${dangolQrKey}`), { linkClosed: false, bookingIntent: null })); }
+  if (dangolQrKey) { waitFb(() => fbUpdate(fbRef(db, `guests/${W.id}/${dangolQrKey}`), { linkClosed: false, bookingIntent: null, bookingDone: null })); }
   openSmsApp(dangolQrPhone, body);
 }
 
@@ -1547,6 +1564,78 @@ function deleteDangol(key, name) {
     fbRemove(fbRef(db, `dangolInfo/${W.id}/${key}`));
   });
   toast('✓ 삭제됨');
+}
+
+// ── 오늘 부킹 대기 (알림 탭 상단) ──
+// 현재 매장에 있는 손님(visitOpen) 중 부킹 원함/매우 원함만 — 매우 원함 먼저, 완료된 팀은 뒤로
+function renderBookingQueue(data) {
+  const box = document.getElementById('bookingQueue');
+  if (!box) return;
+  const inQueue = Object.entries(data || {})
+    .map(([k,v]) => ({...v, _key:k}))
+    .filter(g => g.visitOpen === true && g.active !== false && (g.bookingIntent === 'want' || g.bookingIntent === 'very'))
+    .sort((a,b) => {
+      const done = v => v.bookingDone === true ? 1 : 0;
+      if (done(a) !== done(b)) return done(a) - done(b);
+      const rank = v => v.bookingIntent === 'very' ? 0 : 1;
+      return rank(a) - rank(b);
+    });
+  if (!inQueue.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const remain = inQueue.filter(g => g.bookingDone !== true).length;
+  box.innerHTML = '';
+  box.style.display = 'block';
+  if (window._bqOpen === undefined) window._bqOpen = true;
+
+  const head = document.createElement('div');
+  head.className = 'bq-head';
+  const title = document.createElement('div');
+  title.className = 'bq-title';
+  title.textContent = '💃 오늘 부킹 대기 — ' + (remain > 0 ? remain + '팀 남음' : '전부 완료');
+  const arrow = document.createElement('span');
+  arrow.className = 'bq-arrow';
+  arrow.textContent = '▼';
+  arrow.style.transform = window._bqOpen ? 'rotate(180deg)' : '';
+  head.append(title, arrow);
+  head.onclick = () => { window._bqOpen = !window._bqOpen; renderBookingQueue(window._lastGuests || {}); };
+  box.appendChild(head);
+
+  if (!window._bqOpen) return;
+  inQueue.forEach(g => {
+    const row = document.createElement('div');
+    row.className = 'bq-row' + (g.bookingDone === true ? ' done' : '');
+    const badge = document.createElement('span');
+    badge.className = 'bq-badge ' + (g.bookingIntent === 'very' ? 'very' : 'want');
+    badge.textContent = g.bookingIntent === 'very' ? '매우 원함' : '원함';
+    const label = document.createElement('div');
+    label.className = 'bq-label';
+    label.textContent = g.label || '손님';
+    row.append(badge, label);
+    if (g.bookingDone === true) {
+      const doneTxt = document.createElement('span');
+      doneTxt.className = 'bq-done-txt';
+      doneTxt.textContent = '✓ 부킹 완료';
+      row.appendChild(doneTxt);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'bq-done-btn';
+      btn.textContent = '✓ 부킹 완료';
+      btn.onclick = () => markBookingDone(g._key, g.label || '손님');
+      row.appendChild(btn);
+    }
+    box.appendChild(row);
+  });
+}
+
+function markBookingDone(key, label) {
+  if (!confirm(label + '\n부킹 완료 처리할까요?')) return;
+  waitFb(() => {
+    fbUpdate(fbRef(db, `guests/${W.id}/${key}`), { bookingDone: true });
+    fbPush(fbRef(db, `history/${W.id}`), {
+      type: 'bookingDone', tableLabel: label, guestMsg: label, guestId: key,
+      time: nowStr(), date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
+    });
+  });
+  toast('✓ 부킹 완료');
 }
 
 function renderDangol(data) {
@@ -2021,6 +2110,7 @@ function startListeners() {
     const data = snap.val() || {};
     window._lastGuests = data;
     renderDangol(data);
+    renderBookingQueue(data);
     updateNewBadges();
     updateHistVip();
     const guests = Object.entries(data)
@@ -2134,9 +2224,9 @@ function startListeners() {
       return;
     }
 
-    var ICON  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪' };
-    var LABEL = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장' };
-    var COLOR = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)' };
+    var ICON  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪', bookingDone:'💃' };
+    var LABEL = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장', bookingDone:'부킹 완료' };
+    var COLOR = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)', bookingDone:'#b8923f' };
 
     function parseDateNum(s) {
       var m = s.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
@@ -2232,6 +2322,15 @@ function startListeners() {
           }).catch(function(){ done++; });
         });
       })(maidCntBadge, _cntGids, _cntDk);
+
+      // 그날 부킹 완료 건수 (부킹 대기열에서 완료 처리한 팀 수)
+      var _bkCnt = items.filter(function(n){ return n.type === 'bookingDone'; }).length;
+      if (_bkCnt > 0) {
+        var bkBadge = document.createElement('span');
+        bkBadge.style.cssText = 'background:#faf3e0;color:#b8923f;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
+        bkBadge.textContent = '💃 ' + _bkCnt;
+        dateLeft.appendChild(bkBadge);
+      }
 
       if (isToday) {
         var todayBadge = document.createElement('span');

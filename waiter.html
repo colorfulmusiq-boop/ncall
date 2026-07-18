@@ -370,6 +370,17 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
 .dg-btn.visit{background:#e8f8ee;color:var(--green);border-color:transparent;}
 .dg-btn.remind{background:#fef3e8;color:#e67e22;border-color:transparent;}
 .dg-btn.del{background:#fbeaea;color:var(--red);border-color:transparent;flex:0 0 auto;min-width:auto;padding:0.55rem 0.8rem;}
+.dg-btn.bday{background:#fdf3d8;color:#b8923f;border-color:transparent;}
+
+/* VIP 손님 장부 — 생일·취향·규모 */
+.pf-chips{display:flex;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.9rem;}
+.pf-chip{min-height:44px;padding:0.5rem 0.9rem;border-radius:10px;border:0.5px solid var(--border);background:var(--bg);color:var(--navy);font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.pf-chip:active{transform:scale(0.97);}
+.pf-chip.on{background:linear-gradient(135deg,#d4a843,#e8c87a);border-color:#d4a843;color:#1a1206;}
+.pf-row{display:flex;gap:0.5rem;}
+.pf-row .inp{flex:1;}
+.dangol-bday{font-size:0.8rem;font-weight:800;color:#b8923f;margin-bottom:0.3rem;}
+.remind-head.bday{color:#b8923f;}
 </style>
 </head>
 <body>
@@ -568,6 +579,25 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
     <input class="inp" id="dangolPhone" type="tel" placeholder="010-1234-5678" inputmode="numeric">
     <label class="inp-label">메모 (선호 주류, 특징 등)</label>
     <input class="inp" id="dangolMemo" type="text" placeholder="예: 발렌타인 17년, 금요일 자주 옴">
+    <label class="inp-label">생일 — 아시는 경우만 (선택)</label>
+    <div class="pf-row" style="margin-bottom:0.9rem;">
+      <select class="inp" id="dangolBirthM" style="margin-bottom:0;"></select>
+      <select class="inp" id="dangolBirthD" style="margin-bottom:0;"></select>
+    </div>
+    <label class="inp-label">주로 드시는 술 (선택 · 여러 개 가능)</label>
+    <div class="pf-chips" id="dangolTaste">
+      <button type="button" class="pf-chip" data-v="양주">🥃 양주</button>
+      <button type="button" class="pf-chip" data-v="맥주">🍺 맥주</button>
+      <button type="button" class="pf-chip" data-v="와인">🍷 와인</button>
+      <button type="button" class="pf-chip" data-v="샴페인">🥂 샴페인</button>
+      <button type="button" class="pf-chip" data-v="소주">🍶 소주</button>
+    </div>
+    <label class="inp-label">손님 규모 (선택)</label>
+    <div class="pf-chips" id="dangolScale">
+      <button type="button" class="pf-chip" data-v="큰손">👑 큰손</button>
+      <button type="button" class="pf-chip" data-v="보통">보통</button>
+      <button type="button" class="pf-chip" data-v="가벼움">가벼움</button>
+    </div>
     <div class="err" id="dangolErr">오류</div>
     <button class="btn btn-primary" onclick="doSaveDangol()">저장</button>
     <button class="btn btn-ghost" onclick="closeModal('dangolModal')">취소</button>
@@ -850,6 +880,8 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.19", type: "신규 기능", content: "VIP 손님 장부 — VIP 등록 화면에서 생일, 주로 드시는 술, 손님 규모(큰손 등)를 기록하실 수 있습니다. 전부 버튼으로 선택만 하시면 되고, 기록한 내용은 VIP 카드에 한눈에 표시됩니다. 생일이 일주일 안으로 다가온 VIP는 VIP 탭 맨 위에 자동으로 떠오르며, 축하 문자 버튼 한 번으로 생일 문자를 보내실 수 있습니다." },
+  { date: "2026.07.19", type: "신규 기능", content: "손님 생일 자동 수집 — 웨이터님이 여쭤보실 필요 없이, 손님 호출 화면에 생일 등록 안내가 표시되어 손님이 직접 등록합니다. 생일 주간 케어를 받기 위해 손님이 스스로 남기는 방식이며, 등록된 생일은 VIP 카드에 자동으로 표시됩니다." },
   { date: "2026.07.16", type: "신규 기능", content: "부킹 의지 표시 — 손님의 부킹 의사를 미리 확인하실 수 있는 기능이 추가되었습니다. 손님이 입장하실 때 부킹을 원하는지 직접 선택합니다. 알림 카드에 \"부킹: 원함\" 또는 \"부킹: 매우 원함\"으로 표시됩니다. 부킹을 원하지 않는 손님은 표시되지 않습니다." },
   { date: "2026.07.16", type: "신규 기능", content: "팁 안내 전달 — \"매우 원함\"을 선택한 손님은 팁 안내를 확인한 뒤 선택한 것입니다. 이 사실이 웨이터님께도 함께 전달됩니다. 알림의 \"팁 안내 전달됨\"을 누르시면 손님이 확인한 안내문 원문을 보실 수 있습니다. 팁 지급이 확정된 것은 아니며, 부킹 순서를 정하실 때 참고 자료로 활용해 주시기 바랍니다." },
   { date: "2026.07.16", type: "신규 기능", content: "우선 부킹권 — 부킹이 아쉬웠던 손님께 우선 부킹권을 문자로 보내실 수 있습니다. 내역 탭에서 발급하시면 되며, 유효기간은 발급일로부터 14일입니다. 손님이 방문하셨을 때 사용 처리를 하시면 됩니다." },
@@ -1319,23 +1351,82 @@ function daysSince(iso) {
 }
 function cleanPhone(p) { return (p||'').replace(/[^0-9]/g, ''); }
 
+// ── 손님 장부: 생일·취향·규모 ──
+// 생일은 "MM-DD"로 손님 노드(guests)에 저장 — guest.html에서 손님이 직접 등록한 값과 같은 자리
+// 취향·규모는 웨이터 전용 정보라 dangolInfo에 저장
+function bdayLabel(b) {
+  const p = (b || '').split('-');
+  if (p.length !== 2) return '';
+  return (+p[0]) + '월 ' + (+p[1]) + '일';
+}
+function daysUntilBday(b) {
+  const p = (b || '').split('-');
+  if (p.length !== 2) return null;
+  const m = +p[0], d = +p[1];
+  if (!m || !d) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  let t = new Date(now.getFullYear(), m - 1, d);
+  if (t < now) t = new Date(now.getFullYear() + 1, m - 1, d);
+  return Math.round((t - now) / 86400000);
+}
+function initDangolExtras() {
+  const mSel = document.getElementById('dangolBirthM');
+  const dSel = document.getElementById('dangolBirthD');
+  let mh = '<option value="">월 (모름)</option>';
+  for (let i = 1; i <= 12; i++) mh += '<option value="' + i + '">' + i + '월</option>';
+  mSel.innerHTML = mh;
+  let dh = '<option value="">일 (모름)</option>';
+  for (let i = 1; i <= 31; i++) dh += '<option value="' + i + '">' + i + '일</option>';
+  dSel.innerHTML = dh;
+  document.getElementById('dangolTaste').addEventListener('click', e => {
+    const b = e.target.closest('.pf-chip');
+    if (b) b.classList.toggle('on');
+  });
+  document.getElementById('dangolScale').addEventListener('click', e => {
+    const b = e.target.closest('.pf-chip');
+    if (!b) return;
+    const wasOn = b.classList.contains('on');
+    document.querySelectorAll('#dangolScale .pf-chip').forEach(c => c.classList.remove('on'));
+    if (!wasOn) b.classList.add('on');
+  });
+}
+initDangolExtras();
+function setDangolExtras(birthday, taste, scale) {
+  const p = (birthday || '').split('-');
+  document.getElementById('dangolBirthM').value = p.length === 2 ? String(+p[0]) : '';
+  document.getElementById('dangolBirthD').value = p.length === 2 ? String(+p[1]) : '';
+  const tset = new Set((taste || '').split(',').filter(Boolean));
+  document.querySelectorAll('#dangolTaste .pf-chip').forEach(c => c.classList.toggle('on', tset.has(c.dataset.v)));
+  document.querySelectorAll('#dangolScale .pf-chip').forEach(c => c.classList.toggle('on', c.dataset.v === (scale || '')));
+}
+function getDangolExtras() {
+  const m = document.getElementById('dangolBirthM').value;
+  const d = document.getElementById('dangolBirthD').value;
+  const birthday = (m && d) ? String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0') : '';
+  const taste = [...document.querySelectorAll('#dangolTaste .pf-chip.on')].map(c => c.dataset.v).join(',');
+  const sEl = document.querySelector('#dangolScale .pf-chip.on');
+  return { birthday, taste, scale: sEl ? sEl.dataset.v : '' };
+}
+
 function openAddDangol() {
   editingDangolKey = null;
   document.getElementById('dangolModalTitle').textContent = 'VIP 등록';
   document.getElementById('dangolName').value = '';
   document.getElementById('dangolPhone').value = '';
   document.getElementById('dangolMemo').value = '';
+  setDangolExtras('', '', '');
   document.getElementById('dangolErr').classList.remove('show');
   document.getElementById('dangolModal').classList.add('open');
   setTimeout(() => document.getElementById('dangolName').focus(), 300);
 }
 
-function editDangol(key, name, phone, memo) {
+function editDangol(key, name, phone, memo, birthday, taste, scale) {
   editingDangolKey = key;
   document.getElementById('dangolModalTitle').textContent = 'VIP 정보 수정';
   document.getElementById('dangolName').value = name || '';
   document.getElementById('dangolPhone').value = phone || '';
   document.getElementById('dangolMemo').value = memo || '';
+  setDangolExtras(birthday, taste, scale);
   document.getElementById('dangolErr').classList.remove('show');
   document.getElementById('dangolModal').classList.add('open');
 }
@@ -1346,19 +1437,20 @@ function doSaveDangol() {
   const memo = document.getElementById('dangolMemo').value.trim();
   const err = document.getElementById('dangolErr');
   if (!name) { err.textContent='VIP 이름을 입력해주세요'; err.classList.add('show'); return; }
+  const ex = getDangolExtras();
   waitFb(() => {
     if (editingDangolKey) {
-      fbUpdate(fbRef(db, `guests/${W.id}/${editingDangolKey}`), { label:name });
-      fbUpdate(fbRef(db, `dangolInfo/${W.id}/${editingDangolKey}`), { phone, memo });
+      fbUpdate(fbRef(db, `guests/${W.id}/${editingDangolKey}`), { label:name, birthday: ex.birthday || null });
+      fbUpdate(fbRef(db, `dangolInfo/${W.id}/${editingDangolKey}`), { phone, memo, taste: ex.taste || null, scale: ex.scale || null });
       toast('✓ 수정됨');
       closeModal('dangolModal');
     } else {
       const ref = fbPush(fbRef(db, `guests/${W.id}`), {
-        label:name, isDangol:true, active:true,
+        label:name, isDangol:true, active:true, birthday: ex.birthday || null,
         lastVisit: '', visitCount: 0, bookingCount: 0, createdAt: nowStr()
       });
       const key = ref.key;
-      fbSet(fbRef(db, `dangolInfo/${W.id}/${key}`), { phone, memo });
+      fbSet(fbRef(db, `dangolInfo/${W.id}/${key}`), { phone, memo, taste: ex.taste || null, scale: ex.scale || null });
       closeModal('dangolModal');
       toast('✓ VIP 등록됨');
       setTimeout(() => showDangolQR(key, name, phone), 400);
@@ -1432,6 +1524,12 @@ function sendRemind(key, name, phone) {
   openSmsApp(phone, body);
 }
 
+function sendBirthdaySms(key, name, phone) {
+  const hn = name.endsWith('님') ? name : name + '님';
+  const body = '안녕하세요 ' + hn + ', ' + W.name + '입니다. 생일을 진심으로 축하드립니다! 🎂 생일 주간에 들러주시면 제가 마음을 다해 특별히 모시겠습니다. 늘 건강하시고 좋은 일만 가득하시길 바랍니다.';
+  openSmsApp(phone, body);
+}
+
 function openSmsApp(phone, body) {
   const num = cleanPhone(phone);
   const a = document.createElement('a');
@@ -1467,11 +1565,30 @@ function renderDangol(data) {
 
   // 오래 안 온 순으로 정렬
   dangols.sort((a,b) => (daysSince(b.lastVisit)||0) - (daysSince(a.lastVisit)||0));
-  const due = dangols.filter(g => (daysSince(g.lastVisit)||0) >= REMIND_DAYS);
-  badge.style.display = due.length > 0 ? 'inline' : 'none';
-  badge.textContent = due.length;
+
+  // 생일이 일주일 안으로 다가온 VIP — 맨 위 생일 섹션에 표시 (다른 섹션과 중복 없이)
+  const bday = dangols
+    .filter(g => { const du = daysUntilBday(g.birthday); return du !== null && du <= 7; })
+    .sort((a,b) => daysUntilBday(a.birthday) - daysUntilBday(b.birthday));
+  const bdayKeys = new Set(bday.map(g => g._key));
+
+  const due = dangols.filter(g => !bdayKeys.has(g._key) && (daysSince(g.lastVisit)||0) >= REMIND_DAYS);
+  const attention = bday.length + due.length;
+  badge.style.display = attention > 0 ? 'inline' : 'none';
+  badge.textContent = attention;
 
   list.innerHTML = '';
+
+  if (bday.length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'remind-section';
+    const head = document.createElement('div');
+    head.className = 'remind-head bday';
+    head.textContent = '🎂 곧 생일인 VIP (' + bday.length + '명)';
+    sec.appendChild(head);
+    bday.forEach(g => sec.appendChild(dangolCard(g, false)));
+    list.appendChild(sec);
+  }
 
   if (due.length > 0) {
     const sec = document.createElement('div');
@@ -1484,9 +1601,9 @@ function renderDangol(data) {
     list.appendChild(sec);
   }
 
-  const rest = dangols.filter(g => (daysSince(g.lastVisit)||0) < REMIND_DAYS);
+  const rest = dangols.filter(g => !bdayKeys.has(g._key) && (daysSince(g.lastVisit)||0) < REMIND_DAYS);
   if (rest.length > 0) {
-    if (due.length > 0) {
+    if (due.length > 0 || bday.length > 0) {
       const head = document.createElement('div');
       head.style.cssText = 'font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:0.6rem;';
       head.textContent = 'VIP 전체';
@@ -1535,6 +1652,16 @@ function dangolCard(g, isDue) {
     if (show) window._expandedDangols.add(g._key); else window._expandedDangols.delete(g._key);
   };
 
+  // 생일이 일주일 안이면 카드 맨 위에 강조 표시
+  const _bdayDu = daysUntilBday(g.birthday);
+  const _bdaySoon = _bdayDu !== null && _bdayDu <= 7;
+  if (_bdaySoon) {
+    const bd = document.createElement('div');
+    bd.className = 'dangol-bday';
+    bd.textContent = _bdayDu === 0 ? '🎂 오늘 생일입니다!' : '🎂 생일까지 ' + _bdayDu + '일 (' + bdayLabel(g.birthday) + ')';
+    body.appendChild(bd);
+  }
+
   const since = document.createElement('div');
   since.className = 'dangol-since ' + (isDue ? 'due' : 'ok');
   since.textContent = d === null ? '방문 기록 없음'
@@ -1546,6 +1673,18 @@ function dangolCard(g, isDue) {
   meta.className = 'dangol-meta';
   meta.textContent = (g.phone ? '📱 ' + g.phone : '📱 번호 없음');
   body.appendChild(meta);
+
+  // 손님 장부 — 생일·취향·규모 (있는 것만)
+  const _prof = [];
+  if (g.birthday && !_bdaySoon) _prof.push('🎂 ' + bdayLabel(g.birthday));
+  if (g.taste) _prof.push('🥃 ' + g.taste.split(',').join('·'));
+  if (g.scale) _prof.push((g.scale === '큰손' ? '👑 ' : '') + g.scale);
+  if (_prof.length) {
+    const pr = document.createElement('div');
+    pr.className = 'dangol-meta';
+    pr.textContent = _prof.join(' · ');
+    body.appendChild(pr);
+  }
 
   if (g.memo) {
     const memo = document.createElement('div');
@@ -1648,8 +1787,16 @@ function dangolCard(g, isDue) {
   remindBtn.className = 'dg-btn remind';
   remindBtn.textContent = '✉️ 리마인드 문자';
   remindBtn.onclick = () => {
-    if (!g.phone) { toast('전화번호를 먼저 등록하세요'); editDangol(g._key, g.label, g.phone, g.memo); return; }
+    if (!g.phone) { toast('전화번호를 먼저 등록하세요'); editDangol(g._key, g.label, g.phone, g.memo, g.birthday, g.taste, g.scale); return; }
     sendRemind(g._key, g.label, g.phone);
+  };
+
+  const bdayBtn = document.createElement('button');
+  bdayBtn.className = 'dg-btn bday';
+  bdayBtn.textContent = '🎂 축하 문자';
+  bdayBtn.onclick = () => {
+    if (!g.phone) { toast('전화번호를 먼저 등록하세요'); editDangol(g._key, g.label, g.phone, g.memo, g.birthday, g.taste, g.scale); return; }
+    sendBirthdaySms(g._key, g.label, g.phone);
   };
 
   const qrBtn = document.createElement('button');
@@ -1660,7 +1807,7 @@ function dangolCard(g, isDue) {
   const editBtn = document.createElement('button');
   editBtn.className = 'dg-btn';
   editBtn.textContent = '✏️ 수정';
-  editBtn.onclick = () => editDangol(g._key, g.label, g.phone, g.memo);
+  editBtn.onclick = () => editDangol(g._key, g.label, g.phone, g.memo, g.birthday, g.taste, g.scale);
 
   const delBtn = document.createElement('button');
   delBtn.className = 'dg-btn del';
@@ -1668,11 +1815,9 @@ function dangolCard(g, isDue) {
   delBtn.onclick = () => deleteDangol(g._key, g.label);
 
   const _isVisiting = (g.visitOpen === true);
-  if (_isVisiting) {
-    btns.append(visitBtn, remindBtn, qrBtn, editBtn, delBtn);
-  } else {
-    btns.append(remindBtn, qrBtn, editBtn, delBtn);
-  }
+  if (_isVisiting) btns.append(visitBtn);
+  if (_bdaySoon) btns.append(bdayBtn);
+  btns.append(remindBtn, qrBtn, editBtn, delBtn);
   body.appendChild(btns);
 
   card.append(top, body);

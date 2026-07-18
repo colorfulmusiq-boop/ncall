@@ -379,6 +379,8 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
 .pf-chip.on{background:linear-gradient(135deg,#d4a843,#e8c87a);border-color:#d4a843;color:#1a1206;}
 .pf-row{display:flex;gap:0.5rem;}
 .pf-row .inp{flex:1;}
+.pf-toggle{width:100%;min-height:44px;display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:0.7rem 1rem;font-family:inherit;font-size:0.85rem;font-weight:700;color:var(--navy);cursor:pointer;margin-bottom:0.9rem;text-align:left;}
+.pf-toggle:active{transform:scale(0.98);}
 .dangol-bday{font-size:0.8rem;font-weight:800;color:#b8923f;margin-bottom:0.3rem;}
 .remind-head.bday{color:#b8923f;}
 
@@ -595,24 +597,27 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
     <input class="inp" id="dangolPhone" type="tel" placeholder="010-1234-5678" inputmode="numeric">
     <label class="inp-label">메모 (선호 주류, 특징 등)</label>
     <input class="inp" id="dangolMemo" type="text" placeholder="예: 발렌타인 17년, 금요일 자주 옴">
-    <label class="inp-label">생일 — 아시는 경우만 (선택)</label>
-    <div class="pf-row" style="margin-bottom:0.9rem;">
-      <select class="inp" id="dangolBirthM" style="margin-bottom:0;"></select>
-      <select class="inp" id="dangolBirthD" style="margin-bottom:0;"></select>
-    </div>
-    <label class="inp-label">주로 드시는 술 (선택 · 여러 개 가능)</label>
-    <div class="pf-chips" id="dangolTaste">
-      <button type="button" class="pf-chip" data-v="양주">🥃 양주</button>
-      <button type="button" class="pf-chip" data-v="맥주">🍺 맥주</button>
-      <button type="button" class="pf-chip" data-v="와인">🍷 와인</button>
-      <button type="button" class="pf-chip" data-v="샴페인">🥂 샴페인</button>
-      <button type="button" class="pf-chip" data-v="소주">🍶 소주</button>
-    </div>
-    <label class="inp-label">손님 규모 (선택)</label>
-    <div class="pf-chips" id="dangolScale">
-      <button type="button" class="pf-chip" data-v="큰손">👑 큰손</button>
-      <button type="button" class="pf-chip" data-v="보통">보통</button>
-      <button type="button" class="pf-chip" data-v="가벼움">가벼움</button>
+    <button type="button" class="pf-toggle" id="dangolExtrasToggle" onclick="toggleDangolExtras()">📖 장부 더 쓰기 — 생일·취향·규모 (선택) <span id="dangolExtrasArrow" style="transition:transform 0.2s;display:inline-block;">▼</span></button>
+    <div id="dangolExtras" style="display:none;">
+      <label class="inp-label">생일 — 아시는 경우만 (선택)</label>
+      <div class="pf-row" style="margin-bottom:0.9rem;">
+        <select class="inp" id="dangolBirthM" style="margin-bottom:0;"></select>
+        <select class="inp" id="dangolBirthD" style="margin-bottom:0;"></select>
+      </div>
+      <label class="inp-label">주로 드시는 술 (선택 · 여러 개 가능)</label>
+      <div class="pf-chips" id="dangolTaste">
+        <button type="button" class="pf-chip" data-v="양주">🥃 양주</button>
+        <button type="button" class="pf-chip" data-v="맥주">🍺 맥주</button>
+        <button type="button" class="pf-chip" data-v="와인">🍷 와인</button>
+        <button type="button" class="pf-chip" data-v="샴페인">🥂 샴페인</button>
+        <button type="button" class="pf-chip" data-v="소주">🍶 소주</button>
+      </div>
+      <label class="inp-label">손님 규모 (선택)</label>
+      <div class="pf-chips" id="dangolScale">
+        <button type="button" class="pf-chip" data-v="큰손">👑 큰손</button>
+        <button type="button" class="pf-chip" data-v="보통">보통</button>
+        <button type="button" class="pf-chip" data-v="가벼움">가벼움</button>
+      </div>
     </div>
     <div class="err" id="dangolErr">오류</div>
     <button class="btn btn-primary" onclick="doSaveDangol()">저장</button>
@@ -1408,7 +1413,16 @@ function initDangolExtras() {
   });
 }
 initDangolExtras();
+function toggleDangolExtras(force) {
+  const box = document.getElementById('dangolExtras');
+  const arrow = document.getElementById('dangolExtrasArrow');
+  const show = force !== undefined ? force : box.style.display === 'none';
+  box.style.display = show ? 'block' : 'none';
+  arrow.style.transform = show ? 'rotate(180deg)' : '';
+}
 function setDangolExtras(birthday, taste, scale) {
+  // 기록된 값이 있으면 펼친 상태로, 없으면 접힌 상태로 열림 — 평소 등록은 이름·전화만 보이게
+  toggleDangolExtras(!!(birthday || taste || scale));
   const p = (birthday || '').split('-');
   document.getElementById('dangolBirthM').value = p.length === 2 ? String(+p[0]) : '';
   document.getElementById('dangolBirthD').value = p.length === 2 ? String(+p[1]) : '';

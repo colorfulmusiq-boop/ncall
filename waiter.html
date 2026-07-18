@@ -2494,28 +2494,32 @@ function startListeners() {
         (function(lb){ vipBtn.onclick = function(e){ e.stopPropagation(); openAddDangolFromGuest(lb); }; })(tbl);
         tSummary.appendChild(vipBtn);
 
-        var couponBtn = document.createElement('span');
-        couponBtn.className = 'hist-coupon-btn';
-        couponBtn.dataset.gid = vipGidRaw;
-        couponBtn.dataset.label = tbl;
-        couponBtn.setAttribute('data-hist-coupon-btn', '');
-        var _cp = findGuestCoupon(vipGidRaw, tbl);
-        var _cpUsed = !!_cp && _cp.status === 'used';
-        if (_cpUsed) couponBtn.classList.add('used');
-        else if (_cp) couponBtn.classList.add('sent');
-        couponBtn.textContent = _cpUsed ? '✓ 사용 완료' : (_cp ? '✓ 발송 완료' : '🎟️ 우선 부킹권');
-        (function(g, lb){ couponBtn.onclick = function(e){ e.stopPropagation(); issueCoupon(g, lb); }; })(vipGidRaw, tbl);
-        tSummary.appendChild(couponBtn);
+        // 우선 부킹권 — 오늘(현재 영업일) 폴더에서만 표시. 지난 날짜 내역은 순수 기록으로 깨끗하게.
+        // 쿠폰 받은 손님이 재방문하면 오늘 폴더에 새 줄이 생기므로 사용 처리도 오늘 자리에서 가능.
+        if (isToday) {
+          var couponBtn = document.createElement('span');
+          couponBtn.className = 'hist-coupon-btn';
+          couponBtn.dataset.gid = vipGidRaw;
+          couponBtn.dataset.label = tbl;
+          couponBtn.setAttribute('data-hist-coupon-btn', '');
+          var _cp = findGuestCoupon(vipGidRaw, tbl);
+          var _cpUsed = !!_cp && _cp.status === 'used';
+          if (_cpUsed) couponBtn.classList.add('used');
+          else if (_cp) couponBtn.classList.add('sent');
+          couponBtn.textContent = _cpUsed ? '✓ 사용 완료' : (_cp ? '✓ 발송 완료' : '🎟️ 우선 부킹권');
+          (function(g, lb){ couponBtn.onclick = function(e){ e.stopPropagation(); issueCoupon(g, lb); }; })(vipGidRaw, tbl);
+          tSummary.appendChild(couponBtn);
 
-        var couponUseBtn = document.createElement('span');
-        couponUseBtn.className = 'hist-coupon-use-btn';
-        couponUseBtn.dataset.gid = vipGidRaw;
-        couponUseBtn.dataset.label = tbl;
-        couponUseBtn.setAttribute('data-hist-coupon-use-btn', '');
-        couponUseBtn.textContent = '✅ 사용 처리';
-        couponUseBtn.style.display = (_cp && _cp.status === 'issued') ? 'inline-flex' : 'none';
-        (function(g, lb){ couponUseBtn.onclick = function(e){ e.stopPropagation(); useCouponForGuest(g, lb); }; })(vipGidRaw, tbl);
-        tSummary.appendChild(couponUseBtn);
+          var couponUseBtn = document.createElement('span');
+          couponUseBtn.className = 'hist-coupon-use-btn';
+          couponUseBtn.dataset.gid = vipGidRaw;
+          couponUseBtn.dataset.label = tbl;
+          couponUseBtn.setAttribute('data-hist-coupon-use-btn', '');
+          couponUseBtn.textContent = '✅ 사용 처리';
+          couponUseBtn.style.display = (_cp && _cp.status === 'issued') ? 'inline-flex' : 'none';
+          (function(g, lb){ couponUseBtn.onclick = function(e){ e.stopPropagation(); useCouponForGuest(g, lb); }; })(vipGidRaw, tbl);
+          tSummary.appendChild(couponUseBtn);
+        }
 
         tLeft.appendChild(tSummary);
 

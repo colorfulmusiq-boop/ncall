@@ -487,7 +487,10 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
   <!-- VIP -->
   <div id="panel-dangol" class="scroll" style="display:none;"><div class="pad">
     <div class="dangol-hint">⭐ VIP를 등록하면 영구 호출 QR이 생겨요. VIP에게 한 번 문자로 보내두면, 언제 와도 그 링크로 형님을 호출해요. 오래 안 온 VIP는 자동으로 위에 떠요.</div>
-    <button class="btn btn-primary" id="btnAddDangol" style="margin-bottom:1rem;" onclick="openAddDangol()">+ VIP 등록</button>
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+      <button class="btn btn-primary" id="btnAddDangol" style="flex:1;" onclick="openAddDangol()">+ VIP 등록</button>
+      <button class="btn btn-primary" id="btnBulkSms" style="flex:1;" onclick="openBulkSms()">📨 단체 문자</button>
+    </div>
     <div id="dangolList"><div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 VIP 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 VIP를 등록하세요</span></div></div>
   </div></div>
 
@@ -623,6 +626,27 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
     <div class="err" id="dangolErr">오류</div>
     <button class="btn btn-primary" onclick="doSaveDangol()">저장</button>
     <button class="btn btn-ghost" onclick="closeModal('dangolModal')">취소</button>
+  </div>
+</div>
+
+<!-- 단체 문자 모달 -->
+<div class="modal-bg" id="bulkSmsModal">
+  <div class="modal" style="max-height:85vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📨 단체 문자</div>
+    <label class="inp-label">누구에게 보낼까요</label>
+    <div class="pf-chips" id="bulkTarget">
+      <button type="button" class="pf-chip on" data-v="all">전체</button>
+      <button type="button" class="pf-chip" data-v="recent">최근 한 달 방문</button>
+      <button type="button" class="pf-chip" data-v="away">한 달 넘게 안 옴</button>
+    </div>
+    <div id="bulkCount" style="font-size:0.82rem;font-weight:700;color:var(--navy);margin-bottom:0.9rem;">대상 0명</div>
+    <label class="inp-label">보낼 내용</label>
+    <textarea class="inp" id="bulkMsg" rows="5" style="resize:vertical;min-height:110px;line-height:1.6;"></textarea>
+    <button class="btn btn-primary" onclick="sendBulkSms()" style="margin-top:0.3rem;">📨 문자앱에서 한 번에 보내기</button>
+    <button class="btn btn-ghost" id="bulkListToggle" onclick="toggleBulkList()">한 명씩 보내기 ▼</button>
+    <div id="bulkList" style="display:none;"></div>
+    <button class="btn btn-ghost" onclick="closeModal('bulkSmsModal')">닫기</button>
   </div>
 </div>
 
@@ -902,6 +926,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.20", type: "신규 기능", content: "단체 문자 — VIP 탭의 📨 단체 문자 버튼으로 여러 VIP에게 한 번에 문자를 보내실 수 있습니다. 전체 · 최근 한 달 방문 · 한 달 넘게 안 온 손님 중 대상을 고르면 몇 명에게 가는지 바로 표시되고, 미리 채워진 문구를 다듬은 뒤 버튼을 누르면 문자앱이 수신자와 내용이 채워진 채 열립니다. 전송 버튼만 누르시면 끝입니다. 휴대폰에 따라 단체 수신이 안 되는 경우 아래 '한 명씩 보내기'를 이용해 주세요. 발송은 웨이터님 휴대폰 문자로 나가므로 무제한 요금제면 비용이 들지 않습니다." },
   { date: "2026.07.19", type: "신규 기능", content: "오늘 부킹 대기 — 부킹을 원한다고 답한 손님이 알림 탭 맨 위에 자동으로 줄을 섭니다. 매우 원함 손님이 먼저 표시되며, 부킹을 넣어드린 뒤 부킹 완료 버튼을 누르시면 남은 팀 수가 줄어듭니다. 밤새 누구에게 부킹을 넣어드려야 하는지 이 목록 하나로 확인하실 수 있습니다. 완료하신 부킹은 내역 탭 날짜별로 💃 표시로 집계됩니다." },
   { date: "2026.07.19", type: "신규 기능", content: "VIP 손님 장부 — VIP 등록 화면에서 생일, 주로 드시는 술, 손님 규모(큰손 등)를 기록하실 수 있습니다. 전부 버튼으로 선택만 하시면 되고, 기록한 내용은 VIP 카드에 한눈에 표시됩니다. 생일이 일주일 안으로 다가온 VIP는 VIP 탭 맨 위에 자동으로 떠오르며, 축하 문자 버튼 한 번으로 생일 문자를 보내실 수 있습니다." },
   { date: "2026.07.19", type: "신규 기능", content: "손님 생일 자동 수집 — 웨이터님이 여쭤보실 필요 없이, 손님 호출 화면에 생일 등록 안내가 표시되어 손님이 직접 등록합니다. 생일 주간 케어를 받기 위해 손님이 스스로 남기는 방식이며, 등록된 생일은 VIP 카드에 자동으로 표시됩니다." },
@@ -1564,6 +1589,126 @@ function sendBirthdaySms(key, name, phone) {
   const hn = name.endsWith('님') ? name : name + '님';
   const body = '안녕하세요 ' + hn + ', ' + W.name + '입니다. 생일을 진심으로 축하드립니다! 🎂 생일 주간에 들러주시면 제가 마음을 다해 특별히 모시겠습니다. 늘 건강하시고 좋은 일만 가득하시길 바랍니다.';
   openSmsApp(phone, body);
+}
+
+// ── 단체 문자 ──
+// 서버 발송이 아니라 웨이터 본인 폰 문자앱을 여는 방식(sms: 다중 수신) — 비용 0원
+let _bulkTarget = 'all';
+let _bulkSent = {}; // 한 명씩 보내기에서 보낸 표시 (모달 열 때 초기화)
+
+function canUseBulkSms() { return true; } // 유료화 시 프로 구독 체크 지점
+
+function bulkRecipients() {
+  const info = window._dangolInfo || {};
+  const data = window._lastGuests || {};
+  const all = Object.entries(data)
+    .map(([k,v]) => ({...v, ...(info[k]||{}), _key:k}))
+    .filter(g => g.isDangol);
+  const withPhone = all.filter(g => cleanPhone(g.phone));
+  const noPhone = all.length - withPhone.length;
+  let sel = withPhone;
+  if (_bulkTarget === 'recent') sel = withPhone.filter(g => { const d = daysSince(g.lastVisit); return d !== null && d < REMIND_DAYS; });
+  else if (_bulkTarget === 'away') sel = withPhone.filter(g => (daysSince(g.lastVisit) || 0) >= REMIND_DAYS);
+  return { sel, noPhone };
+}
+
+function updateBulkCount() {
+  const r = bulkRecipients();
+  const el = document.getElementById('bulkCount');
+  if (!r.sel.length) {
+    el.textContent = '보낼 대상이 없습니다' + (r.noPhone > 0 ? ' (번호 없는 VIP ' + r.noPhone + '명 제외)' : '');
+  } else {
+    el.textContent = '대상 ' + r.sel.length + '명' + (r.noPhone > 0 ? ' (번호 없는 ' + r.noPhone + '명 제외)' : '');
+  }
+}
+
+function initBulkSms() {
+  document.getElementById('bulkTarget').addEventListener('click', e => {
+    const b = e.target.closest('.pf-chip');
+    if (!b) return;
+    _bulkTarget = b.dataset.v;
+    document.querySelectorAll('#bulkTarget .pf-chip').forEach(c => c.classList.toggle('on', c === b));
+    updateBulkCount();
+    if (document.getElementById('bulkList').style.display !== 'none') renderBulkList();
+  });
+}
+initBulkSms();
+
+function openBulkSms() {
+  if (!canUseBulkSms()) return;
+  _bulkTarget = 'all';
+  _bulkSent = {};
+  document.querySelectorAll('#bulkTarget .pf-chip').forEach(c => c.classList.toggle('on', c.dataset.v === 'all'));
+  document.getElementById('bulkMsg').value = '안녕하세요, ' + W.name + '입니다. 늘 찾아주셔서 진심으로 감사드립니다. 이번 주말 좋은 자리가 준비되어 있어 연락드립니다. 편하게 들러주시면 정성껏 모시겠습니다. 미리 연락 주시면 좋은 자리로 준비해 두겠습니다.';
+  document.getElementById('bulkList').style.display = 'none';
+  document.getElementById('bulkListToggle').textContent = '한 명씩 보내기 ▼';
+  updateBulkCount();
+  document.getElementById('bulkSmsModal').classList.add('open');
+}
+
+function sendBulkSms() {
+  const body = document.getElementById('bulkMsg').value.trim();
+  if (!body) { toast('보낼 내용을 입력해주세요'); return; }
+  const r = bulkRecipients();
+  if (!r.sel.length) { toast('보낼 대상이 없습니다'); return; }
+  const nums = r.sel.map(g => cleanPhone(g.phone));
+  // 안드로이드: sms:번호1,번호2?body= / 아이폰: sms:/open?addresses=번호1,번호2&body=
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const href = isIOS
+    ? 'sms:/open?addresses=' + nums.join(',') + '&body=' + encodeURIComponent(body)
+    : 'sms:' + nums.join(',') + '?body=' + encodeURIComponent(body);
+  const a = document.createElement('a');
+  a.href = href;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => document.body.removeChild(a), 500);
+}
+
+function toggleBulkList() {
+  const list = document.getElementById('bulkList');
+  const show = list.style.display === 'none';
+  list.style.display = show ? 'block' : 'none';
+  document.getElementById('bulkListToggle').textContent = show ? '한 명씩 보내기 ▲' : '한 명씩 보내기 ▼';
+  if (show) renderBulkList();
+}
+
+// 다중 수신이 안 되는 휴대폰용 예비 모드 — 이름마다 보내기 버튼, 보낸 사람은 체크 표시
+function renderBulkList() {
+  const list = document.getElementById('bulkList');
+  const r = bulkRecipients();
+  list.innerHTML = '';
+  if (!r.sel.length) {
+    list.innerHTML = '<div style="padding:0.8rem 0;font-size:0.8rem;color:var(--muted);text-align:center;">보낼 대상이 없습니다</div>';
+    return;
+  }
+  r.sel.forEach(g => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.2rem;border-bottom:0.5px solid var(--border);';
+    const nm = document.createElement('div');
+    nm.style.cssText = 'flex:1;font-size:0.85rem;font-weight:700;color:var(--navy);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    nm.textContent = g.label || '손님';
+    row.appendChild(nm);
+    if (_bulkSent[g._key]) {
+      const done = document.createElement('span');
+      done.style.cssText = 'font-size:0.78rem;font-weight:800;color:var(--green);';
+      done.textContent = '✓ 보냄';
+      row.appendChild(done);
+    } else {
+      const btn = document.createElement('button');
+      btn.style.cssText = 'min-height:44px;padding:0.4rem 0.9rem;border-radius:8px;border:none;background:#e8f0fe;color:#3a5a8a;font-family:inherit;font-size:0.78rem;font-weight:700;cursor:pointer;';
+      btn.textContent = '보내기';
+      btn.onclick = () => {
+        const body = document.getElementById('bulkMsg').value.trim();
+        if (!body) { toast('보낼 내용을 입력해주세요'); return; }
+        openSmsApp(g.phone, body);
+        _bulkSent[g._key] = true;
+        renderBulkList();
+      };
+      row.appendChild(btn);
+    }
+    list.appendChild(row);
+  });
 }
 
 function openSmsApp(phone, body) {

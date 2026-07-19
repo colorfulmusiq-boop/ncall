@@ -390,14 +390,10 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
 .bq-title{font-size:0.85rem;font-weight:800;color:#1a1206;}
 .bq-arrow{color:#1a1206;font-size:0.8rem;transition:transform 0.2s;}
 .bq-row{display:flex;align-items:center;gap:0.6rem;padding:0.65rem 1rem;border-top:0.5px solid var(--border);background:var(--card);}
-.bq-row.done{opacity:0.55;}
 .bq-badge{font-size:0.68rem;font-weight:800;border-radius:8px;padding:0.18rem 0.5rem;white-space:nowrap;}
 .bq-badge.very{background:#fdece2;color:#d35400;border:0.5px solid #f5c6a5;}
 .bq-badge.want{background:#faf3e0;color:#b8923f;border:0.5px solid #ecd9a0;}
 .bq-label{flex:1;font-size:0.88rem;font-weight:700;color:var(--navy);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.bq-done-btn{min-height:44px;padding:0.45rem 0.8rem;border-radius:8px;border:none;background:#e8f8ee;color:var(--green);font-family:inherit;font-size:0.78rem;font-weight:700;cursor:pointer;}
-.bq-done-btn:active{transform:scale(0.97);}
-.bq-done-txt{font-size:0.75rem;font-weight:800;color:var(--green);white-space:nowrap;}
 .bq-old{font-size:0.68rem;font-weight:800;color:var(--red);background:#fbeaea;border-radius:8px;padding:0.18rem 0.5rem;white-space:nowrap;}
 </style>
 </head>
@@ -995,13 +991,14 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.20", type: "업데이트", content: "부킹 대기 정리 — '부킹 완료' 버튼을 없앴습니다. 부킹은 한 번 넣어드려도 손님이 다시 원하실 수 있어, 중간에 완료 처리하는 것이 오히려 챙겨야 할 손님을 가리게 됩니다. 이제 부킹을 원하는 손님은 메이드가 되거나 계산을 마칠 때까지 대기 목록에 그대로 남고, 성과는 메이드 ❤️ 하나로 기록됩니다." },
+  { date: "2026.07.20", type: "업데이트", content: "손님 화면 생일 안내 제거 — 손님 화면에 생일 등록 안내가 갑자기 떠서 어색하다는 의견을 반영해 없앴습니다. 생일은 VIP 등록·수정 화면의 '장부 더 쓰기'에서 웨이터님이 직접 기록하시면 되고, 기록된 생일의 일주일 전 알림과 축하 문자는 그대로 동작합니다." },
   { date: "2026.07.20", type: "신규 기능", content: "예약 메모 — \"금요일에 갈게\" 하신 VIP를 이제 머리로 기억하지 않으셔도 됩니다. VIP 카드의 📅 예약 버튼으로 날짜·인원·메모를 적어두면 카드에 예약이 표시되고, 예약 당일에는 VIP 탭 맨 위 '오늘 예약'에 자동으로 떠오릅니다. 손님이 QR로 입장하시면 도착 표시까지 자동으로 붙습니다. 날짜가 지나면 알아서 사라집니다." },
-  { date: "2026.07.20", type: "신규 기능", content: "월간 실적 — 메뉴에 '월간 실적'이 새로 생겼습니다. 이번 달 손님 팀 수, 부킹 완료 💃, 메이드 ❤️, 단체 문자 발송 인원, 새 VIP가 큰 숫자로 한눈에 보이고 지난달과 자동으로 비교됩니다. 화살표로 지난 달 실적도 넘겨보실 수 있습니다. 열심히 일하신 만큼, 이제 숫자로 확인하세요." },
+  { date: "2026.07.20", type: "신규 기능", content: "월간 실적 — 메뉴에 '월간 실적'이 새로 생겼습니다. 이번 달 손님 팀 수, 메이드 ❤️, 단체 문자 발송 인원, 새 VIP가 큰 숫자로 한눈에 보이고 지난달과 자동으로 비교됩니다. 화살표로 지난 달 실적도 넘겨보실 수 있습니다. 열심히 일하신 만큼, 이제 숫자로 확인하세요." },
   { date: "2026.07.20", type: "신규 기능", content: "맞춤 추천 문구 — 단체 문자의 문구가 오늘 날짜에 맞춰 자동으로 준비됩니다. 불금·토요일 같은 요일, 봄·여름·가을·겨울 계절, 설날·추석·광복절 등 명절과 공휴일, 징검다리 연휴, 안부 인사까지 20여 가지 문구 중 오늘 어울리는 것이 골라져 나오며, '🔀 다른 문구' 버튼을 누를 때마다 바뀝니다. 한 달 넘게 안 온 손님을 선택하면 감사 인사 대신 안부 인사로 시작합니다. 보내기 전에 자유롭게 고치실 수 있습니다." },
   { date: "2026.07.20", type: "신규 기능", content: "단체 문자 — VIP 탭의 📨 단체 문자 버튼으로 여러 VIP에게 한 번에 문자를 보내실 수 있습니다. 전체 · 최근 한 달 방문 · 한 달 넘게 안 온 손님 중 대상을 고르면 몇 명에게 가는지 바로 표시되고, 미리 채워진 문구를 다듬은 뒤 버튼을 누르면 문자앱이 수신자와 내용이 채워진 채 열립니다. 전송 버튼만 누르시면 끝입니다. 휴대폰에 따라 단체 수신이 안 되는 경우 아래 '한 명씩 보내기'를 이용해 주세요. 발송은 웨이터님 휴대폰 문자로 나가므로 무제한 요금제면 비용이 들지 않습니다." },
-  { date: "2026.07.19", type: "신규 기능", content: "오늘 부킹 대기 — 부킹을 원한다고 답한 손님이 알림 탭 맨 위에 자동으로 줄을 섭니다. 매우 원함 손님이 먼저 표시되며, 부킹을 넣어드린 뒤 부킹 완료 버튼을 누르시면 남은 팀 수가 줄어듭니다. 밤새 누구에게 부킹을 넣어드려야 하는지 이 목록 하나로 확인하실 수 있습니다. 완료하신 부킹은 내역 탭 날짜별로 💃 표시로 집계됩니다." },
+  { date: "2026.07.19", type: "신규 기능", content: "오늘 부킹 대기 — 부킹을 원한다고 답한 손님이 알림 탭 맨 위에 자동으로 줄을 섭니다. 매우 원함 손님이 먼저 표시되며, 손님이 메이드가 되거나 계산을 마치면 목록에서 자동으로 빠집니다. 밤새 누구를 챙겨야 하는지 이 목록 하나로 확인하실 수 있습니다." },
   { date: "2026.07.19", type: "신규 기능", content: "VIP 손님 장부 — VIP 등록 화면에서 생일, 주로 드시는 술, 손님 규모(큰손 등)를 기록하실 수 있습니다. 전부 버튼으로 선택만 하시면 되고, 기록한 내용은 VIP 카드에 한눈에 표시됩니다. 생일이 일주일 안으로 다가온 VIP는 VIP 탭 맨 위에 자동으로 떠오르며, 축하 문자 버튼 한 번으로 생일 문자를 보내실 수 있습니다." },
-  { date: "2026.07.19", type: "신규 기능", content: "손님 생일 자동 수집 — 웨이터님이 여쭤보실 필요 없이, 손님 호출 화면에 생일 등록 안내가 표시되어 손님이 직접 등록합니다. 생일 주간 케어를 받기 위해 손님이 스스로 남기는 방식이며, 등록된 생일은 VIP 카드에 자동으로 표시됩니다." },
   { date: "2026.07.19", type: "업데이트", content: "지난 영업일 정리 안내 — 부킹 대기 목록에 어제 입장한 손님이 남아 있으면 입장 날짜가 빨간 태그로 함께 표시됩니다. 또한 영업일이 지나도록(새벽 6시 기준) 계산 완료가 되지 않은 손님은 내 손님 탭과 VIP 카드의 계산 완료 버튼이 깜빡이며 알려드립니다. 계산 완료를 눌러주시면 부킹 대기 목록도 함께 정리됩니다." },
   { date: "2026.07.19", type: "업데이트", content: "VIP 등록 화면 간소화 — VIP 등록 화면이 이전처럼 이름·전화번호·메모만 먼저 보이도록 정리되었습니다. 생일·주로 드시는 술·손님 규모는 아래 '📖 장부 더 쓰기' 버튼을 누르시면 나타납니다. 바쁘실 때는 이름과 전화번호만 입력하고 저장하시면 되고, 여유 있으실 때 장부를 채워주시면 됩니다. 이미 기록해 두신 VIP는 수정 화면을 여시면 장부가 자동으로 펼쳐져 있습니다." },
   { date: "2026.07.16", type: "신규 기능", content: "부킹 의지 표시 — 손님의 부킹 의사를 미리 확인하실 수 있는 기능이 추가되었습니다. 손님이 입장하실 때 부킹을 원하는지 직접 선택합니다. 알림 카드에 \"부킹: 원함\" 또는 \"부킹: 매우 원함\"으로 표시됩니다. 부킹을 원하지 않는 손님은 표시되지 않습니다." },
@@ -1196,12 +1193,11 @@ function computeHistMonth(hist, ym) {
     if (ymKey(d.getFullYear(), d.getMonth() + 1) !== ym) return;
     (byDate[n.date] = byDate[n.date] || []).push(n);
   });
-  let teams = 0, booking = 0;
+  let teams = 0;
   Object.values(byDate).forEach(items => {
     teams += Object.keys(groupHistTables(items)).length;
-    items.forEach(n => { if (n.type === 'bookingDone') booking++; });
   });
-  return { teams, booking };
+  return { teams };
 }
 
 function snapshotStats(hist) {
@@ -1212,12 +1208,11 @@ function snapshotStats(hist) {
   if (pm < 1) { pm = 12; py--; }
   [ymNow, ymKey(py, pm)].forEach(ym => {
     const c = computeHistMonth(hist, ym);
-    if (c.teams === 0 && c.booking === 0) return;
+    if (c.teams === 0) return;
     const stored = ((window._dangolInfo || {})._stats || {})[ym] || {};
     const teams = Math.max(c.teams, stored.teams || 0);
-    const booking = Math.max(c.booking, stored.booking || 0);
-    if (teams !== (stored.teams || 0) || booking !== (stored.booking || 0)) {
-      fbSet(fbRef(db, `dangolInfo/${W.id}/_stats/${ym}`), { teams, booking }).catch(() => {});
+    if (teams !== (stored.teams || 0)) {
+      fbSet(fbRef(db, `dangolInfo/${W.id}/_stats/${ym}`), { teams }).catch(() => {});
     }
   });
 }
@@ -1251,7 +1246,7 @@ function countVipMonth(ym) {
 function getMonthTeams(ym, isCur) {
   if (isCur) return computeHistMonth(window._lastHist || [], ym);
   const s = ((window._dangolInfo || {})._stats || {})[ym];
-  return s ? { teams: s.teams || 0, booking: s.booking || 0 } : { teams: null, booking: null };
+  return s ? { teams: s.teams || 0 } : { teams: null };
 }
 
 function statDelta(cur, prev, unit) {
@@ -1317,6 +1312,7 @@ function renderStats() {
   const pym = ymKey(py, pm);
   const prev = getMonthTeams(pym, pym === ymNow);
   const maid = countMaidMonth(ym);
+  const maidPrev = countMaidMonth(pym);
   const bulk = countBulkMonth(ym);
   const vip = countVipMonth(ym);
 
@@ -1326,21 +1322,16 @@ function renderStats() {
   const grid = document.createElement('div');
   grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem;';
   grid.appendChild(statCard('손님', cur.teams === null ? '—' : cur.teams + '팀', statDelta(cur.teams, prev.teams, '팀'), true));
-  grid.appendChild(statCard('부킹 완료 💃', cur.booking === null ? '—' : cur.booking + '건', statDelta(cur.booking, prev.booking, '건'), true));
-  grid.appendChild(statCard('메이드 ❤️', maid + '건', '', false));
+  grid.appendChild(statCard('메이드 ❤️', maid + '건', statDelta(maid, maidPrev, '건'), true));
   grid.appendChild(statCard('단체 문자', bulk.ppl + '명', bulk.cnt > 0 ? bulk.cnt + '회 발송' : '', false));
+  grid.appendChild(statCard('새 VIP', vip.nw + '명', '전체 VIP ' + vip.total + '명', false));
   body.appendChild(grid);
-
-  const vipRow = document.createElement('div');
-  vipRow.style.cssText = 'background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:0.8rem 1rem;font-size:0.85rem;font-weight:700;color:var(--navy);';
-  vipRow.textContent = '⭐ 이 달 새 VIP ' + vip.nw + '명 · 전체 VIP ' + vip.total + '명';
-  body.appendChild(vipRow);
 
   const note = document.createElement('div');
   note.style.cssText = 'font-size:0.72rem;color:var(--muted);margin-top:0.8rem;line-height:1.6;';
   note.textContent = cur.teams === null
-    ? '이 달의 손님·부킹 기록이 없습니다. 실적은 2026년 7월부터 매일 자동으로 쌓입니다.'
-    : '손님·부킹은 영업 기록에서 매일 자동 집계됩니다. 새 VIP는 2026년 7월 20일 이후 등록분부터 집계됩니다.';
+    ? '이 달의 손님 기록이 없습니다. 실적은 2026년 7월부터 매일 자동으로 쌓입니다.'
+    : '손님 팀 수는 영업 기록에서 매일 자동 집계됩니다. 새 VIP는 2026년 7월 20일 이후 등록분부터 집계됩니다.';
   body.appendChild(note);
 }
 
@@ -2190,21 +2181,26 @@ function deleteDangol(key, name) {
 }
 
 // ── 오늘 부킹 대기 (알림 탭 상단) ──
-// 현재 매장에 있는 손님(visitOpen) 중 부킹 원함/매우 원함만 — 매우 원함 먼저, 완료된 팀은 뒤로
+// 현재 매장에 있는 손님(visitOpen) 중 부킹 원함/매우 원함만 — 매우 원함 먼저.
+// '부킹 완료' 같은 중간 상태는 없음: 부킹은 성사(메이드)되거나 손님이 계산하고 갈 때까지 계속 챙겨야 하는 일이라,
+// 목록에서 빠지는 조건은 계산 완료 또는 오늘 메이드 체크 두 가지뿐.
 function renderBookingQueue(data) {
   const box = document.getElementById('bookingQueue');
   if (!box) return;
+  const maidMap = window._maidMap || {};
+  const todayDk = todayISO().replace(/-/g, '');
+  const maidToday = g => {
+    const gid = (g._key || '').replace(/[^a-zA-Z0-9]/g, '_');
+    return !!(maidMap[gid] && maidMap[gid][todayDk] === true);
+  };
   const inQueue = Object.entries(data || {})
     .map(([k,v]) => ({...v, _key:k}))
-    .filter(g => g.visitOpen === true && g.active !== false && (g.bookingIntent === 'want' || g.bookingIntent === 'very'))
+    .filter(g => g.visitOpen === true && g.active !== false && (g.bookingIntent === 'want' || g.bookingIntent === 'very') && !maidToday(g))
     .sort((a,b) => {
-      const done = v => v.bookingDone === true ? 1 : 0;
-      if (done(a) !== done(b)) return done(a) - done(b);
       const rank = v => v.bookingIntent === 'very' ? 0 : 1;
       return rank(a) - rank(b);
     });
   if (!inQueue.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
-  const remain = inQueue.filter(g => g.bookingDone !== true).length;
   box.innerHTML = '';
   box.style.display = 'block';
   if (window._bqOpen === undefined) window._bqOpen = true;
@@ -2213,7 +2209,7 @@ function renderBookingQueue(data) {
   head.className = 'bq-head';
   const title = document.createElement('div');
   title.className = 'bq-title';
-  title.textContent = '💃 오늘 부킹 대기 — ' + (remain > 0 ? remain + '팀 남음' : '전부 완료');
+  title.textContent = '💃 오늘 부킹 대기 (' + inQueue.length + '팀)';
   const arrow = document.createElement('span');
   arrow.className = 'bq-arrow';
   arrow.textContent = '▼';
@@ -2225,7 +2221,7 @@ function renderBookingQueue(data) {
   if (!window._bqOpen) return;
   inQueue.forEach(g => {
     const row = document.createElement('div');
-    row.className = 'bq-row' + (g.bookingDone === true ? ' done' : '');
+    row.className = 'bq-row';
     const badge = document.createElement('span');
     badge.className = 'bq-badge ' + (g.bookingIntent === 'very' ? 'very' : 'want');
     badge.textContent = g.bookingIntent === 'very' ? '매우 원함' : '원함';
@@ -2241,32 +2237,8 @@ function renderBookingQueue(data) {
       old.textContent = '📅 ' + (+p[1]) + '/' + (+p[2]) + ' 입장';
       row.appendChild(old);
     }
-    if (g.bookingDone === true) {
-      const doneTxt = document.createElement('span');
-      doneTxt.className = 'bq-done-txt';
-      doneTxt.textContent = '✓ 부킹 완료';
-      row.appendChild(doneTxt);
-    } else {
-      const btn = document.createElement('button');
-      btn.className = 'bq-done-btn';
-      btn.textContent = '✓ 부킹 완료';
-      btn.onclick = () => markBookingDone(g._key, g.label || '손님');
-      row.appendChild(btn);
-    }
     box.appendChild(row);
   });
-}
-
-function markBookingDone(key, label) {
-  if (!confirm(label + '\n부킹 완료 처리할까요?')) return;
-  waitFb(() => {
-    fbUpdate(fbRef(db, `guests/${W.id}/${key}`), { bookingDone: true });
-    fbPush(fbRef(db, `history/${W.id}`), {
-      type: 'bookingDone', tableLabel: label, guestMsg: label, guestId: key,
-      time: nowStr(), date: todayStr(), doneAt: nowStr(), sortKey: nowFull()
-    });
-  });
-  toast('✓ 부킹 완료');
 }
 
 function renderDangol(data) {
@@ -2859,6 +2831,8 @@ function startListeners() {
   fbOnValue(fbRef(db, `maid/${wid}`), function(snap){
     window._maidMap = snap.val() || {};
     applyMaidToDom();
+    // 오늘 메이드 체크된 손님은 부킹 대기 목록에서 즉시 빠지도록 재렌더
+    if (window._lastGuests) renderBookingQueue(window._lastGuests);
   });
   // 우선 부킹권 쿠폰 — 발급 여부를 내역 카드 버튼에 실시간 반영
   fbOnValue(fbRef(db, 'coupons'), function(snap){
@@ -2963,15 +2937,6 @@ function startListeners() {
           }).catch(function(){ done++; });
         });
       })(maidCntBadge, _cntGids, _cntDk);
-
-      // 그날 부킹 완료 건수 (부킹 대기열에서 완료 처리한 팀 수)
-      var _bkCnt = items.filter(function(n){ return n.type === 'bookingDone'; }).length;
-      if (_bkCnt > 0) {
-        var bkBadge = document.createElement('span');
-        bkBadge.style.cssText = 'background:#faf3e0;color:#b8923f;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;';
-        bkBadge.textContent = '💃 ' + _bkCnt;
-        dateLeft.appendChild(bkBadge);
-      }
 
       if (isToday) {
         var todayBadge = document.createElement('span');

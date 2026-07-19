@@ -258,13 +258,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <span>웨이터가 확인 중입니다. 곧 갑니다!</span>
   </div>
 
-  <!-- 생일 등록 유도 배너 (생일 미등록 시에만) -->
-  <button id="bdayBanner" onclick="openBdayModal()" style="display:none;margin:0.5rem 1.5rem 0;background:#fdf3d8;border:0.5px solid #ecd9a0;border-radius:10px;padding:0.8rem 1rem;font-size:0.85rem;color:#8a6d1f;align-items:center;gap:0.5rem;font-weight:600;font-family:inherit;cursor:pointer;text-align:left;width:calc(100% - 3rem);min-height:44px;">
-    <span>🎂</span>
-    <span style="flex:1;">생일을 등록해 두시면 생일 주간에 특별히 모십니다</span>
-    <span style="font-weight:800;white-space:nowrap;">등록 ›</span>
-  </button>
-
   <div class="main-area fade-up" style="animation-delay:0.1s;">
     <button class="action-btn btn-booking" onclick="sendAction('booking')">
       <div class="btn-icon">🔔</div>
@@ -365,24 +358,6 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <div class="btn-row">
       <button class="btn btn-cancel" onclick="closeModal()">취소</button>
       <button class="btn btn-confirm" id="confirmBtn" onclick="doSend()">전송</button>
-    </div>
-  </div>
-</div>
-
-<!-- 생일 등록 모달 -->
-<div class="modal-bg" id="bdayModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <span class="modal-icon">🎂</span>
-    <div class="modal-title">생일 등록</div>
-    <div class="modal-sub">생일 주간에 방문하시면 담당 웨이터가 잊지 않고 특별히 모시겠습니다. 월과 일만 받습니다.</div>
-    <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;">
-      <select id="bdayM" style="flex:1;min-height:48px;background:var(--bg);border:0.5px solid var(--border);border-radius:10px;padding:0.6rem 0.8rem;font-family:inherit;font-size:1rem;color:var(--navy);outline:none;"></select>
-      <select id="bdayD" style="flex:1;min-height:48px;background:var(--bg);border:0.5px solid var(--border);border-radius:10px;padding:0.6rem 0.8rem;font-family:inherit;font-size:1rem;color:var(--navy);outline:none;"></select>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-cancel" onclick="closeBdayModal()">다음에</button>
-      <button class="btn btn-confirm" onclick="saveBday()">등록</button>
     </div>
   </div>
 </div>
@@ -509,40 +484,6 @@ function skipPref() {
 }
 function closePrefOverlay() {
   document.getElementById('prefOverlay').classList.remove('open');
-}
-
-/* ── 생일 등록 (선택) ── */
-// 손님이 직접 등록 — bookingIntent와 같은 손님 노드에 "MM-DD"로 저장, 웨이터 VIP 카드에 자동 표시
-function initBdaySelects() {
-  const m = document.getElementById('bdayM'), d = document.getElementById('bdayD');
-  let mh = '<option value="">월</option>';
-  for (let i = 1; i <= 12; i++) mh += '<option value="' + i + '">' + i + '월</option>';
-  m.innerHTML = mh;
-  let dh = '<option value="">일</option>';
-  for (let i = 1; i <= 31; i++) dh += '<option value="' + i + '">' + i + '일</option>';
-  d.innerHTML = dh;
-}
-initBdaySelects();
-function maybeShowBdayBanner() {
-  if (!guestData || guestData.birthday) return;
-  document.getElementById('bdayBanner').style.display = 'flex';
-}
-function openBdayModal() {
-  document.getElementById('bdayModal').classList.add('open');
-}
-function closeBdayModal() {
-  document.getElementById('bdayModal').classList.remove('open');
-}
-function saveBday() {
-  const m = document.getElementById('bdayM').value;
-  const d = document.getElementById('bdayD').value;
-  if (!m || !d) { toast('월과 일을 선택해 주세요'); return; }
-  const val = String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-  if (guestData) guestData.birthday = val;
-  fbUpdate(fbRef(db, `guests/${waiterData.id}/${guestId}`), { birthday: val }).catch(() => {});
-  closeBdayModal();
-  document.getElementById('bdayBanner').style.display = 'none';
-  toast('등록되었습니다. 감사합니다 🎂');
 }
 
 const processedReplyKeys = new Set();
@@ -720,7 +661,6 @@ function init() {
       }
       // 정상 입장 확정 후 부킹 의지 오버레이 (이 방문에서 답변/건너뛰기 이력 있으면 안 뜸)
       maybeShowIntentOverlay();
-      maybeShowBdayBanner();
       const _alreadyIn = guestData.visitOpen === true && guestData.lastVisit === _today;
       if (!_alreadyIn) {
         const enterTime = nowStr();

@@ -456,6 +456,7 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
       <div class="menu-wrap" id="menuWrap">
         <button class="menu-btn" id="menuBtn" onclick="toggleMenu()"><span class="menu-ico">☰</span>메뉴<span id="menuDot" class="menu-dot" style="display:none;"></span></button>
         <div class="menu-dropdown" id="menuDropdown">
+          <button class="menu-item" onclick="closeMenu();openStats()">📊 내 실적</button>
           <button class="menu-item" onclick="closeMenu();showUpdates()">공지사항<span id="noticeBadge" class="menu-notice-badge" style="display:none;">0</span></button>
           <div class="menu-divider"></div>
           <button class="menu-item" onclick="closeMenu();confirmLogout()">로그아웃</button>
@@ -518,6 +519,24 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
     </div>
     <div class="full-foot">
       <a href="https://open.kakao.com/o/s1qOE0mi" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.85rem;background:#fee500;border-radius:10px;font-size:0.85rem;font-weight:700;color:#3a1d1d;text-decoration:none;">💬 문의사항은 여기로</a>
+    </div>
+  </div>
+</div>
+
+<!-- 내 실적 모달 (전체화면) -->
+<div class="modal-bg" id="statsModal">
+  <div class="full-sheet">
+    <div class="full-hdr">
+      <div class="full-title">📊 내 실적</div>
+      <button class="full-close" onclick="closeModal('statsModal')">×</button>
+    </div>
+    <div class="full-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <button id="statsPrev" onclick="statsNav(-1)" style="min-width:44px;min-height:44px;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;font-size:1rem;color:var(--navy);cursor:pointer;font-family:inherit;">◀</button>
+        <div id="statsYmLabel" style="font-size:1.05rem;font-weight:800;color:var(--navy);">—</div>
+        <button id="statsNext" onclick="statsNav(1)" style="min-width:44px;min-height:44px;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;font-size:1rem;color:var(--navy);cursor:pointer;font-family:inherit;">▶</button>
+      </div>
+      <div id="statsBody"></div>
     </div>
   </div>
 </div>
@@ -893,6 +912,34 @@ function enterDash() {
   }
 }
 
+// ── 내역 팀 단위 그룹화 (내역 탭 렌더·실적 집계 공용) ──
+// 같은 손님(특히 VIP)이라도 입장(enter)할 때마다 새 방문으로 분리
+function groupHistTables(items) {
+  var tableGroups = {};
+  var _byKey = {};
+  items.forEach(function(n) {
+    var tbl = n.tableLabel || n.guestMsg || '손님';
+    var baseKey = tbl + '___' + (n.guestId || '');
+    if (!_byKey[baseKey]) _byKey[baseKey] = [];
+    _byKey[baseKey].push(n);
+  });
+  Object.keys(_byKey).forEach(function(baseKey) {
+    var arr = _byKey[baseKey].slice().sort(function(a,b){
+      var ak = a.sortKey || a._key || ''; var bk = b.sortKey || b._key || '';
+      return ak < bk ? -1 : ak > bk ? 1 : 0;
+    });
+    var session = 0, started = false;
+    arr.forEach(function(n) {
+      if (n.type === 'enter') { session++; started = true; }
+      else if (!started) { session = 1; started = true; }
+      var grpKey = baseKey + '___s' + session;
+      if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
+      tableGroups[grpKey].push(n);
+    });
+  });
+  return tableGroups;
+}
+
 // ── 오래된 처리 내역 자동 정리 (30일 경과분, 하루 1회) ──
 function parseKoDate(s) {
   if (!s) return null;
@@ -930,6 +977,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.20", type: "신규 기능", content: "내 실적 — 메뉴에 '📊 내 실적'이 새로 생겼습니다. 이번 달 손님 팀 수, 부킹 완료 💃, 메이드 ❤️, 단체 문자 발송 인원, 새 VIP가 큰 숫자로 한눈에 보이고 지난달과 자동으로 비교됩니다. 화살표로 지난 달 실적도 넘겨보실 수 있습니다. 열심히 일하신 만큼, 이제 숫자로 확인하세요." },
   { date: "2026.07.20", type: "신규 기능", content: "맞춤 추천 문구 — 단체 문자의 문구가 오늘 날짜에 맞춰 자동으로 준비됩니다. 불금·토요일 같은 요일, 봄·여름·가을·겨울 계절, 설날·추석·광복절 등 명절과 공휴일, 징검다리 연휴, 안부 인사까지 20여 가지 문구 중 오늘 어울리는 것이 골라져 나오며, '🔀 다른 문구' 버튼을 누를 때마다 바뀝니다. 한 달 넘게 안 온 손님을 선택하면 감사 인사 대신 안부 인사로 시작합니다. 보내기 전에 자유롭게 고치실 수 있습니다." },
   { date: "2026.07.20", type: "신규 기능", content: "단체 문자 — VIP 탭의 📨 단체 문자 버튼으로 여러 VIP에게 한 번에 문자를 보내실 수 있습니다. 전체 · 최근 한 달 방문 · 한 달 넘게 안 온 손님 중 대상을 고르면 몇 명에게 가는지 바로 표시되고, 미리 채워진 문구를 다듬은 뒤 버튼을 누르면 문자앱이 수신자와 내용이 채워진 채 열립니다. 전송 버튼만 누르시면 끝입니다. 휴대폰에 따라 단체 수신이 안 되는 경우 아래 '한 명씩 보내기'를 이용해 주세요. 발송은 웨이터님 휴대폰 문자로 나가므로 무제한 요금제면 비용이 들지 않습니다." },
   { date: "2026.07.19", type: "신규 기능", content: "오늘 부킹 대기 — 부킹을 원한다고 답한 손님이 알림 탭 맨 위에 자동으로 줄을 섭니다. 매우 원함 손님이 먼저 표시되며, 부킹을 넣어드린 뒤 부킹 완료 버튼을 누르시면 남은 팀 수가 줄어듭니다. 밤새 누구에게 부킹을 넣어드려야 하는지 이 목록 하나로 확인하실 수 있습니다. 완료하신 부킹은 내역 탭 날짜별로 💃 표시로 집계됩니다." },
@@ -1115,6 +1163,168 @@ function showUpdates() {
   updateNoticeBadge();
   document.getElementById('updatesModal').classList.add('open');
 }
+// ── 내 실적 (월간) ──
+// 내역은 30일 후 자동 삭제되므로, 팀·부킹 수는 앱이 열릴 때마다 월별 스냅샷(dangolInfo/_stats)에 최대값으로 저장해 과거 달을 보존.
+// 메이드·VIP·단체 문자 기록은 영구 보존 데이터라 그때그때 계산.
+let _statsY = 0, _statsM = 0;
+function ymKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
+
+function computeHistMonth(hist, ym) {
+  const byDate = {};
+  (hist || []).forEach(n => {
+    const d = parseKoDate(n.date);
+    if (!d) return;
+    if (ymKey(d.getFullYear(), d.getMonth() + 1) !== ym) return;
+    (byDate[n.date] = byDate[n.date] || []).push(n);
+  });
+  let teams = 0, booking = 0;
+  Object.values(byDate).forEach(items => {
+    teams += Object.keys(groupHistTables(items)).length;
+    items.forEach(n => { if (n.type === 'bookingDone') booking++; });
+  });
+  return { teams, booking };
+}
+
+function snapshotStats(hist) {
+  if (!W) return;
+  const t = todayISO();
+  const ymNow = t.slice(0, 7);
+  let py = +t.slice(0, 4), pm = +t.slice(5, 7) - 1;
+  if (pm < 1) { pm = 12; py--; }
+  [ymNow, ymKey(py, pm)].forEach(ym => {
+    const c = computeHistMonth(hist, ym);
+    if (c.teams === 0 && c.booking === 0) return;
+    const stored = ((window._dangolInfo || {})._stats || {})[ym] || {};
+    const teams = Math.max(c.teams, stored.teams || 0);
+    const booking = Math.max(c.booking, stored.booking || 0);
+    if (teams !== (stored.teams || 0) || booking !== (stored.booking || 0)) {
+      fbSet(fbRef(db, `dangolInfo/${W.id}/_stats/${ym}`), { teams, booking }).catch(() => {});
+    }
+  });
+}
+
+function countMaidMonth(ym) {
+  const digits = ym.replace('-', '');
+  const m = window._maidMap || {};
+  let cnt = 0;
+  Object.values(m).forEach(g => {
+    Object.entries(g || {}).forEach(([dk, v]) => { if (v === true && String(dk).startsWith(digits)) cnt++; });
+  });
+  return cnt;
+}
+function countBulkMonth(ym) {
+  const log = (window._dangolInfo || {})._bulkLog || {};
+  let cnt = 0, ppl = 0;
+  Object.values(log).forEach(v => { if (v && v.ym === ym) { cnt++; ppl += (+v.n || 0); } });
+  return { cnt, ppl };
+}
+function countVipMonth(ym) {
+  const gs = window._lastGuests || {};
+  let total = 0, nw = 0;
+  Object.values(gs).forEach(g => {
+    if (!g || !g.isDangol) return;
+    total++;
+    if ((g.createdDate || '').slice(0, 7) === ym) nw++;
+  });
+  return { total, nw };
+}
+
+function getMonthTeams(ym, isCur) {
+  if (isCur) return computeHistMonth(window._lastHist || [], ym);
+  const s = ((window._dangolInfo || {})._stats || {})[ym];
+  return s ? { teams: s.teams || 0, booking: s.booking || 0 } : { teams: null, booking: null };
+}
+
+function statDelta(cur, prev, unit) {
+  if (cur === null || prev === null) return '';
+  const d = cur - prev;
+  if (d > 0) return '▲ 지난달보다 ' + d + unit;
+  if (d < 0) return '▼ 지난달보다 ' + (-d) + unit;
+  return '— 지난달과 같음';
+}
+
+function statCard(label, val, sub, gold) {
+  const card = document.createElement('div');
+  card.style.cssText = 'border-radius:12px;padding:0.9rem 1rem;' + (gold
+    ? 'background:linear-gradient(135deg,#d4a843,#e8c87a);'
+    : 'background:var(--bg2);border:0.5px solid var(--border);');
+  const l = document.createElement('div');
+  l.style.cssText = 'font-size:0.72rem;font-weight:700;margin-bottom:0.2rem;color:' + (gold ? 'rgba(26,18,6,0.7)' : 'var(--muted)') + ';';
+  l.textContent = label;
+  const v = document.createElement('div');
+  v.style.cssText = 'font-size:1.55rem;font-weight:800;color:' + (gold ? '#1a1206' : 'var(--navy)') + ';';
+  v.textContent = val;
+  card.append(l, v);
+  if (sub) {
+    const s = document.createElement('div');
+    s.style.cssText = 'font-size:0.7rem;font-weight:600;margin-top:0.25rem;color:' + (gold ? 'rgba(26,18,6,0.65)' : 'var(--muted)') + ';';
+    s.textContent = sub;
+    card.appendChild(s);
+  }
+  return card;
+}
+
+function openStats() {
+  const t = todayISO();
+  _statsY = +t.slice(0, 4);
+  _statsM = +t.slice(5, 7);
+  renderStats();
+  document.getElementById('statsModal').classList.add('open');
+}
+
+function statsNav(dir) {
+  let y = _statsY, m = _statsM + dir;
+  if (m < 1) { m = 12; y--; }
+  if (m > 12) { m = 1; y++; }
+  const t = todayISO();
+  const curIdx = (+t.slice(0, 4)) * 12 + (+t.slice(5, 7));
+  const idx = y * 12 + m;
+  if (idx > curIdx || idx < curIdx - 11) return; // 미래 금지, 과거 12개월까지
+  _statsY = y; _statsM = m;
+  renderStats();
+}
+
+function renderStats() {
+  const t = todayISO();
+  const ymNow = t.slice(0, 7);
+  const ym = ymKey(_statsY, _statsM);
+  const isCur = ym === ymNow;
+  document.getElementById('statsYmLabel').textContent = _statsY + '년 ' + _statsM + '월' + (isCur ? ' (이번 달)' : '');
+  document.getElementById('statsNext').style.opacity = isCur ? '0.35' : '1';
+
+  const cur = getMonthTeams(ym, isCur);
+  let py = _statsY, pm = _statsM - 1;
+  if (pm < 1) { pm = 12; py--; }
+  const pym = ymKey(py, pm);
+  const prev = getMonthTeams(pym, pym === ymNow);
+  const maid = countMaidMonth(ym);
+  const bulk = countBulkMonth(ym);
+  const vip = countVipMonth(ym);
+
+  const body = document.getElementById('statsBody');
+  body.innerHTML = '';
+
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem;';
+  grid.appendChild(statCard('손님', cur.teams === null ? '—' : cur.teams + '팀', statDelta(cur.teams, prev.teams, '팀'), true));
+  grid.appendChild(statCard('부킹 완료 💃', cur.booking === null ? '—' : cur.booking + '건', statDelta(cur.booking, prev.booking, '건'), true));
+  grid.appendChild(statCard('메이드 ❤️', maid + '건', '', false));
+  grid.appendChild(statCard('단체 문자', bulk.ppl + '명', bulk.cnt > 0 ? bulk.cnt + '회 발송' : '', false));
+  body.appendChild(grid);
+
+  const vipRow = document.createElement('div');
+  vipRow.style.cssText = 'background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:0.8rem 1rem;font-size:0.85rem;font-weight:700;color:var(--navy);';
+  vipRow.textContent = '⭐ 이 달 새 VIP ' + vip.nw + '명 · 전체 VIP ' + vip.total + '명';
+  body.appendChild(vipRow);
+
+  const note = document.createElement('div');
+  note.style.cssText = 'font-size:0.72rem;color:var(--muted);margin-top:0.8rem;line-height:1.6;';
+  note.textContent = cur.teams === null
+    ? '이 달의 손님·부킹 기록이 없습니다. 실적은 2026년 7월부터 매일 자동으로 쌓입니다.'
+    : '손님·부킹은 영업 기록에서 매일 자동 집계됩니다. 새 VIP는 2026년 7월 20일 이후 등록분부터 집계됩니다.';
+  body.appendChild(note);
+}
+
 function doLogout() {
   try { firebase.auth().signOut(); } catch(e) {}
   W = null; prevNotifCount = -1;
@@ -1513,7 +1723,7 @@ function doSaveDangol() {
     } else {
       const ref = fbPush(fbRef(db, `guests/${W.id}`), {
         label:name, isDangol:true, active:true, birthday: ex.birthday || null,
-        lastVisit: '', visitCount: 0, bookingCount: 0, createdAt: nowStr()
+        lastVisit: '', visitCount: 0, bookingCount: 0, createdAt: nowStr(), createdDate: todayISO()
       });
       const key = ref.key;
       fbSet(fbRef(db, `dangolInfo/${W.id}/${key}`), { phone, memo, taste: ex.taste || null, scale: ex.scale || null });
@@ -1815,11 +2025,18 @@ function openBulkSms() {
   document.getElementById('bulkSmsModal').classList.add('open');
 }
 
+// 단체 문자 발송 기록 — 월간 실적(단체 문자 N명·N회) 집계용
+function logBulkSend(n) {
+  if (!W) return;
+  waitFb(() => fbPush(fbRef(db, `dangolInfo/${W.id}/_bulkLog`), { ym: todayISO().slice(0, 7), n: n, at: nowStr() }).catch(() => {}));
+}
+
 function sendBulkSms() {
   const body = document.getElementById('bulkMsg').value.trim();
   if (!body) { toast('보낼 내용을 입력해주세요'); return; }
   const r = bulkRecipients();
   if (!r.sel.length) { toast('보낼 대상이 없습니다'); return; }
+  logBulkSend(r.sel.length);
   const nums = r.sel.map(g => cleanPhone(g.phone));
   // 안드로이드: sms:번호1,번호2?body= / 아이폰: sms:/open?addresses=번호1,번호2&body=
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -1871,6 +2088,7 @@ function renderBulkList() {
         const body = document.getElementById('bulkMsg').value.trim();
         if (!body) { toast('보낼 내용을 입력해주세요'); return; }
         openSmsApp(g.phone, body);
+        logBulkSend(1);
         _bulkSent[g._key] = true;
         renderBulkList();
       };
@@ -2551,6 +2769,8 @@ function startListeners() {
     var hist = Object.entries(raw)
       .map(function(entry){ return Object.assign({}, entry[1], {_key: entry[0]}); })
       .sort(function(a,b){ return (a.sortKey||a._key) < (b.sortKey||b._key) ? -1 : 1; });
+    window._lastHist = hist;
+    snapshotStats(hist); // 월간 실적 스냅샷 갱신 (내역 30일 삭제 대비)
 
     var list = document.getElementById('histList');
     // 현재 열린 폴더 상태 저장
@@ -2609,29 +2829,7 @@ function startListeners() {
       dateTxt.textContent = date + ' ' + dayLabel;
       dateLeft.appendChild(dateTxt);
 
-      var tableGroups = {};
-      // 같은 손님(특히 VIP)이라도 입장(enter)할 때마다 새 방문으로 분리
-      var _byKey = {};
-      items.forEach(function(n) {
-        var tbl = n.tableLabel || n.guestMsg || '손님';
-        var baseKey = tbl + '___' + (n.guestId || '');
-        if (!_byKey[baseKey]) _byKey[baseKey] = [];
-        _byKey[baseKey].push(n);
-      });
-      Object.keys(_byKey).forEach(function(baseKey) {
-        var arr = _byKey[baseKey].slice().sort(function(a,b){
-          var ak = a.sortKey || a._key || ''; var bk = b.sortKey || b._key || '';
-          return ak < bk ? -1 : ak > bk ? 1 : 0;
-        });
-        var session = 0, started = false;
-        arr.forEach(function(n) {
-          if (n.type === 'enter') { session++; started = true; }
-          else if (!started) { session = 1; started = true; }
-          var grpKey = baseKey + '___s' + session;
-          if (!tableGroups[grpKey]) tableGroups[grpKey] = [];
-          tableGroups[grpKey].push(n);
-        });
-      });
+      var tableGroups = groupHistTables(items);
       var tableEntries = Object.entries(tableGroups).sort(function(a,b){
         var aKey = a[1].map(function(n){ return n._key||''; }).sort().pop()||'';
         var bKey = b[1].map(function(n){ return n._key||''; }).sort().pop()||'';

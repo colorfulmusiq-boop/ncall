@@ -641,7 +641,11 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
       <button type="button" class="pf-chip" data-v="away">한 달 넘게 안 옴</button>
     </div>
     <div id="bulkCount" style="font-size:0.82rem;font-weight:700;color:var(--navy);margin-bottom:0.9rem;">대상 0명</div>
-    <label class="inp-label">보낼 내용</label>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem;">
+      <label class="inp-label" style="margin-bottom:0;">보낼 내용</label>
+      <button type="button" onclick="shuffleBulkMsg()" style="min-height:44px;padding:0.4rem 0.8rem;border-radius:8px;border:0.5px solid var(--border);background:var(--bg2);color:var(--navy);font-family:inherit;font-size:0.78rem;font-weight:700;cursor:pointer;">🔀 다른 문구</button>
+    </div>
+    <div id="bulkMsgName" style="font-size:0.72rem;font-weight:700;color:#b8923f;margin-bottom:0.35rem;"></div>
     <textarea class="inp" id="bulkMsg" rows="5" style="resize:vertical;min-height:110px;line-height:1.6;"></textarea>
     <button class="btn btn-primary" onclick="sendBulkSms()" style="margin-top:0.3rem;">📨 문자앱에서 한 번에 보내기</button>
     <button class="btn btn-ghost" id="bulkListToggle" onclick="toggleBulkList()">한 명씩 보내기 ▼</button>
@@ -926,6 +930,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.20", type: "신규 기능", content: "맞춤 추천 문구 — 단체 문자의 문구가 오늘 날짜에 맞춰 자동으로 준비됩니다. 불금·토요일 같은 요일, 봄·여름·가을·겨울 계절, 설날·추석·광복절 등 명절과 공휴일, 징검다리 연휴, 월급날, 안부 인사까지 20여 가지 문구 중 오늘 어울리는 것이 골라져 나오며, '🔀 다른 문구' 버튼을 누를 때마다 바뀝니다. 한 달 넘게 안 온 손님을 선택하면 감사 인사 대신 안부 인사로 시작합니다. 보내기 전에 자유롭게 고치실 수 있습니다." },
   { date: "2026.07.20", type: "신규 기능", content: "단체 문자 — VIP 탭의 📨 단체 문자 버튼으로 여러 VIP에게 한 번에 문자를 보내실 수 있습니다. 전체 · 최근 한 달 방문 · 한 달 넘게 안 온 손님 중 대상을 고르면 몇 명에게 가는지 바로 표시되고, 미리 채워진 문구를 다듬은 뒤 버튼을 누르면 문자앱이 수신자와 내용이 채워진 채 열립니다. 전송 버튼만 누르시면 끝입니다. 휴대폰에 따라 단체 수신이 안 되는 경우 아래 '한 명씩 보내기'를 이용해 주세요. 발송은 웨이터님 휴대폰 문자로 나가므로 무제한 요금제면 비용이 들지 않습니다." },
   { date: "2026.07.19", type: "신규 기능", content: "오늘 부킹 대기 — 부킹을 원한다고 답한 손님이 알림 탭 맨 위에 자동으로 줄을 섭니다. 매우 원함 손님이 먼저 표시되며, 부킹을 넣어드린 뒤 부킹 완료 버튼을 누르시면 남은 팀 수가 줄어듭니다. 밤새 누구에게 부킹을 넣어드려야 하는지 이 목록 하나로 확인하실 수 있습니다. 완료하신 부킹은 내역 탭 날짜별로 💃 표시로 집계됩니다." },
   { date: "2026.07.19", type: "신규 기능", content: "VIP 손님 장부 — VIP 등록 화면에서 생일, 주로 드시는 술, 손님 규모(큰손 등)를 기록하실 수 있습니다. 전부 버튼으로 선택만 하시면 되고, 기록한 내용은 VIP 카드에 한눈에 표시됩니다. 생일이 일주일 안으로 다가온 VIP는 VIP 탭 맨 위에 자동으로 떠오르며, 축하 문자 버튼 한 번으로 생일 문자를 보내실 수 있습니다." },
@@ -1595,6 +1600,133 @@ function sendBirthdaySms(key, name, phone) {
 // 서버 발송이 아니라 웨이터 본인 폰 문자앱을 여는 방식(sms: 다중 수신) — 비용 0원
 let _bulkTarget = 'all';
 let _bulkSent = {}; // 한 명씩 보내기에서 보낸 표시 (모달 열 때 초기화)
+let _bulkCands = []; // 오늘 쓸 수 있는 추천 문구 후보들
+let _bulkIdx = 0;
+
+// 문구 = 인사말(대상별) + 본문(상황별) + 맺음말 조합
+function bulkGreet() {
+  if (_bulkTarget === 'away') return '안녕하세요, ' + W.name + '입니다. 한동안 뵙지 못해 안부 여쭙니다. 늘 감사한 마음입니다.';
+  return '안녕하세요, ' + W.name + '입니다. 늘 찾아주셔서 진심으로 감사드립니다.';
+}
+const BULK_CLOSE = '편하게 들러주시면 정성껏 모시겠습니다. 미리 연락 주시면 좋은 자리로 준비해 두겠습니다.';
+
+// 상황별 본문 라이브러리
+const BULK_BODY = {
+  friA:  { name: '불금', body: '드디어 불금입니다. 오늘 밤 최고의 분위기로 모실 준비를 마쳤습니다.' },
+  friB:  { name: '불금 2', body: '한 주 마무리는 역시 불금이지요. 오늘 좋은 자리 비워두었습니다.' },
+  satA:  { name: '토요일', body: '기다리던 토요일입니다. 오늘 밤 가장 뜨거운 자리로 모시겠습니다.' },
+  satB:  { name: '토요일 2', body: '토요일 밤, 이번 주 최고의 무대가 준비되어 있습니다.' },
+  thu:   { name: '주말 예고', body: '내일부터 주말입니다. 미리 말씀 주시면 가장 좋은 자리로 잡아드리겠습니다.' },
+  wkdA:  { name: '평일', body: '한 주 고생 많으십니다. 오늘 하루의 피로, 시원하게 풀고 가시지요.' },
+  wkdB:  { name: '평일 2', body: '평일이라 오히려 여유 있고 좋은 자리가 많습니다. 조용히 잘 모시겠습니다.' },
+  sprA:  { name: '봄', body: '봄바람이 좋은 요즘입니다. 기분 전환하러 한번 들러주세요.' },
+  sprB:  { name: '봄 2', body: '꽃 피는 계절입니다. 좋은 분위기에서 한잔 어떠신지요.' },
+  sumA:  { name: '여름', body: '더운 여름밤, 시원한 맥주와 신나는 음악으로 더위 날려드리겠습니다.' },
+  sumB:  { name: '여름 2', body: '열대야에 잠 못 드는 밤이라면, 저희 집에서 시원하게 즐기다 가시지요.' },
+  autA:  { name: '가을', body: '선선한 가을밤입니다. 분위기 있게 한잔하기 딱 좋은 날씨네요.' },
+  autB:  { name: '가을 2', body: '가을이 깊어갑니다. 좋은 음악과 함께 운치 있는 밤 만들어드리겠습니다.' },
+  winA:  { name: '겨울', body: '날이 많이 추워졌습니다. 따뜻한 분위기에서 뜨겁게 즐기다 가세요.' },
+  winB:  { name: '겨울 2', body: '추운 겨울밤, 안에서는 어느 때보다 뜨거운 밤이 기다리고 있습니다.' },
+  yearEnd: { name: '연말', body: '올 한 해도 감사했습니다. 연말 분위기 제대로 즐기실 수 있도록 준비해 두었습니다.' },
+  newYear: { name: '새해', body: '새해 복 많이 받으십시오! 올해도 변함없이 정성껏 모시겠습니다. 새해 첫 자리, 제가 책임지겠습니다.' },
+  seol:  { name: '설날', body: '설 명절 편안히 보내시길 바랍니다. 연휴에 좋은 시간 보내시고, 몸도 마음도 넉넉한 한 해 되십시오.' },
+  chuseok: { name: '추석', body: '풍성한 한가위 되시길 바랍니다. 연휴 지나고 허전하실 때 들러주시면 더 풍성하게 모시겠습니다.' },
+  xmas:  { name: '크리스마스', body: '곧 크리스마스입니다. 올해 가장 특별한 밤, 최고의 분위기로 준비하겠습니다.' },
+  holiday: { name: '공휴일', body: '' }, // 공휴일 이름 넣어 동적 생성
+  bridge: { name: '징검다리 연휴', body: '이번 주는 징검다리 연휴네요. 하루만 쉬면 황금연휴 — 노는 날 전날 밤은 저희 집이 최고입니다.' },
+  payday: { name: '월급날', body: '월급날입니다. 고생한 나에게 주는 선물 같은 하루, 오늘은 기분 좀 내셔야지요.' },
+  helloA: { name: '안부', body: '요즘 어떻게 지내시는지요. 문득 생각나서 연락드렸습니다. 얼굴 뵌 지 오래되어 아쉽습니다.' },
+  helloB: { name: '안부 2', body: '별일 없으신지요. 예전처럼 편하게 들러주시면 그 자리 그대로 준비해 두겠습니다.' },
+};
+
+// 대한민국 공휴일 — 양력 고정
+const KR_HOLIDAYS = [
+  { m: 3, d: 1, name: '삼일절' },
+  { m: 5, d: 5, name: '어린이날' },
+  { m: 6, d: 6, name: '현충일' },
+  { m: 8, d: 15, name: '광복절' },
+  { m: 10, d: 3, name: '개천절' },
+  { m: 10, d: 9, name: '한글날' },
+];
+// 음력 명절의 양력 날짜 (연도별 표 — 매년 말 다음 해 날짜 추가)
+const KR_LUNAR = [
+  { date: '2026-02-17', key: 'seol' },
+  { date: '2026-09-25', key: 'chuseok' },
+  { date: '2027-02-06', key: 'seol' },
+  { date: '2027-09-15', key: 'chuseok' },
+];
+
+// 오늘 날짜 기준으로 쓸 수 있는 문구 후보를 우선순위대로 조립
+function buildBulkCands() {
+  const now = new Date();
+  const y = now.getFullYear(), mo = now.getMonth() + 1, dd = now.getDate(), dow = now.getDay();
+  const t0 = new Date(y, mo - 1, dd);
+  const cands = [];
+  const push = (key, item) => { if (!cands.some(c => c._k === key)) cands.push({ _k: key, ...item }); };
+  const daysTo = dt => Math.round((dt - t0) / 86400000);
+
+  // 1) 다가오는 명절·공휴일 (오늘~7일 이내)
+  KR_LUNAR.forEach(h => {
+    const p = h.date.split('-');
+    const d = daysTo(new Date(+p[0], +p[1] - 1, +p[2]));
+    if (d >= 0 && d <= 7) push(h.key, BULK_BODY[h.key]);
+  });
+  KR_HOLIDAYS.forEach(h => {
+    let dt = new Date(y, h.m - 1, h.d);
+    if (daysTo(dt) < 0) dt = new Date(y + 1, h.m - 1, h.d);
+    const d = daysTo(dt);
+    if (d >= 0 && d <= 7) {
+      push('h' + h.m + '_' + h.d, { name: h.name, body: '곧 ' + h.name + ' 휴일입니다. 쉬는 날 전날 밤이야말로 부담 없이 즐기기 가장 좋은 날이지요. 최고의 밤으로 모시겠습니다.' });
+      const hd = dt.getDay();
+      if (hd === 2 || hd === 4) push('bridge', BULK_BODY.bridge); // 화·목 공휴일 = 징검다리
+    }
+  });
+  { // 크리스마스
+    let dt = new Date(y, 11, 25);
+    if (daysTo(dt) < 0) dt = new Date(y + 1, 11, 25);
+    const d = daysTo(dt);
+    if (d >= 0 && d <= 7) push('xmas', BULK_BODY.xmas);
+  }
+
+  // 2) 연말·새해
+  if (mo === 12 && dd >= 20) push('yearEnd', BULK_BODY.yearEnd);
+  if (mo === 1 && dd <= 15) push('newYear', BULK_BODY.newYear);
+
+  // 3) 요일
+  if (dow === 5) { push('friA', BULK_BODY.friA); push('friB', BULK_BODY.friB); }
+  else if (dow === 6) { push('satA', BULK_BODY.satA); push('satB', BULK_BODY.satB); }
+  else if (dow === 4) { push('thu', BULK_BODY.thu); push('wkdA', BULK_BODY.wkdA); }
+  else { push('wkdA', BULK_BODY.wkdA); push('wkdB', BULK_BODY.wkdB); }
+
+  // 4) 월급날 (24~26일)
+  if (dd >= 24 && dd <= 26) push('payday', BULK_BODY.payday);
+
+  // 5) 계절
+  const season = (mo >= 3 && mo <= 5) ? ['sprA','sprB'] : (mo >= 6 && mo <= 8) ? ['sumA','sumB'] : (mo >= 9 && mo <= 11) ? ['autA','autB'] : ['winA','winB'];
+  season.forEach(k => push(k, BULK_BODY[k]));
+
+  // 6) 안부 — 항상 후보에 포함, 오래 안 온 손님 대상일 땐 맨 앞으로
+  push('helloA', BULK_BODY.helloA);
+  push('helloB', BULK_BODY.helloB);
+  if (_bulkTarget === 'away') {
+    const hello = cands.filter(c => c._k === 'helloA' || c._k === 'helloB');
+    const rest = cands.filter(c => c._k !== 'helloA' && c._k !== 'helloB');
+    return hello.concat(rest);
+  }
+  return cands;
+}
+
+function fillBulkMsg() {
+  if (!_bulkCands.length) _bulkCands = buildBulkCands();
+  const c = _bulkCands[_bulkIdx % _bulkCands.length];
+  document.getElementById('bulkMsg').value = bulkGreet() + '\n' + c.body + '\n' + BULK_CLOSE;
+  document.getElementById('bulkMsgName').textContent = '추천 문구: ' + c.name + ' (' + ((_bulkIdx % _bulkCands.length) + 1) + '/' + _bulkCands.length + ') — 자유롭게 고쳐서 보내세요';
+}
+
+function shuffleBulkMsg() {
+  _bulkIdx++;
+  fillBulkMsg();
+}
 
 function canUseBulkSms() { return true; } // 유료화 시 프로 구독 체크 지점
 
@@ -1629,6 +1761,10 @@ function initBulkSms() {
     _bulkTarget = b.dataset.v;
     document.querySelectorAll('#bulkTarget .pf-chip').forEach(c => c.classList.toggle('on', c === b));
     updateBulkCount();
+    // 대상이 바뀌면 인사말·문구 우선순위를 다시 맞춤 (오래 안 온 손님 → 안부 인사 먼저)
+    _bulkCands = buildBulkCands();
+    _bulkIdx = 0;
+    fillBulkMsg();
     if (document.getElementById('bulkList').style.display !== 'none') renderBulkList();
   });
 }
@@ -1639,7 +1775,9 @@ function openBulkSms() {
   _bulkTarget = 'all';
   _bulkSent = {};
   document.querySelectorAll('#bulkTarget .pf-chip').forEach(c => c.classList.toggle('on', c.dataset.v === 'all'));
-  document.getElementById('bulkMsg').value = '안녕하세요, ' + W.name + '입니다. 늘 찾아주셔서 진심으로 감사드립니다. 이번 주말 좋은 자리가 준비되어 있어 연락드립니다. 편하게 들러주시면 정성껏 모시겠습니다. 미리 연락 주시면 좋은 자리로 준비해 두겠습니다.';
+  _bulkCands = buildBulkCands();
+  _bulkIdx = 0;
+  fillBulkMsg();
   document.getElementById('bulkList').style.display = 'none';
   document.getElementById('bulkListToggle').textContent = '한 명씩 보내기 ▼';
   updateBulkCount();

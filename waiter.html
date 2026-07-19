@@ -456,7 +456,7 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
       <div class="menu-wrap" id="menuWrap">
         <button class="menu-btn" id="menuBtn" onclick="toggleMenu()"><span class="menu-ico">☰</span>메뉴<span id="menuDot" class="menu-dot" style="display:none;"></span></button>
         <div class="menu-dropdown" id="menuDropdown">
-          <button class="menu-item" onclick="closeMenu();openStats()">📊 내 실적</button>
+          <button class="menu-item" onclick="closeMenu();openStats()">월간 실적</button>
           <button class="menu-item" onclick="closeMenu();showUpdates()">공지사항<span id="noticeBadge" class="menu-notice-badge" style="display:none;">0</span></button>
           <div class="menu-divider"></div>
           <button class="menu-item" onclick="closeMenu();confirmLogout()">로그아웃</button>
@@ -527,7 +527,7 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
 <div class="modal-bg" id="statsModal">
   <div class="full-sheet">
     <div class="full-hdr">
-      <div class="full-title">📊 내 실적</div>
+      <div class="full-title">월간 실적</div>
       <button class="full-close" onclick="closeModal('statsModal')">×</button>
     </div>
     <div class="full-body">
@@ -996,7 +996,7 @@ function cleanOldHistory() {
 
 const APP_UPDATES = [
   { date: "2026.07.20", type: "신규 기능", content: "예약 메모 — \"금요일에 갈게\" 하신 VIP를 이제 머리로 기억하지 않으셔도 됩니다. VIP 카드의 📅 예약 버튼으로 날짜·인원·메모를 적어두면 카드에 예약이 표시되고, 예약 당일에는 VIP 탭 맨 위 '오늘 예약'에 자동으로 떠오릅니다. 손님이 QR로 입장하시면 도착 표시까지 자동으로 붙습니다. 날짜가 지나면 알아서 사라집니다." },
-  { date: "2026.07.20", type: "신규 기능", content: "내 실적 — 메뉴에 '📊 내 실적'이 새로 생겼습니다. 이번 달 손님 팀 수, 부킹 완료 💃, 메이드 ❤️, 단체 문자 발송 인원, 새 VIP가 큰 숫자로 한눈에 보이고 지난달과 자동으로 비교됩니다. 화살표로 지난 달 실적도 넘겨보실 수 있습니다. 열심히 일하신 만큼, 이제 숫자로 확인하세요." },
+  { date: "2026.07.20", type: "신규 기능", content: "월간 실적 — 메뉴에 '월간 실적'이 새로 생겼습니다. 이번 달 손님 팀 수, 부킹 완료 💃, 메이드 ❤️, 단체 문자 발송 인원, 새 VIP가 큰 숫자로 한눈에 보이고 지난달과 자동으로 비교됩니다. 화살표로 지난 달 실적도 넘겨보실 수 있습니다. 열심히 일하신 만큼, 이제 숫자로 확인하세요." },
   { date: "2026.07.20", type: "신규 기능", content: "맞춤 추천 문구 — 단체 문자의 문구가 오늘 날짜에 맞춰 자동으로 준비됩니다. 불금·토요일 같은 요일, 봄·여름·가을·겨울 계절, 설날·추석·광복절 등 명절과 공휴일, 징검다리 연휴, 안부 인사까지 20여 가지 문구 중 오늘 어울리는 것이 골라져 나오며, '🔀 다른 문구' 버튼을 누를 때마다 바뀝니다. 한 달 넘게 안 온 손님을 선택하면 감사 인사 대신 안부 인사로 시작합니다. 보내기 전에 자유롭게 고치실 수 있습니다." },
   { date: "2026.07.20", type: "신규 기능", content: "단체 문자 — VIP 탭의 📨 단체 문자 버튼으로 여러 VIP에게 한 번에 문자를 보내실 수 있습니다. 전체 · 최근 한 달 방문 · 한 달 넘게 안 온 손님 중 대상을 고르면 몇 명에게 가는지 바로 표시되고, 미리 채워진 문구를 다듬은 뒤 버튼을 누르면 문자앱이 수신자와 내용이 채워진 채 열립니다. 전송 버튼만 누르시면 끝입니다. 휴대폰에 따라 단체 수신이 안 되는 경우 아래 '한 명씩 보내기'를 이용해 주세요. 발송은 웨이터님 휴대폰 문자로 나가므로 무제한 요금제면 비용이 들지 않습니다." },
   { date: "2026.07.19", type: "신규 기능", content: "오늘 부킹 대기 — 부킹을 원한다고 답한 손님이 알림 탭 맨 위에 자동으로 줄을 섭니다. 매우 원함 손님이 먼저 표시되며, 부킹을 넣어드린 뒤 부킹 완료 버튼을 누르시면 남은 팀 수가 줄어듭니다. 밤새 누구에게 부킹을 넣어드려야 하는지 이 목록 하나로 확인하실 수 있습니다. 완료하신 부킹은 내역 탭 날짜별로 💃 표시로 집계됩니다." },

@@ -673,6 +673,24 @@ body[data-theme="dark"] .hist-coupon-btn.sent{background:rgba(122,179,138,0.16);
   </div>
 </div>
 
+<!-- 예약 메모 모달 (VIP 전용) -->
+<div class="modal-bg" id="resvModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="resvTitle">📅 예약 메모</div>
+    <label class="inp-label">예약 날짜</label>
+    <input class="inp" id="resvDate" type="date">
+    <label class="inp-label">인원 (선택)</label>
+    <select class="inp" id="resvSize"></select>
+    <label class="inp-label">메모 (선택)</label>
+    <input class="inp" id="resvMemo" type="text" placeholder="예: 룸 넓은 데로, 양주 미리">
+    <div class="err" id="resvErr">오류</div>
+    <button class="btn btn-primary" onclick="saveResv()">저장</button>
+    <button class="btn btn-ghost" id="resvDelBtn" style="display:none;color:var(--red);" onclick="deleteResv()">예약 취소</button>
+    <button class="btn btn-ghost" onclick="closeModal('resvModal')">닫기</button>
+  </div>
+</div>
+
 <!-- VIP QR 팝업 -->
 <div class="qr-popup" id="dangolQrPopup">
   <div class="qr-sheet">
@@ -977,6 +995,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.20", type: "신규 기능", content: "예약 메모 — \"금요일에 갈게\" 하신 VIP를 이제 머리로 기억하지 않으셔도 됩니다. VIP 카드의 📅 예약 버튼으로 날짜·인원·메모를 적어두면 카드에 예약이 표시되고, 예약 당일에는 VIP 탭 맨 위 '오늘 예약'에 자동으로 떠오릅니다. 손님이 QR로 입장하시면 도착 표시까지 자동으로 붙습니다. 날짜가 지나면 알아서 사라집니다." },
   { date: "2026.07.20", type: "신규 기능", content: "내 실적 — 메뉴에 '📊 내 실적'이 새로 생겼습니다. 이번 달 손님 팀 수, 부킹 완료 💃, 메이드 ❤️, 단체 문자 발송 인원, 새 VIP가 큰 숫자로 한눈에 보이고 지난달과 자동으로 비교됩니다. 화살표로 지난 달 실적도 넘겨보실 수 있습니다. 열심히 일하신 만큼, 이제 숫자로 확인하세요." },
   { date: "2026.07.20", type: "신규 기능", content: "맞춤 추천 문구 — 단체 문자의 문구가 오늘 날짜에 맞춰 자동으로 준비됩니다. 불금·토요일 같은 요일, 봄·여름·가을·겨울 계절, 설날·추석·광복절 등 명절과 공휴일, 징검다리 연휴, 안부 인사까지 20여 가지 문구 중 오늘 어울리는 것이 골라져 나오며, '🔀 다른 문구' 버튼을 누를 때마다 바뀝니다. 한 달 넘게 안 온 손님을 선택하면 감사 인사 대신 안부 인사로 시작합니다. 보내기 전에 자유롭게 고치실 수 있습니다." },
   { date: "2026.07.20", type: "신규 기능", content: "단체 문자 — VIP 탭의 📨 단체 문자 버튼으로 여러 VIP에게 한 번에 문자를 보내실 수 있습니다. 전체 · 최근 한 달 방문 · 한 달 넘게 안 온 손님 중 대상을 고르면 몇 명에게 가는지 바로 표시되고, 미리 채워진 문구를 다듬은 뒤 버튼을 누르면 문자앱이 수신자와 내용이 채워진 채 열립니다. 전송 버튼만 누르시면 끝입니다. 휴대폰에 따라 단체 수신이 안 되는 경우 아래 '한 명씩 보내기'를 이용해 주세요. 발송은 웨이터님 휴대폰 문자로 나가므로 무제한 요금제면 비용이 들지 않습니다." },
@@ -1806,6 +1825,59 @@ function sendBirthdaySms(key, name, phone) {
   openSmsApp(phone, body);
 }
 
+// ── 예약 메모 (VIP 전용) ──
+// 손님 노드 resv = { date:'YYYY-MM-DD', size, memo } — 날짜가 지나면 표시에서 자동 제외
+let _resvKey = null;
+function initResvModal() {
+  const s = document.getElementById('resvSize');
+  let h = '<option value="">모름</option>';
+  for (let i = 1; i <= 10; i++) h += '<option value="' + i + '">' + i + '명</option>';
+  h += '<option value="11">10명 이상</option>';
+  s.innerHTML = h;
+}
+initResvModal();
+function activeResv(g) {
+  return (g && g.resv && g.resv.date && g.resv.date >= todayISO()) ? g.resv : null;
+}
+function resvLabel(r) {
+  const p = (r.date || '').split('-');
+  if (p.length !== 3) return '';
+  const DAY_KR = ['일', '월', '화', '수', '목', '금', '토'];
+  const d = new Date(+p[0], +p[1] - 1, +p[2]);
+  const dayTxt = r.date === todayISO() ? '오늘' : (+p[1]) + '월 ' + (+p[2]) + '일 (' + DAY_KR[d.getDay()] + ')';
+  const sizeTxt = r.size ? ' ' + (r.size > 10 ? '10명 이상' : r.size + '명') : '';
+  return '📅 ' + dayTxt + sizeTxt + ' 예약' + (r.memo ? ' · ' + r.memo : '');
+}
+function openResvModal(key, name, resv) {
+  _resvKey = key;
+  document.getElementById('resvTitle').textContent = '📅 ' + name + ' 예약 메모';
+  const today = todayISO();
+  const valid = resv && resv.date && resv.date >= today;
+  document.getElementById('resvDate').min = today;
+  document.getElementById('resvDate').value = valid ? resv.date : '';
+  document.getElementById('resvSize').value = valid && resv.size ? String(resv.size) : '';
+  document.getElementById('resvMemo').value = valid && resv.memo ? resv.memo : '';
+  document.getElementById('resvDelBtn').style.display = valid ? 'block' : 'none';
+  document.getElementById('resvErr').classList.remove('show');
+  document.getElementById('resvModal').classList.add('open');
+}
+function saveResv() {
+  const date = document.getElementById('resvDate').value;
+  const err = document.getElementById('resvErr');
+  if (!date) { err.textContent = '예약 날짜를 선택해주세요'; err.classList.add('show'); return; }
+  if (date < todayISO()) { err.textContent = '지난 날짜는 선택할 수 없습니다'; err.classList.add('show'); return; }
+  const size = +document.getElementById('resvSize').value || 0;
+  const memo = document.getElementById('resvMemo').value.trim();
+  waitFb(() => fbUpdate(fbRef(db, `guests/${W.id}/${_resvKey}`), { resv: { date, size, memo } }));
+  closeModal('resvModal');
+  toast('✓ 예약 저장됨');
+}
+function deleteResv() {
+  waitFb(() => fbUpdate(fbRef(db, `guests/${W.id}/${_resvKey}`), { resv: null }));
+  closeModal('resvModal');
+  toast('예약이 취소되었습니다');
+}
+
 // ── 단체 문자 ──
 // 서버 발송이 아니라 웨이터 본인 폰 문자앱을 여는 방식(sms: 다중 수신) — 비용 0원
 let _bulkTarget = 'all';
@@ -2214,18 +2286,34 @@ function renderDangol(data) {
   // 오래 안 온 순으로 정렬
   dangols.sort((a,b) => (daysSince(b.lastVisit)||0) - (daysSince(a.lastVisit)||0));
 
-  // 생일이 일주일 안으로 다가온 VIP — 맨 위 생일 섹션에 표시 (다른 섹션과 중복 없이)
+  // 오늘 예약이 잡힌 VIP — 최상단 예약 섹션 (다른 섹션과 중복 없이)
+  const _rToday = todayISO();
+  const resvToday = dangols.filter(g => g.resv && g.resv.date === _rToday);
+  const resvKeys = new Set(resvToday.map(g => g._key));
+
+  // 생일이 일주일 안으로 다가온 VIP — 생일 섹션에 표시 (다른 섹션과 중복 없이)
   const bday = dangols
-    .filter(g => { const du = daysUntilBday(g.birthday); return du !== null && du <= 7; })
+    .filter(g => { const du = daysUntilBday(g.birthday); return du !== null && du <= 7 && !resvKeys.has(g._key); })
     .sort((a,b) => daysUntilBday(a.birthday) - daysUntilBday(b.birthday));
   const bdayKeys = new Set(bday.map(g => g._key));
 
-  const due = dangols.filter(g => !bdayKeys.has(g._key) && (daysSince(g.lastVisit)||0) >= REMIND_DAYS);
-  const attention = bday.length + due.length;
+  const due = dangols.filter(g => !resvKeys.has(g._key) && !bdayKeys.has(g._key) && (daysSince(g.lastVisit)||0) >= REMIND_DAYS);
+  const attention = resvToday.length + bday.length + due.length;
   badge.style.display = attention > 0 ? 'inline' : 'none';
   badge.textContent = attention;
 
   list.innerHTML = '';
+
+  if (resvToday.length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'remind-section';
+    const head = document.createElement('div');
+    head.className = 'remind-head bday';
+    head.textContent = '📅 오늘 예약 (' + resvToday.length + '팀)';
+    sec.appendChild(head);
+    resvToday.forEach(g => sec.appendChild(dangolCard(g, false)));
+    list.appendChild(sec);
+  }
 
   if (bday.length > 0) {
     const sec = document.createElement('div');
@@ -2249,9 +2337,9 @@ function renderDangol(data) {
     list.appendChild(sec);
   }
 
-  const rest = dangols.filter(g => !bdayKeys.has(g._key) && (daysSince(g.lastVisit)||0) < REMIND_DAYS);
+  const rest = dangols.filter(g => !resvKeys.has(g._key) && !bdayKeys.has(g._key) && (daysSince(g.lastVisit)||0) < REMIND_DAYS);
   if (rest.length > 0) {
-    if (due.length > 0 || bday.length > 0) {
+    if (due.length > 0 || bday.length > 0 || resvToday.length > 0) {
       const head = document.createElement('div');
       head.style.cssText = 'font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:0.6rem;';
       head.textContent = 'VIP 전체';
@@ -2299,6 +2387,15 @@ function dangolCard(g, isDue) {
     arrow.style.transform = show ? 'rotate(180deg)' : '';
     if (show) window._expandedDangols.add(g._key); else window._expandedDangols.delete(g._key);
   };
+
+  // 예약이 잡혀 있으면 카드 맨 위에 표시 (오늘 예약 + 이미 도착했으면 도착 표시)
+  const _resv = activeResv(g);
+  if (_resv) {
+    const rv = document.createElement('div');
+    rv.className = 'dangol-bday';
+    rv.textContent = resvLabel(_resv) + (_resv.date === todayISO() && g.visitOpen === true ? ' · ✓ 도착' : '');
+    body.appendChild(rv);
+  }
 
   // 생일이 일주일 안이면 카드 맨 위에 강조 표시
   const _bdayDu = daysUntilBday(g.birthday);
@@ -2447,6 +2544,11 @@ function dangolCard(g, isDue) {
     sendBirthdaySms(g._key, g.label, g.phone);
   };
 
+  const resvBtn = document.createElement('button');
+  resvBtn.className = 'dg-btn';
+  resvBtn.textContent = _resv ? '📅 예약 보기' : '📅 예약';
+  resvBtn.onclick = () => openResvModal(g._key, g.label, g.resv);
+
   const qrBtn = document.createElement('button');
   qrBtn.className = 'dg-btn';
   qrBtn.textContent = '📱 호출 QR';
@@ -2465,7 +2567,7 @@ function dangolCard(g, isDue) {
   const _isVisiting = (g.visitOpen === true);
   if (_isVisiting) btns.append(visitBtn);
   if (_bdaySoon) btns.append(bdayBtn);
-  btns.append(remindBtn, qrBtn, editBtn, delBtn);
+  btns.append(remindBtn, resvBtn, qrBtn, editBtn, delBtn);
   body.appendChild(btns);
 
   card.append(top, body);

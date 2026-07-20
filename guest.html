@@ -227,6 +227,12 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard',-apple-syst
     <span>웨이터가 확인 중입니다. 곧 갑니다!</span>
   </div>
 
+  <!-- 부킹 의사 올리기 — 매우 원함이 아닌 손님에게만 (올리는 방향만 허용) -->
+  <button id="intentChangeBar" onclick="openIntentChange()" style="display:none;margin:0.5rem 1.5rem 0;background:#fdf3d8;border:0.5px solid #ecd9a0;border-radius:10px;padding:0.8rem 1rem;font-size:0.85rem;color:#8a6d1f;align-items:center;gap:0.5rem;font-weight:600;font-family:inherit;cursor:pointer;text-align:left;width:calc(100% - 3rem);min-height:44px;">
+    <span id="intentChangeLabel" style="flex:1;">부킹: 원함</span>
+    <span style="font-weight:800;white-space:nowrap;">변경 ›</span>
+  </button>
+
   <div class="main-area fade-up" style="animation-delay:0.1s;">
     <button class="action-btn btn-booking" onclick="sendAction('booking')">
       <div class="btn-icon">🔔</div>
@@ -400,13 +406,42 @@ function withIntent(data) {
 }
 function maybeShowIntentOverlay() {
   if (guestData && guestData.bookingIntent) return; // 이 방문에서 이미 답했거나 건너뜀
+  _prefChangeMode = false;
   document.getElementById('prefNotice').classList.remove('show');
-  document.querySelectorAll('#prefOverlay .pref-opt').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#prefOverlay .pref-opt').forEach(b => { b.classList.remove('selected'); b.style.display = ''; });
   document.getElementById('prefOverlay').classList.add('open');
 }
 function saveIntent(value) {
   if (guestData) guestData.bookingIntent = value;
   fbUpdate(fbRef(db, `guests/${waiterData.id}/${guestId}`), { bookingIntent: value }).catch(() => {});
+  updateIntentChangeBar();
+}
+
+/* ── 부킹 의사 올리기 — 원하지 않음 → 원함 → 매우 원함 방향만 허용 (내리기 불가) ──
+   매우 원함은 팁 안내를 확인한 약속이라 무를 수 없음 — 변경 줄 자체가 표시되지 않음 */
+let _prefChangeMode = false;
+const _INTENT_LV = { none: 0, skipped: 0, want: 1, very: 2 };
+function updateIntentChangeBar() {
+  const bar = document.getElementById('intentChangeBar');
+  if (!bar || !guestData) return;
+  const cur = guestData.bookingIntent;
+  if (!cur || cur === 'very') { bar.style.display = 'none'; return; }
+  document.getElementById('intentChangeLabel').textContent =
+    cur === 'want' ? '부킹: 원함 — 더 급해지셨나요?' : '부킹을 원하시게 되면 알려주세요';
+  bar.style.display = 'flex';
+}
+function openIntentChange() {
+  if (!guestData) return;
+  const cur = guestData.bookingIntent;
+  if (cur === 'very') return;
+  _prefChangeMode = true;
+  const curLv = _INTENT_LV[cur] || 0;
+  document.getElementById('prefNotice').classList.remove('show');
+  document.querySelectorAll('#prefOverlay .pref-opt').forEach(b => {
+    b.classList.remove('selected');
+    b.style.display = _INTENT_LV[b.dataset.intent] > curLv ? '' : 'none'; // 지금보다 높은 단계만 선택 가능
+  });
+  document.getElementById('prefOverlay').classList.add('open');
 }
 function selectIntent(value) {
   const notice = document.getElementById('prefNotice');
@@ -428,10 +463,12 @@ function confirmVeryIntent() {
   toast('입력해 주셔서 감사합니다');
 }
 function skipPref() {
+  if (_prefChangeMode) { closePrefOverlay(); return; } // 변경 모드에선 저장 없이 닫기만 (내려가기 방지)
   saveIntent('skipped');
   closePrefOverlay();
 }
 function closePrefOverlay() {
+  _prefChangeMode = false;
   document.getElementById('prefOverlay').classList.remove('open');
 }
 
@@ -573,6 +610,7 @@ function init() {
       }
       // 정상 입장 확정 후 부킹 의지 오버레이 (이 방문에서 답변/건너뛰기 이력 있으면 안 뜸)
       maybeShowIntentOverlay();
+      updateIntentChangeBar();
       const _alreadyIn = guestData.visitOpen === true && guestData.lastVisit === _today;
       if (!_alreadyIn) {
         const enterTime = nowStr();

@@ -253,6 +253,8 @@ body[data-theme="dark"] .menu-dropdown{background:#1a1813;box-shadow:0 12px 32px
 .reply-textarea::placeholder{color:var(--muted);}
 
 #toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:8px;padding:0.7rem 1.25rem;font-size:0.82rem;white-space:nowrap;z-index:400;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+/* 다크모드: --navy가 밝은 크림색으로 바뀌므로 글자를 진한 색으로 (밝은 배경 + 흰 글자 방지) */
+body[data-theme="dark"] #toast{color:#1a1206;}
 #toast.show{opacity:1;}
 
 /* 인앱 알림 배너 */

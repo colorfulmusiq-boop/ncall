@@ -905,7 +905,7 @@ function enterDash() {
   document.getElementById('dashScreen').style.display = 'flex';
   document.getElementById('dashName').textContent = W.name + ' 웨이터님';
   _dashOpen = true;
-  renderBookingQueueFromCache();
+  renderListsFromCache();
   requestWakeLock();
   requestNotifPerm();
   registerFcmToken();
@@ -1332,6 +1332,8 @@ function renderStats() {
 
 function doLogout() {
   try { firebase.auth().signOut(); } catch(e) {}
+  // 즉시 표시용 캐시 정리 (VIP 전화번호 등 개인정보가 남지 않게)
+  if (W) { lsRem('ncall_guests_' + W.id); lsRem('ncall_dinfo_' + W.id); lsRem('ncall_bq_' + W.id); }
   W = null; prevNotifCount = -1;
   listenersStarted = false;
   lastNotifKey = null;
@@ -1357,7 +1359,7 @@ function autoLogin() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashScreen').style.display = 'flex';
   document.getElementById('dashName').textContent = W.name + ' 웨이터님';
-  renderBookingQueueFromCache();
+  renderListsFromCache();
   waitFb(() => {
     let done = false;
     firebase.auth().onAuthStateChanged(user => {
@@ -2055,6 +2057,67 @@ function deleteDangol(key, name) {
   toast('✓ 삭제됨');
 }
 
+// ── 내 손님 목록 (리스너·캐시 공용) ──
+function renderGuestList(data) {
+  const guests = Object.entries(data || {})
+    .map(([k,v]) => ({...v, _key:k}))
+    .filter(g => g.active !== false && !g.isDangol);
+  const list = document.getElementById('guestList');
+  if (!list) return;
+  if (guests.length === 0) {
+    list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div>';
+    return;
+  }
+  list.innerHTML = '';
+  guests.forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'guest-card';
+    if (g.muted) card.style.opacity = '0.6';
+
+    const top = document.createElement('div');
+    top.className = 'guest-card-top';
+    const dot = document.createElement('div');
+    dot.className = 'guest-dot';
+    dot.style.background = g.muted ? 'var(--muted)' : 'var(--green)';
+    const lbl = document.createElement('div');
+    lbl.className = 'guest-label';
+    lbl.textContent = g.label;
+    const cnt = document.createElement('div');
+    cnt.className = 'guest-booking-count';
+    cnt.textContent = '부킹 ' + (g.bookingCount || 0) + '회';
+    top.append(dot, lbl, cnt);
+
+    const btns = document.createElement('div');
+    btns.className = 'guest-card-btns';
+
+    const qrBtn = document.createElement('button');
+    qrBtn.className = 'guest-qr-btn';
+    qrBtn.textContent = '📱 QR 보기';
+    qrBtn.onclick = () => showQR(g._key, g.label);
+
+    const muteBtn = document.createElement('button');
+    muteBtn.className = 'guest-qr-btn';
+    muteBtn.style.background = g.muted ? '#e8f8ee' : '#fbeaea';
+    muteBtn.style.color = g.muted ? 'var(--green)' : 'var(--red)';
+    muteBtn.textContent = g.muted ? '🔔 호출 허용' : '🔕 호출 차단';
+    muteBtn.onclick = () => toggleMute(g._key);
+
+    const checkoutBtn = document.createElement('button');
+    checkoutBtn.className = 'guest-checkout-btn';
+    checkoutBtn.textContent = '✓ 계산 완료';
+    checkoutBtn.onclick = () => checkoutGuest(g._key, g.label);
+    checkoutBtn.dataset.gid = g._key;
+    checkoutBtn.setAttribute('data-checkout-btn', '');
+    if ((window._checkoutReqGuests && window._checkoutReqGuests.has(g._key)) || isStaleOpen(g)) {
+      checkoutBtn.classList.add('checkout-blink');
+    }
+
+    btns.append(qrBtn, muteBtn, checkoutBtn);
+    card.append(top, btns);
+    list.appendChild(card);
+  });
+}
+
 // ── 오늘 부킹 대기 (알림 탭 상단) ──
 // 현재 매장에 있는 손님(visitOpen) 중 부킹 원함/매우 원함만 — 매우 원함 먼저.
 // '부킹 완료' 같은 중간 상태는 없음: 부킹은 성사(메이드)되거나 손님이 계산하고 갈 때까지 계속 챙겨야 하는 일이라,
@@ -2128,6 +2191,24 @@ function renderBookingQueueFromCache() {
   const data = {};
   arr.forEach((g, i) => { data['c' + i] = { label: g.label, bookingIntent: g.bookingIntent, lastVisit: g.lastVisit, visitOpen: true, active: true }; });
   renderBookingQueue(data);
+}
+
+// 접속 직후 저장해둔 손님·VIP 데이터로 세 목록(VIP·내 손님·부킹 대기)을 즉시 표시
+// — Firebase 첫 응답이 오면 실제 데이터로 다시 그려짐. VIP 탭이 1~2초 비어 보이던 문제 해결.
+function renderListsFromCache() {
+  if (!W || window._lastGuests) return;
+  try {
+    const info = JSON.parse(lsGet('ncall_dinfo_' + W.id) || 'null');
+    if (info && !window._dangolInfo) window._dangolInfo = info;
+    const g = JSON.parse(lsGet('ncall_guests_' + W.id) || 'null');
+    if (g) {
+      renderDangol(g);
+      renderGuestList(g);
+      renderBookingQueue(g);
+    } else {
+      renderBookingQueueFromCache();
+    }
+  } catch (_) {}
 }
 
 function renderDangol(data) {
@@ -2623,6 +2704,7 @@ function startListeners() {
   // VIP 개인정보(전화번호·메모) — 인증 필요한 별도 노드
   fbOnValue(fbRef(db, `dangolInfo/${wid}`), snap => {
     window._dangolInfo = snap.val() || {};
+    lsSet('ncall_dinfo_' + wid, JSON.stringify(window._dangolInfo)); // 접속 직후 즉시 표시용 캐시
     if (window._lastGuests) renderDangol(window._lastGuests);
   });
 
@@ -2630,65 +2712,11 @@ function startListeners() {
   fbOnValue(fbRef(db, `guests/${wid}`), snap => {
     const data = snap.val() || {};
     window._lastGuests = data;
+    lsSet('ncall_guests_' + wid, JSON.stringify(data)); // 접속 직후 즉시 표시용 캐시
     renderDangol(data);
     renderBookingQueue(data);
     updateHistVip();
-    const guests = Object.entries(data)
-      .map(([k,v]) => ({...v, _key:k}))
-      .filter(g => g.active !== false && !g.isDangol);
-    const list = document.getElementById('guestList');
-    if (guests.length === 0) {
-      list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 손님 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 추가하세요</span></div>';
-    } else {
-      list.innerHTML = '';
-      guests.forEach(g => {
-        const card = document.createElement('div');
-        card.className = 'guest-card';
-        if (g.muted) card.style.opacity = '0.6';
-
-        const top = document.createElement('div');
-        top.className = 'guest-card-top';
-        const dot = document.createElement('div');
-        dot.className = 'guest-dot';
-        dot.style.background = g.muted ? 'var(--muted)' : 'var(--green)';
-        const lbl = document.createElement('div');
-        lbl.className = 'guest-label';
-        lbl.textContent = g.label;
-        const cnt = document.createElement('div');
-        cnt.className = 'guest-booking-count';
-        cnt.textContent = '부킹 ' + (g.bookingCount || 0) + '회';
-        top.append(dot, lbl, cnt);
-
-        const btns = document.createElement('div');
-        btns.className = 'guest-card-btns';
-
-        const qrBtn = document.createElement('button');
-        qrBtn.className = 'guest-qr-btn';
-        qrBtn.textContent = '📱 QR 보기';
-        qrBtn.onclick = () => showQR(g._key, g.label);
-
-        const muteBtn = document.createElement('button');
-        muteBtn.className = 'guest-qr-btn';
-        muteBtn.style.background = g.muted ? '#e8f8ee' : '#fbeaea';
-        muteBtn.style.color = g.muted ? 'var(--green)' : 'var(--red)';
-        muteBtn.textContent = g.muted ? '🔔 호출 허용' : '🔕 호출 차단';
-        muteBtn.onclick = () => toggleMute(g._key);
-
-        const checkoutBtn = document.createElement('button');
-        checkoutBtn.className = 'guest-checkout-btn';
-        checkoutBtn.textContent = '✓ 계산 완료';
-        checkoutBtn.onclick = () => checkoutGuest(g._key, g.label);
-        checkoutBtn.dataset.gid = g._key;
-        checkoutBtn.setAttribute('data-checkout-btn', '');
-        if ((window._checkoutReqGuests && window._checkoutReqGuests.has(g._key)) || isStaleOpen(g)) {
-          checkoutBtn.classList.add('checkout-blink');
-        }
-
-        btns.append(qrBtn, muteBtn, checkoutBtn);
-        card.append(top, btns);
-        list.appendChild(card);
-      });
-    }
+    renderGuestList(data);
   });
   // 메이드 실시간 동기화 (VIP·내역 양쪽 버튼 자동 갱신)
   function applyMaidToDom() {

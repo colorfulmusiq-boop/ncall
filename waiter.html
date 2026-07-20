@@ -982,7 +982,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
-  { date: "2026.07.20", type: "신규 기능", content: "부킹 의사 올리기 — 손님이 밤 사이 마음이 바뀌면 호출 화면에서 부킹 의사를 직접 올릴 수 있습니다(원하지 않음 → 원함 → 매우 원함 방향만). 매우 원함으로 올릴 때는 팁 안내 확인 절차를 똑같이 거치며, 올리는 순간 부킹 대기 목록이 실시간으로 다시 정렬됩니다. 내리는 것은 안 됩니다 — 매우 원함은 팁 안내를 확인한 약속이라 무를 수 없습니다." },
+  { date: "2026.07.20", type: "신규 기능", content: "부킹 의사 올리기 — 손님이 밤 사이 마음이 바뀌면 호출 화면에서 부킹 의사를 직접 올릴 수 있습니다(원하지 않음 → 원함 → 매우 원함 방향만). 매우 원함으로 올릴 때는 팁 안내 확인 절차를 똑같이 거치며, 올리는 순간 부킹 대기 목록이 실시간으로 다시 정렬됩니다. 내리는 것은 안 됩니다 — 매우 원함은 팁 안내를 확인한 약속이라 무를 수 없습니다. 손님이 매우 원함을 선택하면(처음 선택이든 올리기든) 호출과 같은 소리·진동 알림이 오고, 알림 탭에 '부킹 매우 원함' 카드가 표시됩니다." },
   { date: "2026.07.20", type: "업데이트", content: "우선 부킹권 종료 — 사용되지 않아 기능을 내렸습니다. 내역 탭의 발급·사용 처리 버튼이 사라지고, 손님 케어는 부킹 대기 목록과 메이드 기록으로 이어집니다." },
   { date: "2026.07.20", type: "업데이트", content: "부킹 대기 정리 — '부킹 완료' 버튼을 없앴습니다. 부킹은 한 번 넣어드려도 손님이 다시 원하실 수 있어, 중간에 완료 처리하는 것이 오히려 챙겨야 할 손님을 가리게 됩니다. 이제 부킹을 원하는 손님은 메이드가 되거나 계산을 마칠 때까지 대기 목록에 그대로 남고, 성과는 메이드 ❤️ 하나로 기록됩니다." },
   { date: "2026.07.20", type: "업데이트", content: "손님 화면 생일 안내 제거 — 손님 화면에 생일 등록 안내가 갑자기 떠서 어색하다는 의견을 반영해 없앴습니다. 생일은 VIP 등록·수정 화면의 '장부 더 쓰기'에서 웨이터님이 직접 기록하시면 되고, 기록된 생일의 일주일 전 알림과 축하 문자는 그대로 동작합니다." },
@@ -2527,12 +2527,12 @@ function startListeners() {
         card.id = 'nc-' + n._key;
         const ico = document.createElement('div');
         ico.className = 'notif-ico';
-        ico.textContent = n.type === 'call' ? '🙋' : n.type === 'beer' ? '🍾' : n.type === 'message' ? '💬' : n.type === 'checkout_req' ? '🧾' : '🔔';
+        ico.textContent = n.type === 'call' ? '🙋' : n.type === 'beer' ? '🍾' : n.type === 'message' ? '💬' : n.type === 'checkout_req' ? '🧾' : n.type === 'intent_up' ? '⭐' : '🔔';
         const body = document.createElement('div');
         body.className = 'notif-body';
         const tag = document.createElement('div');
         tag.className = 'notif-tag';
-        tag.textContent = n.type === 'call' ? '웨이터 호출' : n.type === 'beer' ? '맥주 추가' : n.type === 'message' ? '메시지' : n.type === 'checkout_req' ? '계산 요청' : '부킹 요청';
+        tag.textContent = n.type === 'call' ? '웨이터 호출' : n.type === 'beer' ? '맥주 추가' : n.type === 'message' ? '메시지' : n.type === 'checkout_req' ? '계산 요청' : n.type === 'intent_up' ? '부킹 매우 원함' : '부킹 요청';
         const msgEl = document.createElement('div');
         msgEl.className = 'notif-msg';
         msgEl.textContent = n.type === 'beer'
@@ -2739,9 +2739,9 @@ function startListeners() {
       return;
     }
 
-    var ICON  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪', bookingDone:'💃' };
-    var LABEL = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장', bookingDone:'부킹 완료' };
-    var COLOR = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)', bookingDone:'#b8923f' };
+    var ICON  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪', bookingDone:'💃', intent_up:'⭐' };
+    var LABEL = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장', bookingDone:'부킹 완료', intent_up:'매우 원함' };
+    var COLOR = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)', bookingDone:'#b8923f', intent_up:'#d35400' };
 
     function parseDateNum(s) {
       var m = s.match(/(\d+)년\s*(\d+)월\s*(\d+)일/);
@@ -3318,14 +3318,14 @@ async function showPush(type, msg, tableLabel) {
     const result = await Notification.requestPermission();
     if (result !== 'granted') return;
   }
-  const title = type === 'call' ? '🙋 웨이터 호출' : type === 'beer' ? '🍾 맥주 추가' : type === 'message' ? '💬 메시지' : '🔔 부킹 요청';
-  const body = (tableLabel || msg || '손님') + (type === 'booking' ? ' — 부킹 요청' : ' — 호출');
-  const emojiIcon = emojiToPng(type === 'call' ? '🙋' : '🔔');
+  const title = type === 'call' ? '🙋 웨이터 호출' : type === 'beer' ? '🍾 맥주 추가' : type === 'message' ? '💬 메시지' : type === 'intent_up' ? '⭐ 부킹 매우 원함' : '🔔 부킹 요청';
+  const body = (tableLabel || msg || '손님') + (type === 'booking' ? ' — 부킹 요청' : type === 'intent_up' ? ' — 부킹 매우 원함으로 올렸습니다' : ' — 호출');
+  const emojiIcon = emojiToPng(type === 'call' ? '🙋' : type === 'intent_up' ? '⭐' : '🔔');
   const options = {
     body,
     icon: emojiIcon,
     badge: emojiIcon,
-    vibrate: (type === 'booking' || type === 'call') ? [200, 100, 200, 100, 400] : [150, 80, 150],
+    vibrate: (type === 'booking' || type === 'call' || type === 'intent_up') ? [200, 100, 200, 100, 400] : [150, 80, 150],
     tag: type + '-' + Date.now(),
     renotify: true,
     requireInteraction: false
@@ -3341,7 +3341,7 @@ async function showPush(type, msg, tableLabel) {
 }
 function vibrate(type) {
   if (!navigator.vibrate) return;
-  navigator.vibrate((type==='booking' || type==='call') ? [200,100,200,100,400] : [150,80,150]);
+  navigator.vibrate((type==='booking' || type==='call' || type==='intent_up') ? [200,100,200,100,400] : [150,80,150]);
 }
 let audioCtx;
 let _mediaUnlocked = false;
@@ -3367,7 +3367,7 @@ function playBeep(type) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain); gain.connect(audioCtx.destination);
-    if (type==='booking') {
+    if (type==='booking' || type==='intent_up') {
       osc.frequency.setValueAtTime(880, audioCtx.currentTime);
       osc.frequency.setValueAtTime(660, audioCtx.currentTime+0.15);
       osc.frequency.setValueAtTime(880, audioCtx.currentTime+0.3);
@@ -3412,8 +3412,8 @@ let inAppBannerTimer;
 function showInAppBanner(type, tableLabel, guestMsg, extra) {
   const banner = document.getElementById('inAppBanner');
   banner.className = 'show iab-' + type;
-  document.getElementById('iabIcon').textContent = type === 'call' ? '🙋' : type === 'beer' ? '🍾' : type === 'message' ? '💬' : type === 'checkout_req' ? '🧾' : '🔔';
-  document.getElementById('iabTitle').textContent = type === 'call' ? '웨이터 호출' : type === 'beer' ? '맥주 추가' : type === 'message' ? '메시지' : type === 'checkout_req' ? '계산 요청' : '부킹 요청';
+  document.getElementById('iabIcon').textContent = type === 'call' ? '🙋' : type === 'beer' ? '🍾' : type === 'message' ? '💬' : type === 'checkout_req' ? '🧾' : type === 'intent_up' ? '⭐' : '🔔';
+  document.getElementById('iabTitle').textContent = type === 'call' ? '웨이터 호출' : type === 'beer' ? '맥주 추가' : type === 'message' ? '메시지' : type === 'checkout_req' ? '계산 요청' : type === 'intent_up' ? '부킹 매우 원함' : '부킹 요청';
   document.getElementById('iabSub').textContent = type === 'message' && extra ? (tableLabel || guestMsg) + ' — ' + extra : (tableLabel || guestMsg || '손님');
   clearTimeout(inAppBannerTimer);
   inAppBannerTimer = setTimeout(hideInAppBanner, 5000);

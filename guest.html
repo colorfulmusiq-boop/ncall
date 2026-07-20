@@ -458,7 +458,16 @@ function selectIntent(value) {
   toast('입력해 주셔서 감사합니다');
 }
 function confirmVeryIntent() {
+  const wasVery = guestData && guestData.bookingIntent === 'very';
   saveIntent('very');
+  // 매우 원함은 놓치면 안 되는 신호 — 웨이터에게 호출과 같은 알림 전송 (처음 선택이든 올리기든 1회)
+  if (!wasVery && waiterData && guestId && guestData) {
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+      type: 'intent_up', tableLabel: guestData.label, guestMsg: guestData.label,
+      waiterName: waiterData.name, guestId, bookingIntent: 'very',
+      time: nowStr(), date: todayStr(), done: false
+    }).catch(() => {});
+  }
   closePrefOverlay();
   toast('입력해 주셔서 감사합니다');
 }

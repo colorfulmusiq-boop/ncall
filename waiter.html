@@ -985,7 +985,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
-  { date: "2026.07.20", type: "신규 기능", content: "부킹 의사 올리기 — 손님이 밤 사이 마음이 바뀌면 호출 화면에서 부킹 의사를 직접 올릴 수 있습니다(원하지 않음 → 원함 → 매우 원함 방향만). 매우 원함으로 올릴 때는 팁 안내 확인 절차를 똑같이 거치며, 올리는 순간 부킹 대기 목록이 실시간으로 다시 정렬됩니다. 내리는 것은 안 됩니다 — 매우 원함은 팁 안내를 확인한 약속이라 무를 수 없습니다. 손님이 매우 원함을 선택하면(처음 선택이든 올리기든) 호출과 같은 소리·진동 알림이 오고, 알림 탭에 '부킹 매우 원함' 카드가 표시됩니다." },
+  { date: "2026.07.20", type: "신규 기능", content: "부킹 의사 올리기 — 손님이 밤 사이 마음이 바뀌면 호출 화면에서 부킹 의사를 직접 올릴 수 있습니다(원하지 않음 → 원함 → 매우 원함 방향만). 매우 원함으로 올릴 때는 팁 안내 확인 절차를 똑같이 거치며, 올리는 순간 부킹 대기 목록이 실시간으로 다시 정렬됩니다. 내리는 것은 안 됩니다 — 매우 원함은 팁 안내를 확인한 약속이라 무를 수 없습니다. 손님이 부킹 의사를 올리면 호출과 같은 소리·진동 알림이 옵니다 — 원함으로 올리면 '부킹 원함으로 변경되었습니다', 매우 원함으로 올리면 '부킹 매우 원함으로 변경되었습니다' 카드가 알림 탭에 표시됩니다. 입장할 때 처음부터 매우 원함을 고른 손님은 '부킹 매우 원함'으로 표시됩니다." },
   { date: "2026.07.20", type: "업데이트", content: "우선 부킹권 종료 — 사용되지 않아 기능을 내렸습니다. 내역 탭의 발급·사용 처리 버튼이 사라지고, 손님 케어는 부킹 대기 목록과 메이드 기록으로 이어집니다." },
   { date: "2026.07.20", type: "업데이트", content: "부킹 대기 정리 — '부킹 완료' 버튼을 없앴습니다. 부킹은 한 번 넣어드려도 손님이 다시 원하실 수 있어, 중간에 완료 처리하는 것이 오히려 챙겨야 할 손님을 가리게 됩니다. 이제 부킹을 원하는 손님은 메이드가 되거나 계산을 마칠 때까지 대기 목록에 그대로 남고, 성과는 메이드 ❤️ 하나로 기록됩니다." },
   { date: "2026.07.20", type: "업데이트", content: "손님 화면 생일 안내 제거 — 손님 화면에 생일 등록 안내가 갑자기 떠서 어색하다는 의견을 반영해 없앴습니다. 생일은 VIP 등록·수정 화면의 '장부 더 쓰기'에서 웨이터님이 직접 기록하시면 되고, 기록된 생일의 일주일 전 알림과 축하 문자는 그대로 동작합니다." },
@@ -2480,7 +2480,7 @@ function startListeners() {
     if (latestKey && latestKey !== lastNotifKey && prevNotifCount >= 0) {
       notifs.forEach(n => {
         if (!lastNotifKey || n._key > lastNotifKey) {
-          notify(n.type, n.tableLabel, n.guestMsg, n.msgText || n.beerQty || '');
+          notify(n.type, n.tableLabel, n.guestMsg, n.type === 'intent_up' ? intentUpLabel(n) : (n.msgText || n.beerQty || ''));
         }
       });
     }
@@ -2535,7 +2535,7 @@ function startListeners() {
         body.className = 'notif-body';
         const tag = document.createElement('div');
         tag.className = 'notif-tag';
-        tag.textContent = n.type === 'call' ? '웨이터 호출' : n.type === 'beer' ? '맥주 추가' : n.type === 'message' ? '메시지' : n.type === 'checkout_req' ? '계산 요청' : n.type === 'intent_up' ? '부킹 매우 원함' : '부킹 요청';
+        tag.textContent = n.type === 'call' ? '웨이터 호출' : n.type === 'beer' ? '맥주 추가' : n.type === 'message' ? '메시지' : n.type === 'checkout_req' ? '계산 요청' : n.type === 'intent_up' ? intentUpLabel(n) : '부킹 요청';
         const msgEl = document.createElement('div');
         msgEl.className = 'notif-msg';
         msgEl.textContent = n.type === 'beer'
@@ -2743,7 +2743,7 @@ function startListeners() {
     }
 
     var ICON  = { booking:'🔔', call:'🙋', checkout:'✓', beer:'🍾', message:'💬', enter:'🚪', bookingDone:'💃', intent_up:'⭐' };
-    var LABEL = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장', bookingDone:'부킹 완료', intent_up:'매우 원함' };
+    var LABEL = { booking:'부킹', call:'호출', checkout:'계산', beer:'맥주', message:'메시지', enter:'입장', bookingDone:'부킹 완료', intent_up:'부킹 변경' };
     var COLOR = { booking:'var(--red)', call:'var(--blue)', checkout:'var(--green)', beer:'#e67e22', message:'#8e44ad', enter:'var(--muted)', bookingDone:'#b8923f', intent_up:'#d35400' };
 
     function parseDateNum(s) {
@@ -3315,14 +3315,14 @@ function emojiToPng(emoji) {
   } catch(e) { return '/icon-192.png'; }
 }
 
-async function showPush(type, msg, tableLabel) {
+async function showPush(type, msg, tableLabel, extra) {
   if (!('Notification' in window)) return;
   if (Notification.permission !== 'granted') {
     const result = await Notification.requestPermission();
     if (result !== 'granted') return;
   }
-  const title = type === 'call' ? '🙋 웨이터 호출' : type === 'beer' ? '🍾 맥주 추가' : type === 'message' ? '💬 메시지' : type === 'intent_up' ? '⭐ 부킹 매우 원함' : '🔔 부킹 요청';
-  const body = (tableLabel || msg || '손님') + (type === 'booking' ? ' — 부킹 요청' : type === 'intent_up' ? ' — 부킹 매우 원함으로 올렸습니다' : ' — 호출');
+  const title = type === 'call' ? '🙋 웨이터 호출' : type === 'beer' ? '🍾 맥주 추가' : type === 'message' ? '💬 메시지' : type === 'intent_up' ? '⭐ ' + (extra || '부킹 매우 원함') : '🔔 부킹 요청';
+  const body = (tableLabel || msg || '손님') + (type === 'booking' ? ' — 부킹 요청' : type === 'intent_up' ? ' — ' + (extra || '부킹 매우 원함') : ' — 호출');
   const emojiIcon = emojiToPng(type === 'call' ? '🙋' : type === 'intent_up' ? '⭐' : '🔔');
   const options = {
     body,
@@ -3405,10 +3405,16 @@ function processNotifyQueue() {
     setTimeout(() => {
       vibrate(item.type);
       playBeep(item.type);
-      showPush(item.type, item.guestMsg, item.tableLabel);
+      showPush(item.type, item.guestMsg, item.tableLabel, item.extra);
       if (item.type !== 'checkout_req') showInAppBanner(item.type, item.tableLabel, item.guestMsg, item.extra);
     }, i * 450);
   });
+}
+
+// 부킹 의사 변경 알림 문구 — 원함 변경 / 매우 원함 변경 / 처음부터 매우 원함 구분
+function intentUpLabel(n) {
+  if (n.bookingIntent === 'want') return '부킹 원함으로 변경되었습니다';
+  return n.changed ? '부킹 매우 원함으로 변경되었습니다' : '부킹 매우 원함';
 }
 
 let inAppBannerTimer;
@@ -3416,7 +3422,7 @@ function showInAppBanner(type, tableLabel, guestMsg, extra) {
   const banner = document.getElementById('inAppBanner');
   banner.className = 'show iab-' + type;
   document.getElementById('iabIcon').textContent = type === 'call' ? '🙋' : type === 'beer' ? '🍾' : type === 'message' ? '💬' : type === 'checkout_req' ? '🧾' : type === 'intent_up' ? '⭐' : '🔔';
-  document.getElementById('iabTitle').textContent = type === 'call' ? '웨이터 호출' : type === 'beer' ? '맥주 추가' : type === 'message' ? '메시지' : type === 'checkout_req' ? '계산 요청' : type === 'intent_up' ? '부킹 매우 원함' : '부킹 요청';
+  document.getElementById('iabTitle').textContent = type === 'call' ? '웨이터 호출' : type === 'beer' ? '맥주 추가' : type === 'message' ? '메시지' : type === 'checkout_req' ? '계산 요청' : type === 'intent_up' ? (extra || '부킹 매우 원함') : '부킹 요청';
   document.getElementById('iabSub').textContent = type === 'message' && extra ? (tableLabel || guestMsg) + ' — ' + extra : (tableLabel || guestMsg || '손님');
   clearTimeout(inAppBannerTimer);
   inAppBannerTimer = setTimeout(hideInAppBanner, 5000);

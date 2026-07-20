@@ -454,17 +454,26 @@ function selectIntent(value) {
   // 다른 선택지를 고르면 안내문은 사라지고 바로 진행
   notice.classList.remove('show');
   saveIntent(value);
+  // 변경 모드에서 원함으로 올린 경우 — 웨이터에게 '부킹 원함으로 변경되었습니다' 알림
+  if (_prefChangeMode && value === 'want' && waiterData && guestId && guestData) {
+    fbPush(fbRef(db, `notifs/${waiterData.id}`), {
+      type: 'intent_up', tableLabel: guestData.label, guestMsg: guestData.label,
+      waiterName: waiterData.name, guestId, bookingIntent: 'want', changed: true,
+      time: nowStr(), date: todayStr(), done: false
+    }).catch(() => {});
+  }
   closePrefOverlay();
   toast('입력해 주셔서 감사합니다');
 }
 function confirmVeryIntent() {
-  const wasVery = guestData && guestData.bookingIntent === 'very';
+  const prev = guestData && guestData.bookingIntent;
   saveIntent('very');
   // 매우 원함은 놓치면 안 되는 신호 — 웨이터에게 호출과 같은 알림 전송 (처음 선택이든 올리기든 1회)
-  if (!wasVery && waiterData && guestId && guestData) {
+  // changed: 기존 답(원함·원하지 않음·건너뜀)에서 올린 경우 true → 웨이터 화면에 '변경되었습니다'로 표시
+  if (prev !== 'very' && waiterData && guestId && guestData) {
     fbPush(fbRef(db, `notifs/${waiterData.id}`), {
       type: 'intent_up', tableLabel: guestData.label, guestMsg: guestData.label,
-      waiterName: waiterData.name, guestId, bookingIntent: 'very',
+      waiterName: waiterData.name, guestId, bookingIntent: 'very', changed: !!prev,
       time: nowStr(), date: todayStr(), done: false
     }).catch(() => {});
   }

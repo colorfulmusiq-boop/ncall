@@ -483,7 +483,7 @@ body[data-theme="dark"] .pref-hint-ok{background:#453818;color:#e8c87a;}
 
   <!-- VIP -->
   <div id="panel-dangol" class="scroll" style="display:none;"><div class="pad">
-    <div class="dangol-hint">⭐ VIP를 등록하면 영구 호출 QR이 생겨요. VIP에게 한 번 문자로 보내두면, 언제 와도 그 링크로 형님을 호출해요. 오래 안 온 VIP는 자동으로 위에 떠요.</div>
+    <div class="dangol-hint">⭐ VIP를 등록하면 전용 영구 호출 QR이 발급됩니다. 문자로 한 번 보내두시면 손님은 언제 방문하셔도 그 링크로 바로 호출하실 수 있습니다. 오래 방문이 없는 VIP는 자동으로 목록 상단에 표시됩니다.</div>
     <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
       <button class="btn btn-primary" id="btnAddDangol" style="flex:1;" onclick="openAddDangol()">+ VIP 등록</button>
       <button class="btn btn-primary" id="btnBulkSms" style="flex:1;" onclick="openBulkSms()">단체 문자</button>
@@ -691,7 +691,7 @@ body[data-theme="dark"] .pref-hint-ok{background:#453818;color:#e8c87a;}
 <div class="qr-popup" id="dangolQrPopup">
   <div class="qr-sheet">
     <div class="qr-sheet-title" id="dangolQrTitle">VIP 영구 QR</div>
-    <div class="qr-sheet-sub">이 링크를 VIP에게 문자로 보내두세요. 언제 와도 이걸로 형님을 호출해요.</div>
+    <div class="qr-sheet-sub">이 링크를 VIP에게 문자로 보내두시기 바랍니다. 손님은 언제 방문하셔도 이 링크로 웨이터님을 호출하실 수 있습니다.</div>
     <div class="qr-img-box" id="dangolQrBox"></div>
     <div class="qr-url-text" id="dangolQrUrl"></div>
     <button class="btn btn-primary" onclick="sendDangolLink()" style="margin-bottom:0.5rem;width:100%;">✉️ VIP에게 링크 문자 보내기</button>

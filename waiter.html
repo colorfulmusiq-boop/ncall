@@ -333,6 +333,13 @@ body[data-theme="dark"] .pref-hint-ok{background:#453818;color:#e8c87a;}
 .dangol-top{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;}
 .dangol-name{flex:1;font-size:0.98rem;font-weight:600;color:var(--navy);}
 .dangol-visits{background:linear-gradient(95deg,#e8c87a,#d4a843);border-radius:6px;padding:0.25rem 0.6rem;font-size:0.7rem;font-weight:700;color:#1a1206;-webkit-text-fill-color:#1a1206;}
+
+/* 단골 등급 배지 — 방문 횟수 자동(실버 3회+/골드 10회+/블랙 20회+), 큰손 👑는 최소 골드 보장 */
+.tier-badge{display:inline-block;font-size:0.58rem;font-weight:800;letter-spacing:0.07em;border-radius:5px;padding:0.13rem 0.45rem;margin-left:0.35rem;vertical-align:1px;white-space:nowrap;}
+.tier-silver{background:linear-gradient(135deg,#eef1f4,#aeb5bd);color:#33363b;}
+.tier-gold{background:linear-gradient(135deg,#f5d98a,#d4a843);color:#2e2205;}
+.tier-black{background:#050505;color:#e0c478;border:0.5px solid rgba(212,168,67,0.65);}
+.tier-whale{background:linear-gradient(135deg,#f5d98a,#d4a843);color:#3a2c08;}
 .dangol-meta{font-size:0.73rem;color:var(--muted);margin-bottom:0.2rem;line-height:1.5;}
 .dangol-since{font-size:0.73rem;font-weight:600;margin-bottom:0.7rem;}
 .dangol-since.due{color:var(--red);}
@@ -985,6 +992,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.23", type: "신규 기능", content: "단골 등급 자동 표시 — VIP 이름 옆에 방문 횟수에 따라 실버(3회)·골드(10회)·블랙(20회) 등급 배지가 자동으로 붙습니다. 웨이터님이 입력하실 것은 없습니다. 장부에 큰손으로 기록된 손님은 👑 표시가 함께 붙고, 방문이 적어도 최소 골드부터 시작합니다. 목록만 훑어도 누가 진짜 단골인지 한눈에 보입니다." },
   { date: "2026.07.20", type: "신규 기능", content: "부킹 의사 올리기 — 손님이 밤 사이 마음이 바뀌면 호출 화면에서 부킹 의사를 직접 올릴 수 있습니다(원하지 않음 → 원함 → 매우 원함 방향만). 매우 원함으로 올릴 때는 팁 안내 확인 절차를 똑같이 거치며, 올리는 순간 부킹 대기 목록이 실시간으로 다시 정렬됩니다. 내리는 것은 안 됩니다 — 매우 원함은 팁 안내를 확인한 약속이라 무를 수 없습니다. 손님이 부킹 의사를 올리면 호출과 같은 소리·진동 알림이 옵니다 — 원함으로 올리면 '부킹 원함으로 변경되었습니다', 매우 원함으로 올리면 '부킹 매우 원함으로 변경되었습니다' 카드가 알림 탭에 표시됩니다. 입장할 때 처음부터 매우 원함을 고른 손님은 '부킹 매우 원함'으로 표시됩니다." },
   { date: "2026.07.20", type: "업데이트", content: "우선 부킹권 종료 — 사용되지 않아 기능을 내렸습니다. 내역 탭의 발급·사용 처리 버튼이 사라지고, 손님 케어는 부킹 대기 목록과 메이드 기록으로 이어집니다." },
   { date: "2026.07.20", type: "업데이트", content: "부킹 대기 정리 — '부킹 완료' 버튼을 없앴습니다. 부킹은 한 번 넣어드려도 손님이 다시 원하실 수 있어, 중간에 완료 처리하는 것이 오히려 챙겨야 할 손님을 가리게 됩니다. 이제 부킹을 원하는 손님은 메이드가 되거나 계산을 마칠 때까지 대기 목록에 그대로 남고, 성과는 메이드 ❤️ 하나로 기록됩니다." },
@@ -1513,6 +1521,15 @@ function bdayLabel(b) {
   if (p.length !== 2) return '';
   return (+p[0]) + '월 ' + (+p[1]) + '일';
 }
+// 단골 등급 — 방문 횟수로 자동 승급(실버 3회+/골드 10회+/블랙 20회+), 웨이터 입력 없음
+// 큰손(scale)으로 기록된 손님은 방문이 적어도 최소 골드 보장 — 한 번에 크게 쓰는 손님을 실버로 방치하지 않기
+function guestTier(g) {
+  const v = g.visitCount || 0;
+  let tier = v >= 20 ? 'black' : v >= 10 ? 'gold' : v >= 3 ? 'silver' : null;
+  if (g.scale === '큰손' && (tier === null || tier === 'silver')) tier = 'gold';
+  return tier;
+}
+
 function daysUntilBday(b) {
   const p = (b || '').split('-');
   if (p.length !== 2) return null;
@@ -2309,6 +2326,19 @@ function dangolCard(g, isDue) {
   const nm = document.createElement('div');
   nm.className = 'dangol-name';
   nm.textContent = g.label;
+  const _tier = guestTier(g);
+  if (_tier) {
+    const tb = document.createElement('span');
+    tb.className = 'tier-badge tier-' + _tier;
+    tb.textContent = _tier.toUpperCase();
+    nm.appendChild(tb);
+  }
+  if (g.scale === '큰손') {
+    const kb = document.createElement('span');
+    kb.className = 'tier-badge tier-whale';
+    kb.textContent = '👑 큰손';
+    nm.appendChild(kb);
+  }
   const vc = document.createElement('div');
   vc.className = 'dangol-visits';
   vc.textContent = '방문 ' + (g.visitCount || 0) + '회';
@@ -2365,7 +2395,7 @@ function dangolCard(g, isDue) {
   const _prof = [];
   if (g.birthday && !_bdaySoon) _prof.push('🎂 ' + bdayLabel(g.birthday));
   if (g.taste) _prof.push('🥃 ' + g.taste.split(',').join('·'));
-  if (g.scale) _prof.push((g.scale === '큰손' ? '👑 ' : '') + g.scale);
+  if (g.scale && g.scale !== '큰손') _prof.push(g.scale); // 큰손은 이름 옆 👑 배지로 표시
   if (_prof.length) {
     const pr = document.createElement('div');
     pr.className = 'dangol-meta';

@@ -348,6 +348,13 @@ body[data-theme="dark"] .pref-hint-ok{background:#453818;color:#e8c87a;}
 .oc-row .oc-ico{flex-shrink:0;}
 .oc-btn{width:100%;min-height:44px;margin-top:0.5rem;background:linear-gradient(135deg,#e0c478,#c9a24a);border:none;border-radius:9px;font-family:inherit;font-size:0.85rem;font-weight:800;color:#1a1206;cursor:pointer;}
 .oc-btn:active{transform:scale(0.98);}
+
+/* 실적 등급 — 월간 실적 상단 등급 카드(검정+금테)와 최고 기록 줄 */
+.grade-card{background:#050505;border:0.5px solid rgba(212,168,67,0.55);border-radius:12px;padding:1rem;text-align:center;margin-bottom:0.75rem;}
+.grade-label{font-size:0.66rem;font-weight:700;color:#8a7f6a;letter-spacing:0.1em;margin-bottom:0.3rem;}
+.grade-name{font-size:1.45rem;font-weight:800;color:#e0c478;letter-spacing:0.02em;}
+.grade-next{font-size:0.7rem;font-weight:600;color:#8a7f6a;margin-top:0.3rem;}
+.grade-record{background:#18150f;border:0.5px solid rgba(212,168,67,0.3);border-radius:9px;padding:0.65rem 0.8rem;display:flex;align-items:center;gap:0.55rem;font-size:0.76rem;font-weight:600;color:#e0c478;margin-bottom:0.75rem;line-height:1.4;}
 .dangol-meta{font-size:0.73rem;color:var(--muted);margin-bottom:0.2rem;line-height:1.5;}
 .dangol-since{font-size:0.73rem;font-weight:600;margin-bottom:0.7rem;}
 .dangol-since.due{color:var(--red);}
@@ -1001,6 +1008,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.23", type: "신규 기능", content: "실적 등급 — 월간 실적 맨 위에 이번 달 등급이 표시됩니다. 손님 팀 수에 따라 루키 → 프로(10팀) → 에이스(25팀) → 레전드(50팀)로 올라가며, 다음 등급까지 몇 팀 남았는지 보여드립니다. 역대 월 최고 기록을 경신하면 🔥 표시로 축하해 드립니다. 등급과 실적은 웨이터 본인만 볼 수 있습니다." },
   { date: "2026.07.23", type: "신규 기능", content: "모객 비서 — VIP 탭 맨 위에 이번 주 챙길 손님이 자동으로 모여 표시됩니다. 생일이 다가온 VIP, 예약이 잡힌 VIP, 한 달 넘게 안 온 단골을 한 장으로 보여드리고, '문자로 챙기기' 버튼을 누르면 단체 문자로 바로 이어집니다. 챙길 손님이 없는 날에는 나타나지 않습니다." },
   { date: "2026.07.23", type: "신규 기능", content: "단골 등급 자동 표시 — VIP 이름 옆에 방문 횟수에 따라 실버(3회)·골드(10회)·블랙(20회) 등급 배지가 자동으로 붙습니다. 웨이터님이 입력하실 것은 없습니다. 장부에 큰손으로 기록된 손님은 👑 표시가 함께 붙고, 방문이 적어도 최소 골드부터 시작합니다. 목록만 훑어도 누가 진짜 단골인지 한눈에 보입니다." },
   { date: "2026.07.20", type: "신규 기능", content: "부킹 의사 올리기 — 손님이 밤 사이 마음이 바뀌면 호출 화면에서 부킹 의사를 직접 올릴 수 있습니다(원하지 않음 → 원함 → 매우 원함 방향만). 매우 원함으로 올릴 때는 팁 안내 확인 절차를 똑같이 거치며, 올리는 순간 부킹 대기 목록이 실시간으로 다시 정렬됩니다. 내리는 것은 안 됩니다 — 매우 원함은 팁 안내를 확인한 약속이라 무를 수 없습니다. 손님이 부킹 의사를 올리면 호출과 같은 소리·진동 알림이 옵니다 — 원함으로 올리면 '부킹 원함으로 변경되었습니다', 매우 원함으로 올리면 '부킹 매우 원함으로 변경되었습니다' 카드가 알림 탭에 표시됩니다. 입장할 때 처음부터 매우 원함을 고른 손님은 '부킹 매우 원함'으로 표시됩니다." },
@@ -1262,6 +1270,34 @@ function getMonthTeams(ym, isCur) {
   return s ? { teams: s.teams || 0 } : { teams: null };
 }
 
+// 실적 등급 — 그 달 손님 팀 수 기준 (임시 기준선, 유료화 설계 때 이 표만 조정하면 됨)
+const GRADE_LADDER = [
+  { min: 50, name: '레전드' },
+  { min: 25, name: '에이스' },
+  { min: 10, name: '프로' },
+  { min: 0,  name: '루키' },
+];
+function gradeForTeams(t) {
+  for (const g of GRADE_LADDER) if (t >= g.min) return g;
+  return GRADE_LADDER[GRADE_LADDER.length - 1];
+}
+function gradeNext(t) {
+  const higher = [...GRADE_LADDER].reverse().find(g => g.min > t);
+  return higher ? { name: higher.name, remain: higher.min - t } : null;
+}
+// 월별 메이드 집계 전체 — 최고 기록 판정용
+function countMaidByMonth() {
+  const m = window._maidMap || {};
+  const out = {};
+  Object.values(m).forEach(g => Object.entries(g || {}).forEach(([dk, v]) => {
+    if (v === true && String(dk).length === 8) {
+      const ym = String(dk).slice(0, 4) + '-' + String(dk).slice(4, 6);
+      out[ym] = (out[ym] || 0) + 1;
+    }
+  }));
+  return out;
+}
+
 function statDelta(cur, prev, unit) {
   if (cur === null || prev === null) return '';
   const d = cur - prev;
@@ -1332,19 +1368,64 @@ function renderStats() {
   const body = document.getElementById('statsBody');
   body.innerHTML = '';
 
+  // 등급 카드 — 그 달 손님 팀 수 기준, 본인만 보는 동기부여
+  if (cur.teams !== null) {
+    const gc = document.createElement('div');
+    gc.className = 'grade-card';
+    const gl = document.createElement('div');
+    gl.className = 'grade-label';
+    gl.textContent = isCur ? '이번 달 등급' : '이 달의 등급';
+    const g = gradeForTeams(cur.teams);
+    const gn = document.createElement('div');
+    gn.className = 'grade-name';
+    gn.textContent = '🏆 ' + g.name;
+    const nx = gradeNext(cur.teams);
+    const gx = document.createElement('div');
+    gx.className = 'grade-next';
+    gx.textContent = nx ? '다음 등급 ' + nx.name + '까지 손님 ' + nx.remain + '팀' : '최고 등급입니다';
+    gc.append(gl, gn, gx);
+    body.appendChild(gc);
+  }
+
   const grid = document.createElement('div');
   grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem;';
-  grid.appendChild(statCard('손님', cur.teams === null ? '—' : cur.teams + '팀', statDelta(cur.teams, prev.teams, '팀'), true));
+  grid.appendChild(statCard('손님 🍺', cur.teams === null ? '—' : cur.teams + '팀', statDelta(cur.teams, prev.teams, '팀'), true));
   grid.appendChild(statCard('메이드 ❤️', maid + '건', statDelta(maid, maidPrev, '건'), true));
   grid.appendChild(statCard('단체 문자', bulk.ppl + '명', bulk.cnt > 0 ? bulk.cnt + '회 발송' : '', false));
   grid.appendChild(statCard('새 VIP', vip.nw + '명', '전체 VIP ' + vip.total + '명', false));
   body.appendChild(grid);
 
+  // 최고 기록 줄 — 이번 달이 역대 월 최고를 경신했을 때만 (메이드 우선, 다음 손님 팀)
+  if (isCur) {
+    const maidAll = countMaidByMonth();
+    let bestPrevMaid = 0;
+    Object.entries(maidAll).forEach(([m, c]) => { if (m !== ym && c > bestPrevMaid) bestPrevMaid = c; });
+    const statsAll = ((window._dangolInfo || {})._stats) || {};
+    let bestPrevTeams = 0;
+    Object.entries(statsAll).forEach(([m, s]) => { if (m !== ym && (s.teams || 0) > bestPrevTeams) bestPrevTeams = s.teams || 0; });
+    let recTxt = '';
+    if (maid > 0 && bestPrevMaid > 0 && maid > bestPrevMaid) {
+      recTxt = '이번 달 메이드 최고 기록' + (maidPrev > 0 && maid > maidPrev ? ' — 지난달보다 ' + (maid - maidPrev) + '건 ↑' : '');
+    } else if (cur.teams !== null && cur.teams > 0 && bestPrevTeams > 0 && cur.teams > bestPrevTeams) {
+      recTxt = '이번 달 손님 최고 기록' + (prev.teams !== null && cur.teams > prev.teams ? ' — 지난달보다 ' + (cur.teams - prev.teams) + '팀 ↑' : '');
+    }
+    if (recTxt) {
+      const rec = document.createElement('div');
+      rec.className = 'grade-record';
+      const fi = document.createElement('span');
+      fi.textContent = '🔥';
+      const ft = document.createElement('span');
+      ft.textContent = recTxt;
+      rec.append(fi, ft);
+      body.appendChild(rec);
+    }
+  }
+
   const note = document.createElement('div');
   note.style.cssText = 'font-size:0.72rem;color:var(--muted);margin-top:0.8rem;line-height:1.6;';
   note.textContent = cur.teams === null
     ? '이 달의 손님 기록이 없습니다. 실적은 2026년 7월부터 매일 자동으로 쌓입니다.'
-    : '손님 팀 수는 영업 기록에서 매일 자동 집계됩니다. 새 VIP는 2026년 7월 20일 이후 등록분부터 집계됩니다.';
+    : '손님 팀 수는 영업 기록에서 매일 자동 집계됩니다. 등급과 실적은 웨이터 본인만 볼 수 있습니다. 새 VIP는 2026년 7월 20일 이후 등록분부터 집계됩니다.';
   body.appendChild(note);
 }
 

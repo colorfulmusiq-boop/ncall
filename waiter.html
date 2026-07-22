@@ -340,6 +340,14 @@ body[data-theme="dark"] .pref-hint-ok{background:#453818;color:#e8c87a;}
 .tier-gold{background:linear-gradient(135deg,#f5d98a,#d4a843);color:#2e2205;}
 .tier-black{background:#050505;color:#e0c478;border:0.5px solid rgba(212,168,67,0.65);}
 .tier-whale{background:linear-gradient(135deg,#f5d98a,#d4a843);color:#3a2c08;}
+
+/* 오늘의 모객 비서 — 챙길 손님(생일·예약·안 온 단골) 있을 때만 VIP 탭 맨 위, 딥 차콜+골드 톤 */
+#outreachCard{display:none;background:#18150f;border:0.5px solid rgba(212,168,67,0.4);border-radius:12px;padding:0.9rem 1rem;margin-bottom:1rem;}
+.oc-title{font-size:0.9rem;font-weight:800;color:#e0c478;margin-bottom:0.7rem;}
+.oc-row{display:flex;align-items:center;gap:0.5rem;background:#0f0d0a;border:0.5px solid rgba(255,255,255,0.05);border-radius:8px;padding:0.55rem 0.7rem;margin-bottom:0.4rem;font-size:0.8rem;font-weight:600;color:#f3ead3;line-height:1.4;}
+.oc-row .oc-ico{flex-shrink:0;}
+.oc-btn{width:100%;min-height:44px;margin-top:0.5rem;background:linear-gradient(135deg,#e0c478,#c9a24a);border:none;border-radius:9px;font-family:inherit;font-size:0.85rem;font-weight:800;color:#1a1206;cursor:pointer;}
+.oc-btn:active{transform:scale(0.98);}
 .dangol-meta{font-size:0.73rem;color:var(--muted);margin-bottom:0.2rem;line-height:1.5;}
 .dangol-since{font-size:0.73rem;font-weight:600;margin-bottom:0.7rem;}
 .dangol-since.due{color:var(--red);}
@@ -483,6 +491,7 @@ body[data-theme="dark"] .pref-hint-ok{background:#453818;color:#e8c87a;}
 
   <!-- VIP -->
   <div id="panel-dangol" class="scroll" style="display:none;"><div class="pad">
+    <div id="outreachCard"></div>
     <div class="dangol-hint">⭐ VIP를 등록하면 전용 영구 호출 QR이 발급됩니다. 문자로 한 번 보내두시면 손님은 언제 방문하셔도 그 링크로 바로 호출하실 수 있습니다. 오래 방문이 없는 VIP는 자동으로 목록 상단에 표시됩니다.</div>
     <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
       <button class="btn btn-primary" id="btnAddDangol" style="flex:1;" onclick="openAddDangol()">+ VIP 등록</button>
@@ -992,6 +1001,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.23", type: "신규 기능", content: "모객 비서 — VIP 탭 맨 위에 이번 주 챙길 손님이 자동으로 모여 표시됩니다. 생일이 다가온 VIP, 예약이 잡힌 VIP, 한 달 넘게 안 온 단골을 한 장으로 보여드리고, '문자로 챙기기' 버튼을 누르면 단체 문자로 바로 이어집니다. 챙길 손님이 없는 날에는 나타나지 않습니다." },
   { date: "2026.07.23", type: "신규 기능", content: "단골 등급 자동 표시 — VIP 이름 옆에 방문 횟수에 따라 실버(3회)·골드(10회)·블랙(20회) 등급 배지가 자동으로 붙습니다. 웨이터님이 입력하실 것은 없습니다. 장부에 큰손으로 기록된 손님은 👑 표시가 함께 붙고, 방문이 적어도 최소 골드부터 시작합니다. 목록만 훑어도 누가 진짜 단골인지 한눈에 보입니다." },
   { date: "2026.07.20", type: "신규 기능", content: "부킹 의사 올리기 — 손님이 밤 사이 마음이 바뀌면 호출 화면에서 부킹 의사를 직접 올릴 수 있습니다(원하지 않음 → 원함 → 매우 원함 방향만). 매우 원함으로 올릴 때는 팁 안내 확인 절차를 똑같이 거치며, 올리는 순간 부킹 대기 목록이 실시간으로 다시 정렬됩니다. 내리는 것은 안 됩니다 — 매우 원함은 팁 안내를 확인한 약속이라 무를 수 없습니다. 손님이 부킹 의사를 올리면 호출과 같은 소리·진동 알림이 옵니다 — 원함으로 올리면 '부킹 원함으로 변경되었습니다', 매우 원함으로 올리면 '부킹 매우 원함으로 변경되었습니다' 카드가 알림 탭에 표시됩니다. 입장할 때 처음부터 매우 원함을 고른 손님은 '부킹 매우 원함'으로 표시됩니다." },
   { date: "2026.07.20", type: "업데이트", content: "우선 부킹권 종료 — 사용되지 않아 기능을 내렸습니다. 내역 탭의 발급·사용 처리 버튼이 사라지고, 손님 케어는 부킹 대기 목록과 메이드 기록으로 이어집니다." },
@@ -2228,6 +2238,61 @@ function renderListsFromCache() {
   } catch (_) {}
 }
 
+// ── 오늘의 모객 비서 — 이번 주 챙길 손님(생일 임박·예약·안 온 단골)을 한 장으로 요약 ──
+// 챙길 손님이 없으면 카드 자체가 표시되지 않음. 문자로 챙기기 → 단체 문자로 연결.
+function renderOutreachCard(dangols) {
+  const box = document.getElementById('outreachCard');
+  if (!box) return;
+  const bday = dangols
+    .filter(g => { const du = daysUntilBday(g.birthday); return du !== null && du <= 7; })
+    .sort((a, b) => daysUntilBday(a.birthday) - daysUntilBday(b.birthday));
+  const resv = dangols
+    .filter(g => activeResv(g))
+    .sort((a, b) => (a.resv.date < b.resv.date ? -1 : 1));
+  const away = dangols.filter(g => (daysSince(g.lastVisit) || 0) >= REMIND_DAYS);
+  const uniq = new Set([...bday, ...resv, ...away].map(g => g._key));
+  if (uniq.size === 0) { box.style.display = 'none'; box.innerHTML = ''; return; }
+
+  box.innerHTML = '';
+  box.style.display = 'block';
+
+  const title = document.createElement('div');
+  title.className = 'oc-title';
+  title.textContent = '📣 이번 주 챙길 손님 ' + uniq.size + '명';
+  box.appendChild(title);
+
+  const addRow = (ico, text) => {
+    const row = document.createElement('div');
+    row.className = 'oc-row';
+    const i = document.createElement('span');
+    i.className = 'oc-ico';
+    i.textContent = ico;
+    const t = document.createElement('span');
+    t.textContent = text;
+    row.append(i, t);
+    box.appendChild(row);
+  };
+
+  bday.slice(0, 2).forEach(g => {
+    const du = daysUntilBday(g.birthday);
+    addRow('🎂', (g.label || '손님') + ' — ' + (du === 0 ? '오늘' : du === 1 ? '내일' : du + '일 뒤') + ' 생일');
+  });
+  if (bday.length > 2) addRow('🎂', '생일 임박 외 ' + (bday.length - 2) + '명');
+
+  resv.slice(0, 2).forEach(g => {
+    addRow('📅', (g.label || '손님') + ' — ' + resvLabel(g.resv).replace(/^📅\s*/, ''));
+  });
+  if (resv.length > 2) addRow('📅', '예약 외 ' + (resv.length - 2) + '건');
+
+  if (away.length > 0) addRow('💤', '한 달 넘게 안 온 단골 ' + away.length + '명');
+
+  const btn = document.createElement('button');
+  btn.className = 'oc-btn';
+  btn.textContent = '✉️ 문자로 챙기기 →';
+  btn.onclick = () => openBulkSms();
+  box.appendChild(btn);
+}
+
 function renderDangol(data) {
   const list = document.getElementById('dangolList');
   const info = window._dangolInfo || {};
@@ -2235,6 +2300,7 @@ function renderDangol(data) {
     .map(([k,v]) => ({...v, ...(info[k]||{}), _key:k}))
     .filter(g => g.isDangol);
   const badge = document.getElementById('dangolBadge');
+  renderOutreachCard(dangols);
 
   if (dangols.length === 0) {
     list.innerHTML = '<div class="empty" style="padding:1.5rem;font-size:0.82rem;">등록된 VIP 없음<br><span style="font-size:0.75rem;color:var(--muted);">위 버튼으로 VIP를 등록하세요</span></div>';

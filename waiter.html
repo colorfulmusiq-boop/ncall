@@ -1502,7 +1502,7 @@ function renderStats() {
 function doLogout() {
   try { firebase.auth().signOut(); } catch(e) {}
   // 즉시 표시용 캐시 정리 (VIP 전화번호 등 개인정보가 남지 않게)
-  if (W) { lsRem('ncall_guests_' + W.id); lsRem('ncall_dinfo_' + W.id); lsRem('ncall_bq_' + W.id); lsRem('ncall_hist_' + W.id); }
+  if (W) { lsRem('ncall_guests_' + W.id); lsRem('ncall_dinfo_' + W.id); lsRem('ncall_bq_' + W.id); lsRem('ncall_hist_' + W.id); lsRem('ncall_maid_' + W.id); }
   W = null; prevNotifCount = -1;
   listenersStarted = false;
   lastNotifKey = null;
@@ -2446,6 +2446,11 @@ function renderListsFromCache() {
     } else {
       renderBookingQueueFromCache();
     }
+    // 메이드 상태도 저장본으로 먼저 채워서, 내역 메이드 버튼이 Firebase 대기 없이 바로 정확히 뜨게 함
+    if (!window._maidMap) {
+      const m = JSON.parse(lsGet('ncall_maid_' + W.id) || 'null');
+      if (m) window._maidMap = m;
+    }
     // 내역 목록도 저장본으로 즉시 표시 (실데이터 도착 시 리스너가 다시 그림)
     const h = JSON.parse(lsGet('ncall_hist_' + W.id) || 'null');
     if (Array.isArray(h) && h.length && !window._lastHist) {
@@ -2534,6 +2539,12 @@ function renderHistList(hist) {
       maidCntBadge.dataset.dk = _cntDk;
       maidCntBadge.dataset.gids = _cntGids.join(',');
       maidCntBadge.style.cssText = 'background:#fde8e8;color:#c0392b;font-size:0.62rem;font-weight:700;border-radius:10px;padding:0.1rem 0.4rem;display:none;';
+      // 캐시된 메이드 맵으로 집계 배지도 즉시 표시 (Firebase 대기 없이)
+      (function(badge, gids, dkey) {
+        var mm = window._maidMap || {}, c0 = 0;
+        gids.forEach(function(gid) { if (mm[gid] && mm[gid][dkey] === true) c0++; });
+        if (c0 > 0) { badge.textContent = '❤️ ' + c0; badge.style.display = 'inline'; }
+      })(maidCntBadge, _cntGids, _cntDk);
       dateLeft.appendChild(maidCntBadge);
       (function(badge, gids, dkey) {
         if (!gids.length) return;
@@ -2543,7 +2554,10 @@ function renderHistList(hist) {
             fbGet(fbRef(db, 'maid/' + W.id + '/' + gid + '/' + dkey)).then(function(snap) {
               if (snap.val() === true) count++;
               done++;
-              if (done === gids.length && count > 0) { badge.textContent = '❤️ ' + count; badge.style.display = 'inline'; }
+              if (done === gids.length) { // 최신값으로 확정 — 0이면 캐시로 켜졌던 배지도 숨김
+                if (count > 0) { badge.textContent = '❤️ ' + count; badge.style.display = 'inline'; }
+                else { badge.style.display = 'none'; }
+              }
             }).catch(function(){ done++; });
           });
         });
@@ -2663,11 +2677,16 @@ function renderHistList(hist) {
         maidAddBadge.dataset.dk = maidDk;
         maidAddBadge.style.cssText = 'display:inline-flex;align-items:center;gap:0.2rem;background:var(--bg2);border-radius:6px;padding:0.15rem 0.5rem;font-size:0.7rem;font-weight:600;color:var(--muted);cursor:pointer;border:0.5px dashed rgba(184,146,63,0.45);';
         maidAddBadge.textContent = '+ 메이드';
+        // 캐시된 메이드 맵으로 초기 상태를 즉시 설정 (Firebase 대기 없이 바로 정확히 표시)
+        var _mm = window._maidMap || {};
+        if (_mm[maidGid] && _mm[maidGid][maidDk] === true) { maidAddBadge.style.display = 'none'; maidHeartBadge.style.display = 'inline-flex'; }
         (function(addB, heartB, mpath, cntBadge) {
-          waitFb(function() { // 캐시 렌더 시 Firebase 준비 전이어도 안전
+          waitFb(function() { // Firebase 준비되면 최신값으로 갱신 + 클릭 핸들러 연결
             var ref = fbRef(db, mpath);
             fbGet(ref).then(function(snap) {
-              if (snap.val() === true) { addB.style.display = 'none'; heartB.style.display = 'inline-flex'; }
+              var on = snap.val() === true;
+              addB.style.display = on ? 'none' : 'inline-flex';
+              heartB.style.display = on ? 'inline-flex' : 'none';
             }).catch(function(){});
             addB.onclick = function(e) { e.stopPropagation(); fbSet(ref, true); };
             heartB.onclick = function(e) { e.stopPropagation(); fbSet(ref, false); };
@@ -3554,6 +3573,7 @@ function startListeners() {
   }
   fbOnValue(fbRef(db, `maid/${wid}`), function(snap){
     window._maidMap = snap.val() || {};
+    lsSet('ncall_maid_' + wid, JSON.stringify(window._maidMap)); // 접속 직후 메이드 버튼 즉시 표시용 캐시
     applyMaidToDom();
     // 오늘 메이드 체크된 손님은 부킹 대기 목록에서 즉시 빠지도록 재렌더
     if (window._lastGuests) renderBookingQueue(window._lastGuests);

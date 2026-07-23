@@ -379,7 +379,25 @@ body[data-theme="dark"] .pref-hint-ok{background:#453818;color:#e8c87a;}
 .full-body{flex:1;overflow-y:auto;padding:1.25rem;-webkit-overflow-scrolling:touch;}
 .full-body::-webkit-scrollbar{width:0;}
 .full-foot{padding:1rem 1.25rem;border-top:0.5px solid var(--border);flex-shrink:0;}
-.dangol-btns{display:flex;gap:0.4rem;flex-wrap:wrap;}
+.dangol-btns{display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;} /* 항상 2열 — 버튼 수가 늘어도 안 밀림 */
+.dangol-del-top{background:#fbeaea;border:none;border-radius:6px;padding:0.28rem 0.5rem;font-size:0.78rem;cursor:pointer;flex-shrink:0;line-height:1;}
+
+/* 챙기기 시트 (사유별 맞춤 문자) */
+.orc-sec{font-size:0.66rem;font-weight:800;letter-spacing:0.08em;color:#b8923f;margin:0.8rem 0 0.35rem;}
+.orc-row{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.1rem;border-bottom:0.5px solid var(--border);}
+.orc-info{flex:1;min-width:0;}
+.orc-name{font-size:0.85rem;font-weight:700;color:var(--navy);}
+.orc-sub{font-size:0.7rem;color:var(--muted);margin-top:0.1rem;}
+.orc-act{min-height:44px;padding:0.4rem 0.8rem;border-radius:8px;border:none;background:linear-gradient(95deg,#f0d590,#d4a843);color:#1a1206;font-family:inherit;font-size:0.76rem;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.orc-act:active{transform:scale(0.97);}
+.orc-act.blue{background:#e8f0fe;color:#3a5a8a;}
+
+/* 등급 설명 팝업 */
+.tier-badge{cursor:pointer;}
+.ti-row{display:flex;align-items:center;gap:0.55rem;padding:0.55rem 0.7rem;border-radius:9px;background:var(--bg2);margin-bottom:0.4rem;font-size:0.82rem;color:var(--muted);}
+.ti-row.now{background:#fdf3d8;border:0.5px solid #ecd9a0;color:#8a6d1f;font-weight:700;}
+.ti-next{background:#050505;border-radius:10px;padding:0.75rem;text-align:center;font-size:0.85rem;font-weight:700;color:#e0c478;margin:0.6rem 0;}
+.ti-note{font-size:0.72rem;color:var(--muted);line-height:1.6;margin-bottom:0.6rem;}
 .dg-btn{flex:1;min-width:calc(50% - 0.2rem);padding:0.55rem;border-radius:8px;border:0.5px solid rgba(184,146,63,0.4);background:var(--bg);font-family:inherit;font-size:0.74rem;font-weight:600;color:var(--navy);cursor:pointer;transition:all 0.15s;text-align:center;}
 .dg-btn:active{transform:scale(0.97);}
 .dg-btn.visit{background:#e8f8ee;color:var(--green);border-color:transparent;}
@@ -703,6 +721,27 @@ body[data-theme="dark"] .pref-hint-ok{background:#453818;color:#e8c87a;}
   </div>
 </div>
 
+<!-- 챙기기 시트 (사유별 맞춤 문자) -->
+<div class="modal-bg" id="outreachModal">
+  <div class="modal" style="max-height:85vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">이번 주 챙길 손님</div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.4rem;">사유에 맞는 문자가 미리 채워집니다. 보내기 전에 자유롭게 고치실 수 있습니다.</div>
+    <div id="outreachList"></div>
+    <button class="btn btn-ghost" onclick="closeModal('outreachModal')" style="min-height:44px;">닫기</button>
+  </div>
+</div>
+
+<!-- 단골 등급 설명 팝업 -->
+<div class="modal-bg" id="tierInfoModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="tierInfoTitle">단골 등급</div>
+    <div id="tierInfoBody"></div>
+    <button class="btn btn-ghost" onclick="closeModal('tierInfoModal')" style="min-height:44px;">닫기</button>
+  </div>
+</div>
+
 <!-- VIP QR 팝업 -->
 <div class="qr-popup" id="dangolQrPopup">
   <div class="qr-sheet">
@@ -1008,6 +1047,7 @@ function cleanOldHistory() {
 }
 
 const APP_UPDATES = [
+  { date: "2026.07.23", type: "업데이트", content: "챙기기 문자 맞춤화 — '문자로 챙기기'를 누르면 이제 사유별로 나뉜 화면이 열립니다. 생일 손님께는 축하 문자, 예약 손님께는 예약 확인 문자(새로 추가), 오래 안 온 단골께는 안부 단체 문자 — 각각 다른 문구가 미리 준비됩니다. 또한 VIP 카드의 등급 배지를 누르면 등급 기준(실버 3회·골드 10회·블랙 20회)과 다음 승급까지 남은 방문 수를 확인하실 수 있습니다." },
   { date: "2026.07.23", type: "신규 기능", content: "실적 등급 — 월간 실적 맨 위에 이번 달 등급이 표시됩니다. 손님 팀 수에 따라 루키 → 프로(10팀) → 에이스(25팀) → 레전드(50팀)로 올라가며, 다음 등급까지 몇 팀 남았는지 보여드립니다. 역대 월 최고 기록을 경신하면 🔥 표시로 축하해 드립니다. 등급과 실적은 웨이터 본인만 볼 수 있습니다." },
   { date: "2026.07.23", type: "신규 기능", content: "모객 비서 — VIP 탭 맨 위에 이번 주 챙길 손님이 자동으로 모여 표시됩니다. 생일이 다가온 VIP, 예약이 잡힌 VIP, 한 달 넘게 안 온 단골을 한 장으로 보여드리고, '문자로 챙기기' 버튼을 누르면 단체 문자로 바로 이어집니다. 챙길 손님이 없는 날에는 나타나지 않습니다." },
   { date: "2026.07.23", type: "신규 기능", content: "단골 등급 자동 표시 — VIP 이름 옆에 방문 횟수에 따라 실버(3회)·골드(10회)·블랙(20회) 등급 배지가 자동으로 붙습니다. 웨이터님이 입력하실 것은 없습니다. 장부에 큰손으로 기록된 손님은 👑 표시가 함께 붙고, 방문이 적어도 최소 골드부터 시작합니다. 목록만 훑어도 누가 진짜 단골인지 한눈에 보입니다." },
@@ -1801,6 +1841,65 @@ function sendBirthdaySms(key, name, phone) {
   openSmsApp(phone, body);
 }
 
+// 예약 확인 문자 — 예약 날짜가 문구에 자동으로 들어감 (사용자 확정 문구)
+function sendResvConfirmSms(key, name, phone, resv) {
+  const hn = name.endsWith('님') ? name : name + '님';
+  const p = ((resv && resv.date) || '').split('-');
+  let dateTxt = '예약일';
+  if (p.length === 3) {
+    const DAY_KR = ['일', '월', '화', '수', '목', '금', '토'];
+    const d = new Date(+p[0], +p[1] - 1, +p[2]);
+    dateTxt = (+p[1]) + '월 ' + (+p[2]) + '일(' + DAY_KR[d.getDay()] + ')';
+  }
+  const body = '안녕하세요 ' + hn + ', ' + W.name + '입니다. ' + dateTxt + ' 예약을 확인해 드립니다. 귀한 걸음 하시는 만큼 자리와 준비에 소홀함 없도록 정성껏 모시겠습니다. 예약 날에 뵙겠습니다. 감사합니다.';
+  openSmsApp(phone, body);
+}
+
+// 단골 등급 설명 팝업 — 왜 이 등급인지, 언제 승급하는지
+function openTierInfo(name, visitCount, scale) {
+  const v = visitCount || 0;
+  const tier = guestTier({ visitCount: v, scale: scale });
+  document.getElementById('tierInfoTitle').textContent = name + ' — 단골 등급';
+  const body = document.getElementById('tierInfoBody');
+  body.innerHTML = '';
+
+  const LADDER_INFO = [
+    { key: 'silver', label: 'SILVER', desc: '방문 3회부터' },
+    { key: 'gold', label: 'GOLD', desc: '방문 10회부터' },
+    { key: 'black', label: 'BLACK', desc: '방문 20회부터' },
+  ];
+  LADDER_INFO.forEach(rw => {
+    const row = document.createElement('div');
+    row.className = 'ti-row' + (tier === rw.key ? ' now' : '');
+    const b = document.createElement('span');
+    b.className = 'tier-badge tier-' + rw.key;
+    b.style.marginLeft = '0';
+    b.style.cursor = 'default';
+    b.textContent = rw.label;
+    const t = document.createElement('span');
+    t.textContent = rw.desc + (tier === rw.key ? ' · 지금 여기 (방문 ' + v + '회)' : '');
+    row.append(b, t);
+    body.appendChild(row);
+  });
+
+  // 다음 승급까지 남은 방문 수 — 큰손 골드 보장 손님은 다음 목표가 블랙
+  let next = null;
+  if (tier === null) next = { name: '실버', remain: 3 - v };
+  else if (tier === 'silver') next = { name: '골드', remain: 10 - v };
+  else if (tier === 'gold' && v < 20) next = { name: '블랙', remain: 20 - v };
+  const nx = document.createElement('div');
+  nx.className = 'ti-next';
+  nx.textContent = next ? '🖤 ' + next.name + '까지 방문 ' + next.remain + '회 남았습니다' : '🖤 최고 등급입니다';
+  body.appendChild(nx);
+
+  const note = document.createElement('div');
+  note.className = 'ti-note';
+  note.textContent = '방문 횟수에 따라 자동으로 승급됩니다. 한 번에 크게 쓰시는 큰손 👑 손님은 방문이 적어도 최소 골드로 모십니다.';
+  body.appendChild(note);
+
+  document.getElementById('tierInfoModal').classList.add('open');
+}
+
 // ── 예약 메모 (VIP 전용) ──
 // 손님 노드 resv = { date:'YYYY-MM-DD', size, memo } — 날짜가 지나면 표시에서 자동 제외
 let _resvKey = null;
@@ -2321,9 +2420,7 @@ function renderListsFromCache() {
 
 // ── 오늘의 모객 비서 — 이번 주 챙길 손님(생일 임박·예약·안 온 단골)을 한 장으로 요약 ──
 // 챙길 손님이 없으면 카드 자체가 표시되지 않음. 문자로 챙기기 → 단체 문자로 연결.
-function renderOutreachCard(dangols) {
-  const box = document.getElementById('outreachCard');
-  if (!box) return;
+function outreachGroups(dangols) {
   const bday = dangols
     .filter(g => { const du = daysUntilBday(g.birthday); return du !== null && du <= 7; })
     .sort((a, b) => daysUntilBday(a.birthday) - daysUntilBday(b.birthday));
@@ -2332,6 +2429,90 @@ function renderOutreachCard(dangols) {
     .sort((a, b) => (a.resv.date < b.resv.date ? -1 : 1));
   const away = dangols.filter(g => (daysSince(g.lastVisit) || 0) >= REMIND_DAYS);
   const uniq = new Set([...bday, ...resv, ...away].map(g => g._key));
+  return { bday, resv, away, uniq };
+}
+
+// 챙기기 시트 — 사유별로 다른 문자 (생일=축하, 예약=예약 확인, 안 온 단골=안부 단체)
+function openOutreachSheet() {
+  const info = window._dangolInfo || {};
+  const dangols = Object.entries(window._lastGuests || {})
+    .map(([k, v]) => ({...v, ...(info[k] || {}), _key: k}))
+    .filter(g => g.isDangol);
+  const grp = outreachGroups(dangols);
+  const list = document.getElementById('outreachList');
+  list.innerHTML = '';
+
+  const addSec = txt => {
+    const s = document.createElement('div');
+    s.className = 'orc-sec';
+    s.textContent = txt;
+    list.appendChild(s);
+  };
+  const addRow = (name, sub, btnTxt, btnCls, onClick) => {
+    const row = document.createElement('div');
+    row.className = 'orc-row';
+    const inf = document.createElement('div');
+    inf.className = 'orc-info';
+    const nm = document.createElement('div');
+    nm.className = 'orc-name';
+    nm.textContent = name;
+    inf.appendChild(nm);
+    if (sub) {
+      const sb = document.createElement('div');
+      sb.className = 'orc-sub';
+      sb.textContent = sub;
+      inf.appendChild(sb);
+    }
+    const btn = document.createElement('button');
+    btn.className = 'orc-act' + (btnCls ? ' ' + btnCls : '');
+    btn.textContent = btnTxt;
+    btn.onclick = onClick;
+    row.append(inf, btn);
+    list.appendChild(row);
+  };
+
+  if (grp.bday.length) {
+    addSec('🎂 생일 임박 ' + grp.bday.length + '명');
+    grp.bday.forEach(g => {
+      const du = daysUntilBday(g.birthday);
+      addRow(g.label || '손님', du === 0 ? '오늘 생일' : du === 1 ? '내일 생일' : du + '일 뒤 생일', '🎂 축하 문자', '', () => {
+        if (!cleanPhone(g.phone)) { toast('전화번호를 먼저 등록하세요'); return; }
+        sendBirthdaySms(g._key, g.label, g.phone);
+      });
+    });
+  }
+  if (grp.resv.length) {
+    addSec('📅 예약 ' + grp.resv.length + '건');
+    grp.resv.forEach(g => {
+      addRow(g.label || '손님', resvLabel(g.resv).replace(/^📅\s*/, ''), '📅 예약 확인', '', () => {
+        if (!cleanPhone(g.phone)) { toast('전화번호를 먼저 등록하세요'); return; }
+        sendResvConfirmSms(g._key, g.label, g.phone, g.resv);
+      });
+    });
+  }
+  if (grp.away.length) {
+    addSec('💤 한 달 넘게 안 온 단골 ' + grp.away.length + '명');
+    addRow('안부 문자로 다시 부르기', grp.away.length + '명에게 한 번에 발송', '✉️ 안부 단체', 'blue', () => {
+      closeModal('outreachModal');
+      openBulkSmsAway();
+    });
+  }
+
+  document.getElementById('outreachModal').classList.add('open');
+}
+
+// 단체 문자를 '한 달 넘게 안 옴' 대상 + 안부 문구로 바로 열기
+function openBulkSmsAway() {
+  openBulkSms();
+  const chip = document.querySelector('#bulkTarget .pf-chip[data-v="away"]');
+  if (chip) chip.click();
+}
+
+function renderOutreachCard(dangols) {
+  const box = document.getElementById('outreachCard');
+  if (!box) return;
+  const grp = outreachGroups(dangols);
+  const bday = grp.bday, resv = grp.resv, away = grp.away, uniq = grp.uniq;
   if (uniq.size === 0) { box.style.display = 'none'; box.innerHTML = ''; return; }
 
   box.innerHTML = '';
@@ -2370,7 +2551,7 @@ function renderOutreachCard(dangols) {
   const btn = document.createElement('button');
   btn.className = 'oc-btn';
   btn.textContent = '✉️ 문자로 챙기기 →';
-  btn.onclick = () => openBulkSms();
+  btn.onclick = () => openOutreachSheet();
   box.appendChild(btn);
 }
 
@@ -2473,27 +2654,34 @@ function dangolCard(g, isDue) {
   const nm = document.createElement('div');
   nm.className = 'dangol-name';
   nm.textContent = g.label;
+  const _tierClick = e => { e.stopPropagation(); openTierInfo(g.label, g.visitCount || 0, g.scale); };
   const _tier = guestTier(g);
   if (_tier) {
     const tb = document.createElement('span');
     tb.className = 'tier-badge tier-' + _tier;
     tb.textContent = _tier.toUpperCase();
+    tb.onclick = _tierClick; // 배지를 누르면 등급 기준·승급 안내
     nm.appendChild(tb);
   }
   if (g.scale === '큰손') {
     const kb = document.createElement('span');
     kb.className = 'tier-badge tier-whale';
     kb.textContent = '👑 큰손';
+    kb.onclick = _tierClick;
     nm.appendChild(kb);
   }
   const vc = document.createElement('div');
   vc.className = 'dangol-visits';
   vc.textContent = '방문 ' + (g.visitCount || 0) + '회';
+  const delBtn = document.createElement('button');
+  delBtn.className = 'dangol-del-top';
+  delBtn.textContent = '🗑';
+  delBtn.onclick = e => { e.stopPropagation(); deleteDangol(g._key, g.label); };
   const arrow = document.createElement('span');
   arrow.className = 'dangol-arrow';
   arrow.textContent = '▼';
   arrow.style.transform = expanded ? 'rotate(180deg)' : '';
-  top.append(nm, vc, arrow);
+  top.append(nm, vc, delBtn, arrow);
 
   // 본문 (기본 접힘)
   const body = document.createElement('div');
@@ -2678,15 +2866,10 @@ function dangolCard(g, isDue) {
   editBtn.textContent = '✏️ 수정';
   editBtn.onclick = () => editDangol(g._key, g.label, g.phone, g.memo, g.birthday, g.taste, g.scale);
 
-  const delBtn = document.createElement('button');
-  delBtn.className = 'dg-btn del';
-  delBtn.textContent = '🗑';
-  delBtn.onclick = () => deleteDangol(g._key, g.label);
-
   const _isVisiting = (g.visitOpen === true);
   if (_isVisiting) btns.append(visitBtn);
   if (_bdaySoon) btns.append(bdayBtn);
-  btns.append(remindBtn, resvBtn, qrBtn, editBtn, delBtn);
+  btns.append(remindBtn, resvBtn, qrBtn, editBtn); // 삭제는 헤더 🗑로 이동 — 2열 그리드가 항상 짝 맞음
   body.appendChild(btns);
 
   card.append(top, body);
